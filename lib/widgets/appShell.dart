@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart'; // para sa ScrollDirection
 import 'package:ube/authentication/authentication_page.dart';
 import 'package:ube/pages/notification_page.dart';
+import 'package:ube/core/utils/route_utils.dart';
 
 import '../pages/dashboard_page.dart';
 
@@ -53,7 +54,7 @@ class _AppShellState extends State<AppShell> {
     Navigator.of(context).pop();
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => const LoginPage()),
+      instantRoute(const LoginPage()),
     );
   }
 

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:ube/features/emergency_request_page.dart';
+
+final supabase = Supabase.instance.client;
 
 const _kPrimary = Color(0xFF8B2CF5);
 const _kPrimaryDark = Color(0xFF3B1278);
@@ -36,9 +40,9 @@ class EmergencyPage extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SingleChildScrollView(
+      body: const SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(25, 50, 25, 20),
+          padding: EdgeInsets.fromLTRB(25, 50, 25, 20),
           child: EmergencyRequestCaller(),
         ),
       ),
@@ -55,6 +59,7 @@ class EmergencyRequestCaller extends StatefulWidget {
 
 class _EmergencyRequestCallerState extends State<EmergencyRequestCaller> {
   EmergencyType? _selectedType;
+  bool _isSubmitting = false;
 
   final List<EmergencyType> _types = [
     EmergencyType(
@@ -67,29 +72,87 @@ class _EmergencyRequestCallerState extends State<EmergencyRequestCaller> {
     EmergencyType(
       label: 'Fire',
       sub: 'Fire · Smoke',
-      icon: Icons.local_fire_department_outlined,
-      color: Color(0xFFF59E0B),
-      bg: Color(0xFFFFF7ED),
+      icon: const IconData(0xe29c, fontFamily: 'MaterialIcons'), // Icons.local_fire_department_outlined
+      color: const Color(0xFFF59E0B),
+      bg: const Color(0xFFFFF7ED),
     ),
     EmergencyType(
       label: 'Security',
       sub: 'Theft · Danger',
       icon: Icons.shield_outlined,
-      color: Color(0xFFEF4444),
-      bg: Color(0xFFFEF2F2),
+      color: const Color(0xFFEF4444),
+      bg: const Color(0xFFFEF2F2),
     ),
     EmergencyType(
       label: 'Flood',
       sub: 'Water · Storm',
       icon: Icons.water_outlined,
-      color: Color(0xFF22C55E),
-      bg: Color(0xFFF0FDF4),
+      color: const Color(0xFF22C55E),
+      bg: const Color(0xFFF0FDF4),
     ),
   ];
 
+  Future<void> _handleEmergency() async {
+    if (_selectedType == null || _isSubmitting) return;
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      // 1. Get Location
+      Position? position;
+      try {
+        position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            timeLimit: Duration(seconds: 5),
+          ),
+        );
+      } catch (e) {
+        debugPrint('Location error: $e');
+      }
+
+      // 2. Push to Supabase
+      final response = await supabase.from('emergency_incidents').insert({
+        'type': _selectedType!.label,
+        'level': _selectedType!.label == 'Medical' || _selectedType!.label == 'Fire' ? 'critical' : 'high',
+        'location': 'Current Location',
+        'reported_by': 'Resident User', // Should ideally come from Auth
+        'description': 'Emergency alert activated via app.',
+        'step': 0,
+        'map_lat': position?.latitude ?? 14.1668,
+        'map_lng': position?.longitude ?? 121.2420,
+      }).select().single();
+
+      if (!mounted) return;
+
+      // 3. Navigate to Request Page
+      Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              EmergencyRequestPage(
+                incidentId: response['id'],
+                emergencyLabel: _selectedType!.label,
+                emergencySub: _selectedType!.sub,
+              ),
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to send alert: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final bool isReady = _selectedType != null;
+    final bool isReady = _selectedType != null && !_isSubmitting;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,10 +184,10 @@ class _EmergencyRequestCallerState extends State<EmergencyRequestCaller> {
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: selected ? Color(0xFFEEECFD) : Colors.white,
+                  color: selected ? const Color(0xFFEEECFD) : Colors.white,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: selected ? Color(0xFF8B2CF5) : Color(0xFFE4E2F7),
+                    color: selected ? const Color(0xFF8B2CF5) : const Color(0xFFE4E2F7),
                     width: selected ? 2 : 1,
                   ),
                   boxShadow: [
@@ -141,7 +204,7 @@ class _EmergencyRequestCallerState extends State<EmergencyRequestCaller> {
                   children: [
                     Icon(
                       type.icon,
-                      color: selected ? Color(0xFF8B2CF5) : Color(0xFF9490B0),
+                      color: selected ? const Color(0xFF8B2CF5) : const Color(0xFF9490B0),
                       size: 22,
                     ),
                     const Spacer(),
@@ -150,7 +213,7 @@ class _EmergencyRequestCallerState extends State<EmergencyRequestCaller> {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: selected ? Color(0xFF8B2CF5) : Colors.black,
+                        color: selected ? const Color(0xFF8B2CF5) : Colors.black,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -186,64 +249,53 @@ class _EmergencyRequestCallerState extends State<EmergencyRequestCaller> {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: isReady ? _selectedType!.bg : const Color(0xFFF3F0FB),
+                  color: isReady || _isSubmitting ? _selectedType?.bg ?? const Color(0xFFF3F0FB) : const Color(0xFFF3F0FB),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
-                  isReady ? _selectedType!.icon : Icons.info_outline_rounded,
+                  isReady || _isSubmitting ? _selectedType?.icon ?? Icons.info_outline_rounded : Icons.info_outline_rounded,
                   size: 16,
-                  color: isReady ? _selectedType!.color : _kPrimaryMid,
+                  color: isReady || _isSubmitting ? _selectedType?.color ?? _kPrimaryMid : _kPrimaryMid,
                 ),
               ),
               const SizedBox(width: 10),
 
-              isReady
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${_selectedType!.label} emergency',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: _kPrimaryDark,
-                          ),
+              _isSubmitting
+                  ? const Text('Sending alert...', style: TextStyle(fontSize: 12, color: _kPrimary))
+                  : isReady
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${_selectedType!.label} emergency',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: _kPrimaryDark,
+                              ),
+                            ),
+                            const Text(
+                              'Responder: Tanod',
+                              style: TextStyle(fontSize: 11, color: _kPrimary),
+                            ),
+                          ],
+                        )
+                      : const Text(
+                          'Select a type to continue...',
+                          style: TextStyle(fontSize: 12, color: Color(0xFFA8A8B0)),
                         ),
-                        const Text(
-                          'Responder: Tanod',
-                          style: TextStyle(fontSize: 11, color: _kPrimary),
-                        ),
-                      ],
-                    )
-                  : const Text(
-                      'Select a type to continue...',
-                      style: TextStyle(fontSize: 12, color: Color(0xFFA8A8B0)),
-                    ),
             ],
           ),
         ),
 
         const SizedBox(height: 12),
-        EmergencyRequestGuidelines(),
+        const EmergencyRequestGuidelines(),
         const SizedBox(height: 12),
 
         /// SLIDE BUTTON
         SmoothSlideButton(
           enabled: isReady,
-          onActivate: () {
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) =>
-                    EmergencyRequestPage(
-                      emergencyLabel: _selectedType!.label,
-                      emergencySub: _selectedType!.sub,
-                    ),
-                transitionDuration: Duration.zero,
-                reverseTransitionDuration: Duration.zero,
-              ),
-            );
-          },
+          onActivate: _handleEmergency,
           emergencyRed: const Color(0xFFEF4444),
           successGreen: const Color(0xFF22C55E),
         ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:ube/authentication/app_colors.dart';
+import 'app_colors.dart';
 
 // ─── CONGRATULATIONS SCREEN ───────────────────────────────────────────────────
 

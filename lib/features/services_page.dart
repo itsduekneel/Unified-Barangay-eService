@@ -7,9 +7,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:ube/features/announcement_page.dart';
+import 'package:ube/features/appointment_request_page..dart';
 
-// ── Existing screens ────────────────────────────────────────────────────────
-import 'package:ube/features/appointment_request_page.dart';
+
 import 'package:ube/features/document_request_page.dart';
 import 'package:ube/features/emergency_page.dart';
 import 'package:ube/features/residents_household_page.dart';
@@ -37,17 +37,7 @@ import 'package:ube/features/hall/emergency_tracker_page.dart' as hall_emg;
 import 'package:ube/features/hall/incident_tracking_page.dart';
 import 'package:ube/features/hall/household_creation_page.dart';
 import 'package:ube/features/hall/satisfaction_reports_page.dart';
-
-/// ─────────────────────────────────────────
-/// GLOBAL ROUTE (unchanged)
-/// ─────────────────────────────────────────
-Route _instantRoute(Widget page) {
-  return PageRouteBuilder(
-    pageBuilder: (context, animation, secondaryAnimation) => page,
-    transitionDuration: Duration.zero,
-    reverseTransitionDuration: Duration.zero,
-  );
-}
+import 'package:ube/core/utils/route_utils.dart';
 
 /// ─────────────────────────────────────────
 /// COLORS (unchanged)
@@ -90,21 +80,28 @@ class _ViewAllPageState extends State<ViewAllPage> {
       'Document Request',
       Icons.folder,
       onTap: (context) {
-        Navigator.push(context, _instantRoute(const DocumentRequestsScreen()));
+        Navigator.push(context, instantRoute(const DocumentRequestsScreen()));
       },
     ),
     IconItem(
       'Emergency Request',
       Icons.emergency,
       onTap: (context) {
-        Navigator.push(context, _instantRoute(const EmergencyPage()));
+        Navigator.push(context, instantRoute(const EmergencyPage()));
       },
     ),
     IconItem(
       'Appointment Request',
       Icons.calendar_today_rounded,
       onTap: (context) {
-        Navigator.push(context, _instantRoute(const AppointmentRequestPage()));
+        Navigator.push(context, instantRoute(const AppointmentPage()));
+      },
+    ),
+    IconItem(
+      'Appointment Tracker',
+      Icons.calendar_today_rounded,
+      onTap: (context) {
+        Navigator.push(context, instantRoute(const AdminAppointmentPage()));
       },
     ),
 
@@ -112,7 +109,7 @@ class _ViewAllPageState extends State<ViewAllPage> {
       'Residents Household',
       Icons.people_rounded,
       onTap: (context) {
-        Navigator.push(context, _instantRoute(const HouseholdScreen()));
+        Navigator.push(context, instantRoute(const HouseholdScreen()));
       },
     ),
     IconItem(
@@ -121,7 +118,7 @@ class _ViewAllPageState extends State<ViewAllPage> {
       onTap: (context) {
         Navigator.push(
           context,
-          _instantRoute(const CreateAnnouncementScreen()),
+          instantRoute(const CreateAnnouncementScreen()),
         );
       },
     ),
@@ -129,7 +126,7 @@ class _ViewAllPageState extends State<ViewAllPage> {
       'Role-Based Access Control',
       Icons.campaign_rounded,
       onTap: (context) {
-        Navigator.push(context, _instantRoute(const RBACScreen()));
+        Navigator.push(context, instantRoute(const RBACScreen()));
       },
     ),
     IconItem(
@@ -138,7 +135,7 @@ class _ViewAllPageState extends State<ViewAllPage> {
       onTap: (context) {
         Navigator.push(
           context,
-          _instantRoute(const TrackingServicesRequestPage()),
+          instantRoute(const TrackingServicesRequestPage()),
         );
       },
     ),
@@ -146,7 +143,7 @@ class _ViewAllPageState extends State<ViewAllPage> {
       'Audit Log',
       Icons.timer,
       onTap: (context) {
-        Navigator.push(context, _instantRoute(const AuditLogScreen()));
+        Navigator.push(context, instantRoute(const AuditLogScreen()));
       },
     ),
 
@@ -155,7 +152,7 @@ class _ViewAllPageState extends State<ViewAllPage> {
       'Incident Report',
       Icons.report_outlined,
       onTap: (context) {
-        Navigator.push(context, _instantRoute(const IncidentReportPage()));
+        Navigator.push(context, instantRoute(const IncidentReportPage()));
       },
     ),
 
@@ -164,28 +161,28 @@ class _ViewAllPageState extends State<ViewAllPage> {
       'Attendance Tracking',
       Icons.fingerprint,
       onTap: (context) {
-        Navigator.push(context, _instantRoute(const AttendanceTrackingPage()));
+        Navigator.push(context, instantRoute(const AttendanceTrackingPage()));
       },
     ),
     IconItem(
       'Task Dashboard',
       Icons.task_alt,
       onTap: (context) {
-        Navigator.push(context, _instantRoute(const TaskAssignmentPage()));
+        Navigator.push(context, instantRoute(const TaskAssignmentPage()));
       },
     ),
     IconItem(
       'Patrol Tracking',
       Icons.directions_walk,
       onTap: (context) {
-        Navigator.push(context, _instantRoute(const PatrolTrackingPage()));
+        Navigator.push(context, instantRoute(const PatrolTrackingPage()));
       },
     ),
     IconItem(
       'Route Planning',
       Icons.route,
       onTap: (context) {
-        Navigator.push(context, _instantRoute(const RoutePlanningPage()));
+        Navigator.push(context, instantRoute(const RoutePlanningPage()));
       },
     ),
 
@@ -194,14 +191,14 @@ class _ViewAllPageState extends State<ViewAllPage> {
       'User Management',
       Icons.manage_accounts_outlined,
       onTap: (context) {
-        Navigator.push(context, _instantRoute(const UserManagementPage()));
+        Navigator.push(context, instantRoute(const UserManagementPage()));
       },
     ),
     IconItem(
       'Access Control (RBAC)',
       Icons.shield_outlined,
       onTap: (context) {
-        Navigator.push(context, _instantRoute(const RbacManagementPage()));
+        Navigator.push(context, instantRoute(const RbacManagementPage()));
       },
     ),
     IconItem(
@@ -210,7 +207,7 @@ class _ViewAllPageState extends State<ViewAllPage> {
       onTap: (context) {
         Navigator.push(
           context,
-          _instantRoute(const StaffActivityTrackingPage()),
+          instantRoute(const StaffActivityTrackingPage()),
         );
       },
     ),
@@ -218,14 +215,14 @@ class _ViewAllPageState extends State<ViewAllPage> {
       'Smart Queue',
       Icons.queue_outlined,
       onTap: (context) {
-        Navigator.push(context, _instantRoute(const SmartQueuePage()));
+        Navigator.push(context, instantRoute(const SmartQueuePage()));
       },
     ),
     IconItem(
       'Document Issuance',
       Icons.description_outlined,
       onTap: (context) {
-        Navigator.push(context, _instantRoute(const DocumentIssuance()));
+        Navigator.push(context, instantRoute(const DocumentIssuance()));
       },
     ),
 
@@ -235,7 +232,7 @@ class _ViewAllPageState extends State<ViewAllPage> {
       onTap: (context) {
         Navigator.push(
           context,
-          _instantRoute(const hall_emg.EmergencyTrackerPage()),
+          instantRoute(const hall_emg.EmergencyTrackerPage()),
         );
       },
     ),
@@ -243,21 +240,21 @@ class _ViewAllPageState extends State<ViewAllPage> {
       'Incident Tracking',
       Icons.local_police_outlined,
       onTap: (context) {
-        Navigator.push(context, _instantRoute(const IncidentTrackingPage()));
+        Navigator.push(context, instantRoute(const AdminIncidentPage()));
       },
     ),
     IconItem(
       'Household Creation',
       Icons.add_home_outlined,
       onTap: (context) {
-        Navigator.push(context, _instantRoute(const HouseholdCreationPage()));
+        Navigator.push(context, instantRoute(const HouseholdCreationPage()));
       },
     ),
     IconItem(
       'Satisfaction Reports',
       Icons.star_outline,
       onTap: (context) {
-        Navigator.push(context, _instantRoute(const SatisfactionReportsPage()));
+        Navigator.push(context, instantRoute(const SatisfactionReportsPage()));
       },
     ),
   ];

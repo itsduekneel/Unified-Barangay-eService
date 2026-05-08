@@ -1,55 +1,90 @@
 import 'package:flutter/material.dart';
-import 'package:ube/features/appointment_request_page.dart';
+import 'package:ube/features/appointment_request_page..dart';
+
+
 import 'package:ube/features/emergency_page.dart';
 import 'package:ube/features/user_management.dart';
 import 'package:ube/features/services_page.dart';
 import 'package:ube/widgets/quickactions.dart';
+import 'package:ube/core/utils/route_utils.dart';
+import 'package:provider/provider.dart';
+import 'package:ube/view_models/user_view_model.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<UserViewModel>().fetchCurrentUserProfile();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final userViewModel = context.watch<UserViewModel>();
+    final user = userViewModel.currentUser;
+
+    // Mas robust na check para sa Name at Role
+    // Kung walang data o empty string, gagamit ng default values
+    final String firstName = (user?.firstName != null && user!.firstName.isNotEmpty)
+        ? user.firstName
+        : 'Resident';
+
+    final String role = (user?.role != null && user!.role!.isNotEmpty)
+        ? user.role!
+        : 'User';
+
+    final String userId = (user != null && user.id.isNotEmpty)
+        ? (user.id.length > 8 ? user.id.substring(0, 8).toUpperCase() : user.id.toUpperCase())
+        : '—';
+
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // 1. TOP SECTION (Banner, Header, and Floating Card)
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // Purple Background Banner
-                Container(
-                  height: 250,
-                  decoration: const BoxDecoration(color: Color(0xFF8B2CF5)),
-                ),
-
-                // Greeting and Date
-                const Positioned(
-                  top: 100,
-                  left: 20,
-                  right: 20,
-                  child: _HeaderSection(),
-                ),
-
-                // Floating Resident Card
-                Positioned(
-                  bottom: -25,
-                  left: 20,
-                  right: 20,
-                  child: _ResidentCard(
-                    title: "Active Resident",
-                    residentId: "ID: UBE-2024-0012345",
-                    onViewProfile: () {
-                      // Add your view profile logic here
-                      debugPrint("View Profile Clicked");
-                    },
+      body: RefreshIndicator(
+        onRefresh: () => context.read<UserViewModel>().fetchCurrentUserProfile(),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    height: 250,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF8B2CF5), Color(0xFF6D28D9)],
+                      ),
+                    ),
                   ),
-                ),
-              ],
-            ),
-
+                  Positioned(
+                    top: 100,
+                    left: 20,
+                    right: 20,
+                    child: _HeaderSection(userName: firstName),
+                  ),
+                  Positioned(
+                    bottom: -25,
+                    left: 20,
+                    right: 20,
+                    child: _ResidentCard(
+                      title: role,
+                      residentId: "ID: $userId",
+                      onViewProfile: () => debugPrint("View Profile Clicked"),
+                    ),
+                  ),
+                ],
+              ),
+              // ... rest of your code
             // 2. BOTTOM SECTION (Quick Actions)
             // Added margin-top of 40 to account for the floating card overlay
             Padding(
@@ -64,7 +99,7 @@ class HomePage extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ),);
   }
 
   /// Extracted Quick Actions to keep the main build method clean
@@ -75,14 +110,14 @@ class HomePage extends StatelessWidget {
           title: 'User Management',
           icon: Icons.add_home_work_rounded,
           onTap: () =>
-              Navigator.push(context, _instantRoute(const UserManagement())),
+              Navigator.push(context, instantRoute(const UserManagement())),
         ),
         QuickActionItem(
           title: 'Emergency',
           icon: Icons.emergency,
           onTap: () => Navigator.push(
             context,
-            _instantRoute(const EmergencyPage()), // Added const here
+            instantRoute(const EmergencyPage()), // Added const here
           ),
         ),
         QuickActionItem(
@@ -90,14 +125,14 @@ class HomePage extends StatelessWidget {
           icon: Icons.calendar_today_rounded,
           onTap: () => Navigator.push(
             context,
-            _instantRoute(const AppointmentRequestPage()),
+            instantRoute(const AppointmentPage()),
           ),
         ),
         QuickActionItem(
           title: 'View All',
           icon: Icons.grid_view_rounded,
           onTap: () =>
-              Navigator.push(context, _instantRoute(const ViewAllPage())),
+              Navigator.push(context, instantRoute(const ViewAllPage())),
         ),
       ],
     );
@@ -109,7 +144,8 @@ class HomePage extends StatelessWidget {
 // ============================================================================
 
 class _HeaderSection extends StatelessWidget {
-  const _HeaderSection();
+  final String userName;
+  const _HeaderSection({required this.userName});
 
   // Helper lists kept static so they don't recreate on every build
   static const _days = [
@@ -178,9 +214,9 @@ class _HeaderSection extends StatelessWidget {
             height: 1.2,
           ),
         ),
-        const Text(
-          'Username',
-          style: TextStyle(
+        Text(
+          userName,
+          style: const TextStyle(
             fontSize: 30,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -285,14 +321,3 @@ class _ResidentCard extends StatelessWidget {
 // ============================================================================
 // GLOBAL UTILITIES
 // ============================================================================
-
-/// Instantly routes to a new page without an animation
-Route _instantRoute(Widget page) {
-  return PageRouteBuilder(
-    pageBuilder: (context, animation, secondaryAnimation) {
-      return page;
-    },
-    transitionDuration: Duration.zero,
-    reverseTransitionDuration: Duration.zero,
-  );
-}

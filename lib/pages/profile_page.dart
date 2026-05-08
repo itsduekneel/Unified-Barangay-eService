@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:ube/view_models/user_view_model.dart';
 
 class ProfilePage extends StatefulWidget {
-  final String userName;
-  final String userId;
-
-  const ProfilePage({
-    super.key,
-    this.userName = "Username",
-    this.userId = "12345",
-  });
+  const ProfilePage({super.key});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -18,13 +13,25 @@ class _ProfilePageState extends State<ProfilePage> {
   bool darkMode = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<UserViewModel>().fetchCurrentUserProfile();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final user = context.watch<UserViewModel>().currentUser;
+    final firstName = user?.firstName ?? 'Resident';
+    final userId = user != null ? user.id.substring(0, 8).toUpperCase() : '—';
+
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       body: SingleChildScrollView(
         child: Column(
           children: [
-            buildHeader(),
+            buildHeader(firstName, userId),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
               child: Column(
@@ -58,7 +65,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   // ===== HEADER =====
-  Widget buildHeader() {
+  Widget buildHeader(String name, String id) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.only(top: 60, bottom: 40),
@@ -66,13 +73,13 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Center(
         child: Container(
           padding: const EdgeInsets.fromLTRB(30, 20, 30, 10),
-          child: profileTile(),
+          child: profileTile(name, id),
         ),
       ),
     );
   }
 
-  Widget profileTile() {
+  Widget profileTile(String name, String id) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -83,7 +90,7 @@ class _ProfilePageState extends State<ProfilePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                widget.userName,
+                name,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -91,7 +98,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
               Text(
-                widget.userId,
+                id,
                 style: const TextStyle(color: Colors.white, fontSize: 15),
               ),
             ],

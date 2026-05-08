@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'audit_details_page.dart';
+import 'package:ube/core/utils/route_utils.dart';
 // =============================================================================
 // THEME
 // =============================================================================
@@ -310,7 +311,7 @@ class _AuditItem extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  _instantRoute(AuditLogDetailScreen(entry: entry)),
+                  instantRoute(AuditLogDetailScreen(entry: entry)),
                 );
               },
               child: Container(
@@ -406,14 +407,4 @@ class _AuditItem extends StatelessWidget {
       ),
     );
   }
-}
-
-Route _instantRoute(Widget page) {
-  return PageRouteBuilder(
-    pageBuilder: (context, animation, secondaryAnimation) {
-      return page;
-    },
-    transitionDuration: Duration.zero,
-    reverseTransitionDuration: Duration.zero,
-  );
 }

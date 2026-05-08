@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import '../core/utils/snackbar_utils.dart';
 
 // ─── Theme Constants ──────────────────────────────────────────────────────────
 class _C {
@@ -79,26 +80,11 @@ class _NotificationReadPagesState extends State<NotificationReadPages> {
             onPressed: () {
               Navigator.pop(dialogCtx);
               widget.onDelete();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Row(
-                    children: [
-                      Icon(Icons.delete_forever_rounded, color: Colors.white),
-                      SizedBox(width: 10),
-                      Text(
-                        'Notification deleted',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                  backgroundColor: Colors.redAccent,
-                  behavior: SnackBarBehavior.floating,
-                  margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  duration: const Duration(seconds: 2),
-                ),
+              AppSnackBar.show(
+                context,
+                message: 'Notification deleted',
+                icon: Icons.delete_forever_rounded,
+                backgroundColor: Colors.redAccent,
               );
             },
             child: const Text('Delete'),

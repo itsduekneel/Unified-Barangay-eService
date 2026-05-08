@@ -8,6 +8,7 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:ube/core/utils/route_utils.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -213,7 +214,7 @@ class _DocumentIssuanceState extends State<DocumentIssuance> {
             onPressed: () async {
               await Navigator.push(
                 context,
-                _instantRoute(const DocumentCreationPage()),
+                instantRoute(const DocumentCreationPage()),
               );
               _fetchDocuments();
             },
@@ -322,7 +323,7 @@ class _DocumentIssuanceState extends State<DocumentIssuance> {
                       onEdit: () async {
                         await Navigator.push(
                           context,
-                          _instantRoute(
+                          instantRoute(
                             DocumentCreationPage(existingDoc: filtered[index]),
                           ),
                         );
@@ -1663,9 +1664,3 @@ class _PlacedFieldOverlay extends StatelessWidget {
 // ─────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────
-
-Route _instantRoute(Widget page) => PageRouteBuilder(
-  pageBuilder: (_, _, _) => page,
-  transitionDuration: Duration.zero,
-  reverseTransitionDuration: Duration.zero,
-);

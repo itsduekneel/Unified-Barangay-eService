@@ -6,7 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show AuthException;
 import 'app_colors.dart';
 import 'auth_service.dart';
 import 'registerscreen_page.dart';
-import 'route_utils.dart';
+import 'package:ube/core/utils/route_utils.dart';
 import 'widgets/landscape_painter.dart';
 
 // ─── LOGIN PAGE ───────────────────────────────────────────────────────────────

@@ -9,7 +9,7 @@ class EmergencyPage extends StatelessWidget {
       backgroundColor: const Color(0xFFF5F4FA),
       appBar: AppBar(
         title: const Text(
-          'Services',
+          'Emergency Request',
           style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,

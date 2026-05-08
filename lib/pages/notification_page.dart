@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/notification_card.dart';
 import 'notification_read_pages.dart';
+import 'package:ube/core/utils/route_utils.dart';
 
 /// =======================
 /// MAIN NOTIFICATION PAGE
@@ -225,7 +226,7 @@ class _NotificationPageState extends State<NotificationPage> {
 
                             Navigator.push(
                               context,
-                              _instantRoute(
+                              instantRoute(
                                 NotificationReadPages(
                                   title: item.title,
                                   description: item.description,
@@ -253,10 +254,3 @@ class _NotificationPageState extends State<NotificationPage> {
 }
 
 // ─── Instant page transition (no animation) ─────────────────────────────────
-Route _instantRoute(Widget page) {
-  return PageRouteBuilder(
-    pageBuilder: (_, _, _) => page,
-    transitionDuration: Duration.zero,
-    reverseTransitionDuration: Duration.zero,
-  );
-}

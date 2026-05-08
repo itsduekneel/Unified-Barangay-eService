@@ -9,8 +9,19 @@ import 'package:ube/services/mock/mock_service.dart';
 
 const _kPrimary = Color(0xFF8B2CF5);
 const _kBg = Color(0xFFF5F4FA);
-
 const _kBorder = Color(0xFFEBE0FF);
+
+// Incident categories
+const _kCategories = [
+  'Noise Complaint',
+  'Vandalism',
+  'Theft',
+  'Trespassing',
+  'Fire Hazard',
+  'Illegal Parking',
+  'Disturbance',
+  'Others',
+];
 
 class IncidentReportPage extends StatefulWidget {
   const IncidentReportPage({super.key});
@@ -64,10 +75,9 @@ class _IncidentReportPageState extends State<IncidentReportPage> {
   };
 
   void _showReportForm() {
-    final titleCtrl = TextEditingController();
-    final descCtrl = TextEditingController();
-    final locCtrl = TextEditingController();
+    final othersCtrl = TextEditingController();
     String selectedSeverity = 'Minor';
+    String? selectedCategory;
 
     showModalBottomSheet(
       context: context,
@@ -88,6 +98,7 @@ class _IncidentReportPageState extends State<IncidentReportPage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // ── Header ──────────────────────────────────────────────
                 Row(
                   children: [
                     const Expanded(
@@ -106,25 +117,65 @@ class _IncidentReportPageState extends State<IncidentReportPage> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                _FormField(
-                  ctrl: titleCtrl,
-                  label: 'Incident Title',
-                  hint: 'e.g. Noise Complaint',
+
+                // ── Incident Category ────────────────────────────────────
+                const Text(
+                  'Incident Category',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: 10),
-                _FormField(
-                  ctrl: locCtrl,
-                  label: 'Location',
-                  hint: 'e.g. 14 Sampaguita St.',
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _kCategories.map((cat) {
+                    final isSelected = selectedCategory == cat;
+                    return GestureDetector(
+                      onTap: () => setModalState(() {
+                        selectedCategory = cat;
+                        // Clear others field when switching away
+                        if (cat != 'Others') othersCtrl.clear();
+                      }),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 7,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? _kPrimary.withOpacity(0.1)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isSelected ? _kPrimary : _kBorder,
+                            width: isSelected ? 1.5 : 1,
+                          ),
+                        ),
+                        child: Text(
+                          cat,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isSelected ? _kPrimary : Colors.grey[600],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
-                const SizedBox(height: 10),
-                _FormField(
-                  ctrl: descCtrl,
-                  label: 'Description',
-                  hint: 'Describe the incident in detail...',
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 10),
+
+                // ── "Others" text field — only shown when Others is picked ──
+                if (selectedCategory == 'Others') ...[
+                  const SizedBox(height: 10),
+                  _FormField(
+                    ctrl: othersCtrl,
+                    label: 'Please specify incident type',
+                    hint: 'e.g. Stray animals, Flooding...',
+                  ),
+                ],
+
+                const SizedBox(height: 14),
+
+                // ── Severity ─────────────────────────────────────────────
                 const Text(
                   'Severity',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
@@ -133,7 +184,7 @@ class _IncidentReportPageState extends State<IncidentReportPage> {
                 Row(
                   children: ['Minor', 'Moderate', 'Severe'].map((sev) {
                     final selected = selectedSeverity == sev;
-                    Color color = sev == 'Minor'
+                    final Color color = sev == 'Minor'
                         ? const Color(0xFF16A34A)
                         : sev == 'Moderate'
                         ? const Color(0xFFF59E0B)
@@ -170,7 +221,10 @@ class _IncidentReportPageState extends State<IncidentReportPage> {
                     );
                   }).toList(),
                 ),
+
                 const SizedBox(height: 16),
+
+                // ── Submit ───────────────────────────────────────────────
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -182,16 +236,23 @@ class _IncidentReportPageState extends State<IncidentReportPage> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     onPressed: () async {
+                      // Resolve final category label
+                      final finalCategory = selectedCategory == 'Others'
+                          ? (othersCtrl.text.trim().isEmpty
+                          ? 'Others'
+                          : othersCtrl.text.trim())
+                          : (selectedCategory ?? '');
+
                       Navigator.pop(ctx);
                       final report = IncidentReportModel(
                         id: 'INC_NEW',
                         reportedBy: 'Juan Dela Cruz',
                         residentId: 'R001',
-                        title: titleCtrl.text,
-                        description: descCtrl.text,
-                        location: locCtrl.text,
-                        dateReported: 'May 5, 2025',
-                        timeReported: '10:00 AM',
+                        title: finalCategory,
+                        description: finalCategory,
+                        location: '',
+                        dateReported: '',
+                        timeReported: '',
                         severity: selectedSeverity == 'Minor'
                             ? IncidentSeverity.minor
                             : selectedSeverity == 'Moderate'
@@ -266,133 +327,108 @@ class _IncidentReportPageState extends State<IncidentReportPage> {
           : _incidents.isEmpty
           ? _EmptyState(onTap: _showReportForm)
           : ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-              itemCount: _incidents.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 10),
-              itemBuilder: (_, i) {
-                final inc = _incidents[i];
-                final sc = _severityColor(inc.severity);
-                return Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: _kBorder),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              inc.title,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _statusColor(inc.status).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: _statusColor(
-                                  inc.status,
-                                ).withOpacity(0.4),
-                              ),
-                            ),
-                            child: Text(
-                              _statusLabel(inc.status),
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: _statusColor(inc.status),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        inc.description,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.location_on_outlined,
-                            size: 13,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            inc.location,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: sc.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              inc.severity.name,
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: sc,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${inc.dateReported} · ${inc.timeReported}',
-                        style: TextStyle(fontSize: 10, color: Colors.grey[500]),
-                      ),
-                      if (inc.assignedOfficer != null) ...[
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.shield_outlined,
-                              size: 13,
-                              color: _kPrimary,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Assigned: ${inc.assignedOfficer}',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: _kPrimary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+        itemCount: _incidents.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 10),
+        itemBuilder: (_, i) {
+          final inc = _incidents[i];
+          final sc = _severityColor(inc.severity);
+          return Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: _kBorder),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        inc.title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
                         ),
-                      ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _statusColor(inc.status)
+                            .withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: _statusColor(inc.status)
+                              .withOpacity(0.4),
+                        ),
+                      ),
+                      child: Text(
+                        _statusLabel(inc.status),
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: _statusColor(inc.status),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: sc.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        inc.severity.name,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: sc,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (inc.assignedOfficer != null) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.shield_outlined,
+                        size: 13,
+                        color: _kPrimary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Assigned: ${inc.assignedOfficer}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: _kPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
                   ),
-                );
-              },
+                ],
+              ],
             ),
+          );
+        },
+      ),
     );
   }
 }
@@ -426,7 +462,8 @@ class _EmptyState extends StatelessWidget {
           GestureDetector(
             onTap: onTap,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
                 color: _kPrimary,
                 borderRadius: BorderRadius.circular(20),

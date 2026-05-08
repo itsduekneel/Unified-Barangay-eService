@@ -13,17 +13,32 @@ dependencies:
   # 🔐 Auth & Database
   supabase_flutter: ^2.12.0
 
-  # 🔗 Sharing
-  share_plus: ^12.0.1
+  # 🗺️ Maps & Location
+  flutter_map: ^7.0.2
+  flutter_map_cancellable_tile_provider: 3.0.2
+  latlong2: ^0.9.1
+  geolocator: ^13.0.2
+  path_provider: ^2.1.4
+  shared_preferences: ^2.2.3
+
+
+  geocoding: ^3.0.0
+
+  # 🌐 Networking & Cache
+  dio: ^5.7.0
+  dio_cache_interceptor: ^3.5.0
+  dio_cache_interceptor_file_store: ^1.2.3
 
   # 📁 File handling
   file_picker: ^11.0.2
-  path_provider: ^2.1.2
+
+  # 🔗 Sharing
+  share_plus: ^12.0.1
 
   # 📊 CSV
   csv: ^5.0.2
 
-  # 📄 PDF generation & preview
+  # 📄 PDF
   pdf: ^3.10.7
   printing: ^5.12.0
   syncfusion_flutter_pdfviewer: ^33.1.47
@@ -42,11 +57,7 @@ dev_dependencies:
     sdk: flutter
 
   flutter_lints: ^6.0.0
-
-  # 🔤 App name changer
   launcher_name: ^1.0.2
-
-  # 🎨 App icon generator
   flutter_launcher_icons: ^0.14.4
 
 flutter:
@@ -72,11 +83,15 @@ flutter_launcher_icons:
   ios: true
   remove_alpha_ios: true
   image_path: "assets/app_icon.png"
+
   web:
     generate: true
+
   windows:
     generate: true
+
   macos:
     generate: true
+
   linux:
     generate: true
