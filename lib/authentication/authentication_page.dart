@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart' show AuthException;
-
 import 'app_colors.dart';
 import 'auth_service.dart';
 import 'registerscreen_page.dart';
 import 'package:ube/core/utils/route_utils.dart';
 import 'widgets/landscape_painter.dart';
+import '../widgets/appShell.dart';
 
 // ─── LOGIN PAGE ───────────────────────────────────────────────────────────────
 
@@ -19,11 +19,11 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _emailController    = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   bool _rememberMe = false;
-  bool _isLoading  = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -42,7 +42,7 @@ class _LoginPageState extends State<LoginPage> {
   // ── Handlers ──────────────────────────────────────────────────────────────
 
   Future<void> _handleSignIn() async {
-    final email    = _emailController.text.trim();
+    final email = _emailController.text.trim();
     final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
@@ -54,35 +54,34 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       await AuthService.login(email: email, password: password);
+
       if (!mounted) return;
 
-      // TODO: Replace with your home/dashboard route.
-      _showSuccess('Signed in successfully!');
+      Navigator.pushAndRemoveUntil(
+        context,
+        instantRoute(const AppShell()),
+        (route) => false,
+      );
     } on AuthException catch (e) {
       _showError(e.message);
     } catch (_) {
       _showError('An unexpected error occurred. Please try again.');
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(message),
-      backgroundColor: Colors.red.shade600,
-      behavior: SnackBarBehavior.floating,
-    ));
-  }
-
-  void _showSuccess(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(message),
-      backgroundColor: Colors.green,
-      behavior: SnackBarBehavior.floating,
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red.shade600,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   // ── Build ──────────────────────────────────────────────────────────────────
@@ -98,7 +97,9 @@ class _LoginPageState extends State<LoginPage> {
         children: [
           // Decorative background at the bottom
           Positioned(
-            bottom: 0, left: 0, right: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
             child: LandscapeBackground(height: screenHeight * 0.25),
           ),
 
@@ -134,7 +135,8 @@ class _LoginPageState extends State<LoginPage> {
 
                   _RememberMeRow(
                     rememberMe: _rememberMe,
-                    onChanged: (val) => setState(() => _rememberMe = val ?? false),
+                    onChanged: (val) =>
+                        setState(() => _rememberMe = val ?? false),
                     onForgotPassword: () {
                       // TODO: Navigate to forgot-password screen.
                     },
@@ -142,7 +144,10 @@ class _LoginPageState extends State<LoginPage> {
 
                   const Spacer(),
 
-                  _SignInButton(isLoading: _isLoading, onPressed: _handleSignIn),
+                  _SignInButton(
+                    isLoading: _isLoading,
+                    onPressed: _handleSignIn,
+                  ),
 
                   const SizedBox(height: 10),
 
@@ -175,7 +180,7 @@ class _WelcomeHeader extends StatelessWidget {
             color: AppColors.primary,
             borderRadius: BorderRadius.circular(18),
           ),
-          child: Image.asset('assets/app_icon.png', fit: BoxFit.contain),
+          child: Image.asset("assets/app_icon.png", fit: BoxFit.contain),
         ),
         const SizedBox(height: 15),
         const Text(
@@ -250,7 +255,10 @@ class _LoginFieldState extends State<_LoginField> {
               hintText: widget.hint,
               hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: 12,
+                horizontal: 4,
+              ),
               prefixIcon: Container(
                 margin: const EdgeInsets.all(8),
                 padding: const EdgeInsets.all(6),
@@ -269,7 +277,8 @@ class _LoginFieldState extends State<_LoginField> {
                         color: AppColors.iconBg,
                         size: 20,
                       ),
-                      onPressed: () => setState(() => _obscureText = !_obscureText),
+                      onPressed: () =>
+                          setState(() => _obscureText = !_obscureText),
                     )
                   : null,
             ),
@@ -307,7 +316,9 @@ class _RememberMeRow extends StatelessWidget {
                 value: rememberMe,
                 onChanged: onChanged,
                 activeColor: AppColors.primary,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
             ),
             const SizedBox(width: 6),
@@ -349,14 +360,19 @@ class _SignInButton extends StatelessWidget {
           backgroundColor: AppColors.primary,
           disabledBackgroundColor: AppColors.primaryLight,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           elevation: 0,
         ),
         child: isLoading
             ? const SizedBox(
                 width: 22,
                 height: 22,
-                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.5,
+                ),
               )
             : const Text(
                 'Sign in',
@@ -386,7 +402,11 @@ class _SignUpCard extends StatelessWidget {
               color: AppColors.primaryLight,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.person_add_outlined, color: AppColors.primary, size: 20),
+            child: const Icon(
+              Icons.person_add_outlined,
+              color: AppColors.primary,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 10),
           const Expanded(
@@ -405,7 +425,8 @@ class _SignUpCard extends StatelessWidget {
             ),
           ),
           GestureDetector(
-            onTap: () => Navigator.push(context, instantRoute(const RegisterScreen())),
+            onTap: () =>
+                Navigator.push(context, instantRoute(const RegisterScreen())),
             child: const Row(
               children: [
                 Text(

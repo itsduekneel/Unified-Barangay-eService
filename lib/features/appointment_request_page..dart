@@ -66,14 +66,35 @@ const _kServices = [
 
 class _Fmt {
   static const _months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
   static const _short = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
-  static String full(DateTime d) => '${_months[d.month - 1]} ${d.day}, ${d.year}';
+  static String full(DateTime d) =>
+      '${_months[d.month - 1]} ${d.day}, ${d.year}';
   static String short(DateTime d) => '${_short[d.month - 1]} ${d.day}';
   static String iso(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
@@ -214,48 +235,33 @@ class _AppointmentPageState extends State<AppointmentPage> {
     return Scaffold(
       backgroundColor: _C.surface,
       appBar: AppBar(
-        backgroundColor:  _C.surface,
+        backgroundColor: _C.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
         title: Text(
           _titles[_step.clamp(0, 4)],
-          style: const TextStyle(
-            color:  _C.primary,
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
         ),
         leading: _step > 0 && _step < 4
             ? IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color:  _C.primary,
-            size: 20,
-          ),
-          onPressed: _goBack,
-        )
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: _C.primary,
+                  size: 20,
+                ),
+                onPressed: _goBack,
+              )
             : _step == 0
             ? IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color:  _C.primary,
-            size: 20,
-          ),
-          onPressed: () => Navigator.pop(context),
-        )
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: _C.primary,
+                  size: 20,
+                ),
+                onPressed: () => Navigator.pop(context),
+              )
             : null,
-        actions: [
-          if (_step == 0 && _supabase.auth.currentUser != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: TextButton.icon(
-                onPressed: () => setState(() => _showMyAppointments = true),
-                icon: const Icon(Icons.history_rounded, size: 18, color: _C.primary),
-                label: const Text('History', style: TextStyle(color: _C.primary, fontSize: 12, fontWeight: FontWeight.bold)),
-              ),
-            ),
-        ],
       ),
       body: Column(
         children: [
@@ -324,7 +330,7 @@ class _StepBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color:  _C.surface,
+      color: _C.surface,
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
       child: Row(
         children: List.generate(4, (i) {
@@ -536,10 +542,7 @@ class _StepService extends StatelessWidget {
           ),
 
           const SizedBox(height: 8),
-          _NextButton(
-            label: 'Choose date & time',
-            onPressed: onNext,
-          ),
+          _NextButton(label: 'Choose date & time', onPressed: onNext),
         ],
       ),
     );
@@ -589,19 +592,13 @@ class _StepDateTime extends StatelessWidget {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
-              child: _InlineCalendar(
-                selected: date,
-                onSelect: onDate,
-              ),
+              child: _InlineCalendar(selected: date, onSelect: onDate),
             ),
           ),
 
           if (date != null) ...[
             const SizedBox(height: 10),
-            _PillBadge(
-              icon: Icons.event_rounded,
-              text: _Fmt.full(date!),
-            ),
+            _PillBadge(icon: Icons.event_rounded, text: _Fmt.full(date!)),
           ],
 
           const SizedBox(height: 20),
@@ -620,9 +617,7 @@ class _StepDateTime extends StatelessWidget {
                 initialTime: time ?? TimeOfDay.now(),
                 builder: (ctx, child) => Theme(
                   data: Theme.of(ctx).copyWith(
-                    colorScheme: const ColorScheme.light(
-                      primary: _C.primary,
-                    ),
+                    colorScheme: const ColorScheme.light(primary: _C.primary),
                   ),
                   child: child!,
                 ),
@@ -631,10 +626,7 @@ class _StepDateTime extends StatelessWidget {
             },
           ),
 
-          _NextButton(
-            label: 'Continue to details',
-            onPressed: onNext,
-          ),
+          _NextButton(label: 'Continue to details', onPressed: onNext),
         ],
       ),
     );
@@ -661,8 +653,10 @@ class _InlineCalendarState extends State<_InlineCalendar> {
     _viewing = DateTime.now();
   }
 
-  void _prev() => setState(() => _viewing = DateTime(_viewing.year, _viewing.month - 1));
-  void _next() => setState(() => _viewing = DateTime(_viewing.year, _viewing.month + 1));
+  void _prev() =>
+      setState(() => _viewing = DateTime(_viewing.year, _viewing.month - 1));
+  void _next() =>
+      setState(() => _viewing = DateTime(_viewing.year, _viewing.month + 1));
 
   @override
   Widget build(BuildContext context) {
@@ -695,7 +689,10 @@ class _InlineCalendarState extends State<_InlineCalendar> {
               ),
               IconButton(
                 onPressed: _next,
-                icon: const Icon(Icons.chevron_right_rounded, color: _C.primary),
+                icon: const Icon(
+                  Icons.chevron_right_rounded,
+                  color: _C.primary,
+                ),
               ),
             ],
           ),
@@ -706,18 +703,18 @@ class _InlineCalendarState extends State<_InlineCalendar> {
             children: days
                 .map(
                   (d) => Expanded(
-                child: Center(
-                  child: Text(
-                    d,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: _C.ink3,
+                    child: Center(
+                      child: Text(
+                        d,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: _C.ink3,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            )
+                )
                 .toList(),
           ),
           const SizedBox(height: 6),
@@ -737,12 +734,16 @@ class _InlineCalendarState extends State<_InlineCalendar> {
               if (i < startOffset) return const SizedBox.shrink();
               final day = i - startOffset + 1;
               final date = DateTime(_viewing.year, _viewing.month, day);
-              final isPast = date.isBefore(DateTime(now.year, now.month, now.day));
-              final isSelected = widget.selected != null &&
+              final isPast = date.isBefore(
+                DateTime(now.year, now.month, now.day),
+              );
+              final isSelected =
+                  widget.selected != null &&
                   widget.selected!.year == date.year &&
                   widget.selected!.month == date.month &&
                   widget.selected!.day == date.day;
-              final isToday = date.year == now.year &&
+              final isToday =
+                  date.year == now.year &&
                   date.month == now.month &&
                   date.day == now.day;
 
@@ -987,27 +988,27 @@ class _StepReview extends StatelessWidget {
               ),
               child: isSubmitting
                   ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
                   : const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.check_circle_outline_rounded, size: 18),
-                  SizedBox(width: 8),
-                  Text(
-                    'Confirm Appointment',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.check_circle_outline_rounded, size: 18),
+                        SizedBox(width: 8),
+                        Text(
+                          'Confirm Appointment',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
             ),
           ),
         ],
@@ -1112,10 +1113,23 @@ class _StepDone extends StatelessWidget {
 
           _ReviewCard(
             rows: [
-              _ReviewRow(Icons.medical_services_outlined, 'Service', service.name),
-              _ReviewRow(Icons.event_rounded, 'Date & Time', '${_Fmt.short(date)} • $time'),
+              _ReviewRow(
+                Icons.medical_services_outlined,
+                'Service',
+                service.name,
+              ),
+              _ReviewRow(
+                Icons.event_rounded,
+                'Date & Time',
+                '${_Fmt.short(date)} • $time',
+              ),
               _ReviewRow(Icons.person_outline_rounded, 'Name', name),
-              _ReviewRow(Icons.info_outline_rounded, 'Status', 'Scheduled', isStatus: true),
+              _ReviewRow(
+                Icons.info_outline_rounded,
+                'Status',
+                'Scheduled',
+                isStatus: true,
+              ),
             ],
           ),
 
@@ -1170,11 +1184,19 @@ class _MyAppointmentsView extends StatelessWidget {
         elevation: 0,
         title: const Text(
           'My Appointments',
-          style: TextStyle(color: _C.primary, fontWeight: FontWeight.bold, fontSize: 15),
+          style: TextStyle(
+            color: _C.primary,
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+          ),
         ),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: _C.primary, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: _C.primary,
+            size: 20,
+          ),
           onPressed: onBack,
         ),
       ),
@@ -1186,7 +1208,9 @@ class _MyAppointmentsView extends StatelessWidget {
             .order('appointment_date', ascending: false),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: _C.primary));
+            return const Center(
+              child: CircularProgressIndicator(color: _C.primary),
+            );
           }
 
           final data = snapshot.data ?? [];
@@ -1197,7 +1221,10 @@ class _MyAppointmentsView extends StatelessWidget {
                 children: [
                   Icon(Icons.calendar_today_outlined, size: 48, color: _C.ink3),
                   const SizedBox(height: 16),
-                  Text('No appointments found', style: TextStyle(color: _C.ink2, fontSize: 14)),
+                  Text(
+                    'No appointments found',
+                    style: TextStyle(color: _C.ink2, fontSize: 14),
+                  ),
                 ],
               ),
             );
@@ -1206,7 +1233,7 @@ class _MyAppointmentsView extends StatelessWidget {
           return ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: data.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (_, i) {
               final item = data[i];
               final status = item['status']?.toString() ?? 'pending';
@@ -1218,9 +1245,15 @@ class _MyAppointmentsView extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: _C.card,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: _kStatusColor(status).withOpacity(0.3)),
+                  border: Border.all(
+                    color: _kStatusColor(status).withOpacity(0.3),
+                  ),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
                   ],
                 ),
                 child: Column(
@@ -1230,17 +1263,38 @@ class _MyAppointmentsView extends StatelessWidget {
                       children: [
                         Container(
                           padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(color: _C.primarySuperLight, borderRadius: BorderRadius.circular(10)),
-                          child: const Icon(Icons.assignment_outlined, size: 18, color: _C.primary),
+                          decoration: BoxDecoration(
+                            color: _C.primarySuperLight,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.assignment_outlined,
+                            size: 18,
+                            color: _C.primary,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(item['service_name'] ?? 'Service', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: _C.ink)),
+                              Text(
+                                item['service_name'] ?? 'Service',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: _C.ink,
+                                ),
+                              ),
                               const SizedBox(height: 2),
-                              Text(item['reference_no'] ?? '—', style: const TextStyle(fontSize: 11, color: _C.ink3, fontWeight: FontWeight.bold)),
+                              Text(
+                                item['reference_no'] ?? '—',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: _C.ink3,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -1250,9 +1304,15 @@ class _MyAppointmentsView extends StatelessWidget {
                     const Divider(height: 24, color: _C.border),
                     Row(
                       children: [
-                        _SmallInfo(icon: Icons.event_rounded, text: _Fmt.short(date)),
+                        _SmallInfo(
+                          icon: Icons.event_rounded,
+                          text: _Fmt.short(date),
+                        ),
                         const SizedBox(width: 16),
-                        _SmallInfo(icon: Icons.access_time_rounded, text: item['appointment_time'] ?? '—'),
+                        _SmallInfo(
+                          icon: Icons.access_time_rounded,
+                          text: item['appointment_time'] ?? '—',
+                        ),
                       ],
                     ),
                     if (item['notes'] != null) ...[
@@ -1260,8 +1320,18 @@ class _MyAppointmentsView extends StatelessWidget {
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(color: _C.surface, borderRadius: BorderRadius.circular(8)),
-                        child: Text('Note: ${item['notes']}', style: const TextStyle(fontSize: 11, color: _C.ink2, fontStyle: FontStyle.italic)),
+                        decoration: BoxDecoration(
+                          color: _C.surface,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Note: ${item['notes']}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: _C.ink2,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
                       ),
                     ],
                   ],
@@ -1276,10 +1346,14 @@ class _MyAppointmentsView extends StatelessWidget {
 
   Color _kStatusColor(String s) {
     switch (s) {
-      case 'confirmed': return _C.success;
-      case 'cancelled': return _C.danger;
-      case 'completed': return Colors.blue;
-      default: return _C.warn;
+      case 'confirmed':
+        return _C.success;
+      case 'cancelled':
+        return _C.danger;
+      case 'completed':
+        return Colors.blue;
+      default:
+        return _C.warn;
     }
   }
 }
@@ -1293,21 +1367,42 @@ class _StatusBadge extends StatelessWidget {
     final Color color;
     final IconData icon;
     switch (status) {
-      case 'confirmed': color = _C.success; icon = Icons.check_circle_outline_rounded; break;
-      case 'cancelled': color = _C.danger; icon = Icons.cancel_outlined; break;
-      case 'completed': color = Colors.blue; icon = Icons.task_alt_rounded; break;
-      default: color = _C.warn; icon = Icons.hourglass_empty_rounded;
+      case 'confirmed':
+        color = _C.success;
+        icon = Icons.check_circle_outline_rounded;
+        break;
+      case 'cancelled':
+        color = _C.danger;
+        icon = Icons.cancel_outlined;
+        break;
+      case 'completed':
+        color = Colors.blue;
+        icon = Icons.task_alt_rounded;
+        break;
+      default:
+        color = _C.warn;
+        icon = Icons.hourglass_empty_rounded;
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 12, color: color),
           const SizedBox(width: 4),
-          Text(status.toUpperCase(), style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: color)),
+          Text(
+            status.toUpperCase(),
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
+          ),
         ],
       ),
     );
@@ -1325,7 +1420,14 @@ class _SmallInfo extends StatelessWidget {
       children: [
         Icon(icon, size: 14, color: _C.ink3),
         const SizedBox(width: 4),
-        Text(text, style: const TextStyle(fontSize: 12, color: _C.ink2, fontWeight: FontWeight.w500)),
+        Text(
+          text,
+          style: const TextStyle(
+            fontSize: 12,
+            color: _C.ink2,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ],
     );
   }
@@ -1509,11 +1611,7 @@ class _TapField extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: _C.ink3,
-              size: 20,
-            ),
+            Icon(Icons.chevron_right_rounded, color: _C.ink3, size: 20),
           ],
         ),
       ),
@@ -1569,8 +1667,8 @@ class _FormField extends StatelessWidget {
           style: const TextStyle(fontSize: 14, color: _C.ink),
           validator: required
               ? (v) => (v == null || v.trim().isEmpty)
-              ? '$label is required'
-              : null
+                    ? '$label is required'
+                    : null
               : null,
           decoration: InputDecoration(
             hintText: hint,
@@ -1652,12 +1750,7 @@ class _ReviewRow extends StatelessWidget {
   final String label, value;
   final bool isStatus;
 
-  const _ReviewRow(
-      this.icon,
-      this.label,
-      this.value, {
-        this.isStatus = false,
-      });
+  const _ReviewRow(this.icon, this.label, this.value, {this.isStatus = false});
 
   @override
   Widget build(BuildContext context) {
@@ -1667,41 +1760,38 @@ class _ReviewRow extends StatelessWidget {
         children: [
           Icon(icon, size: 15, color: _C.ink3),
           const SizedBox(width: 10),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 13, color: _C.ink2),
-          ),
+          Text(label, style: const TextStyle(fontSize: 13, color: _C.ink2)),
           const Spacer(),
           isStatus
               ? Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 4,
-            ),
-            decoration: BoxDecoration(
-              color: _C.successLight,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Text(
-              'Scheduled',
-              style: TextStyle(
-                fontSize: 11,
-                color: _C.success,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          )
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _C.successLight,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Scheduled',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: _C.success,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                )
               : Flexible(
-            child: Text(
-              value.isEmpty ? '—' : value,
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: _C.ink,
-              ),
-            ),
-          ),
+                  child: Text(
+                    value.isEmpty ? '—' : value,
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: _C.ink,
+                    ),
+                  ),
+                ),
         ],
       ),
     );

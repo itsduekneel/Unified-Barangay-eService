@@ -107,7 +107,7 @@ const _colorPresets = [
 ];
 
 _CatColorPreset _presetByKey(String key) => _colorPresets.firstWhere(
-      (p) => p.key == key,
+  (p) => p.key == key,
   orElse: () => _colorPresets[0],
 );
 
@@ -261,7 +261,9 @@ class EmergencyItem {
       location: map['location'] ?? 'Unknown',
       reportedBy: map['reported_by'] ?? 'Anonymous',
       dateTime: map['created_at'] != null
-          ? DateFormat('MMM dd, hh:mm a').format(DateTime.parse(map['created_at']))
+          ? DateFormat(
+              'MMM dd, hh:mm a',
+            ).format(DateTime.parse(map['created_at']))
           : 'Just now',
       description: map['description'] ?? '',
       responder: map['responder'],
@@ -306,7 +308,7 @@ String _levelLabel(EmergencyLevel l) => switch (l) {
 
 IconData _typeIcon(String type) {
   final cat = appCategories.firstWhere(
-        (c) => c.name == type,
+    (c) => c.name == type,
     orElse: () => appCategories.first,
   );
   return cat.icon;
@@ -314,7 +316,7 @@ IconData _typeIcon(String type) {
 
 Color _typeColor(String type) {
   final cat = appCategories.firstWhere(
-        (c) => c.name == type,
+    (c) => c.name == type,
     orElse: () => appCategories.first,
   );
   return _presetByKey(cat.colorKey).fg;
@@ -326,7 +328,6 @@ const _severities = [
   (EmergencyLevel.high, '🟠', 'High'),
   (EmergencyLevel.critical, '🔴', 'Critical'),
 ];
-
 
 // ============================================================================
 //  MANAGE CATEGORIES PAGE
@@ -380,12 +381,20 @@ class _ManageCategoriesPageState extends State<ManageCategoriesPage> {
         backgroundColor: _kBg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: _kAccent, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: _kAccent,
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'Emergency Categories',
-          style: TextStyle(color: _kText, fontWeight: FontWeight.bold, fontSize: 15),
+          style: TextStyle(
+            color: _kText,
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+          ),
         ),
         centerTitle: true,
         actions: [
@@ -396,7 +405,11 @@ class _ManageCategoriesPageState extends State<ManageCategoriesPage> {
               icon: const Icon(Icons.add_rounded, size: 18, color: _kAccent),
               label: const Text(
                 'Add',
-                style: TextStyle(color: _kAccent, fontWeight: FontWeight.bold, fontSize: 13),
+                style: TextStyle(
+                  color: _kAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
               ),
               style: TextButton.styleFrom(
                 backgroundColor: _kAccentBg,
@@ -404,7 +417,10 @@ class _ManageCategoriesPageState extends State<ManageCategoriesPage> {
                   borderRadius: BorderRadius.circular(10),
                   side: const BorderSide(color: _kAccentBorder),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
               ),
             ),
           ),
@@ -416,12 +432,26 @@ class _ManageCategoriesPageState extends State<ManageCategoriesPage> {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: Row(
               children: [
-                _SummaryPill('${appCategories.length} Total', _kAccent, _kAccentBg, _kAccentBorder),
+                _SummaryPill(
+                  '${appCategories.length} Total',
+                  _kAccent,
+                  _kAccentBg,
+                  _kAccentBorder,
+                ),
                 const SizedBox(width: 8),
-                _SummaryPill('$active Active', _kGreen, _kGreenBg, _kGreenBorder),
+                _SummaryPill(
+                  '$active Active',
+                  _kGreen,
+                  _kGreenBg,
+                  _kGreenBorder,
+                ),
                 const SizedBox(width: 8),
-                _SummaryPill('${appCategories.length - active} Disabled', _kText3,
-                    const Color(0xFFF9FAFB), const Color(0xFFE5E7EB)),
+                _SummaryPill(
+                  '${appCategories.length - active} Disabled',
+                  _kText3,
+                  const Color(0xFFF9FAFB),
+                  const Color(0xFFE5E7EB),
+                ),
               ],
             ),
           ),
@@ -430,19 +460,20 @@ class _ManageCategoriesPageState extends State<ManageCategoriesPage> {
             child: appCategories.isEmpty
                 ? const _EmptyCategories()
                 : ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
-              itemCount: appCategories.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (_, i) {
-                final cat = appCategories[i];
-                return _CategoryCard(
-                  category: cat,
-                  onEdit: () => _openEdit(cat),
-                  onDelete: () => _confirmDelete(cat),
-                  onToggle: () => setState(() => cat.active = !cat.active),
-                );
-              },
-            ),
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+                    itemCount: appCategories.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (_, i) {
+                      final cat = appCategories[i];
+                      return _CategoryCard(
+                        category: cat,
+                        onEdit: () => _openEdit(cat),
+                        onDelete: () => _confirmDelete(cat),
+                        onToggle: () =>
+                            setState(() => cat.active = !cat.active),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -464,7 +495,10 @@ class _SummaryPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: border),
       ),
-      child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: fg)),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: fg),
+      ),
     );
   }
 }
@@ -483,7 +517,7 @@ class _CategoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final preset = _presetByKey(category.colorKey);
     final sevEntry = _severities.firstWhere(
-          (s) => s.$1 == category.severity,
+      (s) => s.$1 == category.severity,
       orElse: () => _severities[2],
     );
 
@@ -516,24 +550,44 @@ class _CategoryCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(category.name,
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: _kText)),
+                        Text(
+                          category.name,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: _kText,
+                          ),
+                        ),
                         const SizedBox(height: 3),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: preset.bg,
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(color: preset.border),
                           ),
-                          child: Text('${sevEntry.$2}  ${sevEntry.$3}',
-                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: preset.fg)),
+                          child: Text(
+                            '${sevEntry.$2}  ${sevEntry.$3}',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: preset.fg,
+                            ),
+                          ),
                         ),
                         if (category.description.isNotEmpty) ...[
                           const SizedBox(height: 4),
-                          Text(category.description,
-                              style: const TextStyle(fontSize: 11, color: _kText3),
-                              overflow: TextOverflow.ellipsis),
+                          Text(
+                            category.description,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: _kText3,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ],
                       ],
                     ),
@@ -542,7 +596,7 @@ class _CategoryCard extends StatelessWidget {
                   Switch(
                     value: category.active,
                     onChanged: (_) => onToggle(),
-                    activeColor: _kAccent,
+                    activeThumbColor: _kAccent,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ],
@@ -550,15 +604,28 @@ class _CategoryCard extends StatelessWidget {
             ),
             Container(
               decoration: const BoxDecoration(
-                  border: Border(top: BorderSide(color: _kBorder, width: 0.5))),
+                border: Border(top: BorderSide(color: _kBorder, width: 0.5)),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               child: Row(
                 children: [
-                  _CardActionBtn(label: 'Edit', icon: Icons.edit_outlined, onTap: onEdit),
-                  Container(width: 0.5, height: 18, color: _kBorder,
-                      margin: const EdgeInsets.symmetric(horizontal: 10)),
                   _CardActionBtn(
-                      label: 'Delete', icon: Icons.delete_outline_rounded, onTap: onDelete, danger: true),
+                    label: 'Edit',
+                    icon: Icons.edit_outlined,
+                    onTap: onEdit,
+                  ),
+                  Container(
+                    width: 0.5,
+                    height: 18,
+                    color: _kBorder,
+                    margin: const EdgeInsets.symmetric(horizontal: 10),
+                  ),
+                  _CardActionBtn(
+                    label: 'Delete',
+                    icon: Icons.delete_outline_rounded,
+                    onTap: onDelete,
+                    danger: true,
+                  ),
                 ],
               ),
             ),
@@ -574,7 +641,12 @@ class _CardActionBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
   final bool danger;
-  const _CardActionBtn({required this.label, required this.icon, required this.onTap, this.danger = false});
+  const _CardActionBtn({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+    this.danger = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -585,7 +657,14 @@ class _CardActionBtn extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: color),
           const SizedBox(width: 5),
-          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
         ],
       ),
     );
@@ -605,16 +684,31 @@ class _EmptyCategories extends StatelessWidget {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-                color: _kAccentBg, shape: BoxShape.circle, border: Border.all(color: _kAccentBorder)),
-            child: const Icon(Icons.category_outlined, color: _kAccent, size: 32),
+              color: _kAccentBg,
+              shape: BoxShape.circle,
+              border: Border.all(color: _kAccentBorder),
+            ),
+            child: const Icon(
+              Icons.category_outlined,
+              color: _kAccent,
+              size: 32,
+            ),
           ),
           const SizedBox(height: 16),
-          const Text('No categories yet',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: _kText)),
+          const Text(
+            'No categories yet',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: _kText,
+            ),
+          ),
           const SizedBox(height: 6),
-          const Text('Tap Add to create your first\nemergency category.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: _kText3, height: 1.6)),
+          const Text(
+            'Tap Add to create your first\nemergency category.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: _kText3, height: 1.6),
+          ),
         ],
       ),
     );
@@ -678,15 +772,17 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
         ..instructions = _instCtrl.text.trim();
       widget.onSave(widget.existing!);
     } else {
-      widget.onSave(EmergencyCategory(
-        id: _nextCatId(),
-        name: name,
-        icon: _selectedIcon,
-        colorKey: _selectedColorKey,
-        severity: _selectedSeverity,
-        description: _descCtrl.text.trim(),
-        instructions: _instCtrl.text.trim(),
-      ));
+      widget.onSave(
+        EmergencyCategory(
+          id: _nextCatId(),
+          name: name,
+          icon: _selectedIcon,
+          colorKey: _selectedColorKey,
+          severity: _selectedSeverity,
+          description: _descCtrl.text.trim(),
+          instructions: _instCtrl.text.trim(),
+        ),
+      );
     }
     Navigator.pop(context);
   }
@@ -697,8 +793,15 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
 
     return Container(
       decoration: const BoxDecoration(
-          color: _kSurface, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(context).viewInsets.bottom + 32),
+        color: _kSurface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        16,
+        20,
+        MediaQuery.of(context).viewInsets.bottom + 32,
+      ),
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -706,20 +809,32 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
           children: [
             Center(
               child: Container(
-                  width: 36, height: 3,
-                  decoration: BoxDecoration(color: _kBorder, borderRadius: BorderRadius.circular(2))),
+                width: 36,
+                height: 3,
+                decoration: BoxDecoration(
+                  color: _kBorder,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
-                  child: Text(_isEdit ? 'Edit Category' : 'Add Category',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _kText)),
+                  child: Text(
+                    _isEdit ? 'Edit Category' : 'Add Category',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: _kText,
+                    ),
+                  ),
                 ),
                 IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: _kText2, size: 20),
-                    padding: EdgeInsets.zero),
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close, color: _kText2, size: 20),
+                  padding: EdgeInsets.zero,
+                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -734,16 +849,22 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
                 hintStyle: const TextStyle(color: _kText3, fontSize: 13),
                 filled: true,
                 fillColor: _kSurface,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: _nameError ? _kRed : _kBorder)),
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: _nameError ? _kRed : _kBorder),
+                ),
                 enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: _nameError ? _kRed : _kBorder)),
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: _nameError ? _kRed : _kBorder),
+                ),
                 focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: _nameError ? _kRed : _kAccent)),
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: _nameError ? _kRed : _kAccent),
+                ),
                 errorText: _nameError ? 'Please enter a category name' : null,
               ),
             ),
@@ -754,7 +875,11 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 8, crossAxisSpacing: 6, mainAxisSpacing: 6, childAspectRatio: 1),
+                crossAxisCount: 8,
+                crossAxisSpacing: 6,
+                mainAxisSpacing: 6,
+                childAspectRatio: 1,
+              ),
               itemCount: _iconOptions.length,
               itemBuilder: (_, i) {
                 final opt = _iconOptions[i];
@@ -767,9 +892,15 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
                       color: active ? preset.bg : Colors.transparent,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                          color: active ? preset.border : _kBorder, width: active ? 1.5 : 1),
+                        color: active ? preset.border : _kBorder,
+                        width: active ? 1.5 : 1,
+                      ),
                     ),
-                    child: Icon(opt.icon, size: 20, color: active ? preset.fg : _kText3),
+                    child: Icon(
+                      opt.icon,
+                      size: 20,
+                      color: active ? preset.fg : _kText3,
+                    ),
                   ),
                 );
               },
@@ -786,15 +917,22 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
                     onTap: () => setState(() => _selectedColorKey = p.key),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 150),
-                      width: 32, height: 32,
+                      width: 32,
+                      height: 32,
                       decoration: BoxDecoration(
                         color: p.fg,
                         shape: BoxShape.circle,
                         border: Border.all(
-                            color: active ? _kText : Colors.transparent, width: 3),
+                          color: active ? _kText : Colors.transparent,
+                          width: 3,
+                        ),
                       ),
                       child: active
-                          ? const Icon(Icons.check_rounded, size: 14, color: Colors.white)
+                          ? const Icon(
+                              Icons.check_rounded,
+                              size: 14,
+                              color: Colors.white,
+                            )
                           : null,
                     ),
                   ),
@@ -820,16 +958,23 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
                       decoration: BoxDecoration(
                         color: active ? bg : Colors.transparent,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: active ? fg : _kBorder, width: active ? 1.5 : 1),
+                        border: Border.all(
+                          color: active ? fg : _kBorder,
+                          width: active ? 1.5 : 1,
+                        ),
                       ),
                       child: Column(
                         children: [
                           Text(emoji, style: const TextStyle(fontSize: 16)),
                           const SizedBox(height: 3),
-                          Text(label,
-                              style: TextStyle(
-                                  fontSize: 9, fontWeight: FontWeight.w700,
-                                  color: active ? fg : _kText3)),
+                          Text(
+                            label,
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: active ? fg : _kText3,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -840,27 +985,38 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
             const SizedBox(height: 18),
             _FormLabel('Short Description'),
             const SizedBox(height: 6),
-            _StyledTextField(controller: _descCtrl, hint: 'Briefly describe this emergency type…', maxLines: 2),
+            _StyledTextField(
+              controller: _descCtrl,
+              hint: 'Briefly describe this emergency type…',
+              maxLines: 2,
+            ),
             const SizedBox(height: 14),
             _FormLabel('Responder Instructions'),
             const SizedBox(height: 6),
-            _StyledTextField(controller: _instCtrl, hint: 'What should responders do first?', maxLines: 3),
+            _StyledTextField(
+              controller: _instCtrl,
+              hint: 'What should responders do first?',
+              maxLines: 3,
+            ),
             const SizedBox(height: 28),
             // Preview
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                  color: _kSurface2,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: _kBorder)),
+                color: _kSurface2,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _kBorder),
+              ),
               child: Row(
                 children: [
                   Container(
-                    width: 42, height: 42,
+                    width: 42,
+                    height: 42,
                     decoration: BoxDecoration(
-                        color: preset.bg,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: preset.border)),
+                      color: preset.bg,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: preset.border),
+                    ),
                     child: Icon(_selectedIcon, color: preset.fg, size: 22),
                   ),
                   const SizedBox(width: 12),
@@ -869,24 +1025,41 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _nameCtrl.text.isNotEmpty ? _nameCtrl.text : 'Category name…',
+                          _nameCtrl.text.isNotEmpty
+                              ? _nameCtrl.text
+                              : 'Category name…',
                           style: TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w700,
-                              color: _nameCtrl.text.isNotEmpty ? _kText : _kText3),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: _nameCtrl.text.isNotEmpty ? _kText : _kText3,
+                          ),
                         ),
                         const SizedBox(height: 2),
-                        const Text('Preview', style: TextStyle(fontSize: 10, color: _kText3)),
+                        const Text(
+                          'Preview',
+                          style: TextStyle(fontSize: 10, color: _kText3),
+                        ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
-                        color: preset.bg,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: preset.border)),
-                    child: Text(_levelLabel(_selectedSeverity),
-                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: preset.fg)),
+                      color: preset.bg,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: preset.border),
+                    ),
+                    child: Text(
+                      _levelLabel(_selectedSeverity),
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        color: preset.fg,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -898,14 +1071,24 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _kAccent,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   elevation: 0,
                 ),
                 onPressed: _save,
-                icon: Icon(_isEdit ? Icons.check_rounded : Icons.add_rounded, size: 18),
-                label: Text(_isEdit ? 'Save Changes' : 'Add Category',
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                icon: Icon(
+                  _isEdit ? Icons.check_rounded : Icons.add_rounded,
+                  size: 18,
+                ),
+                label: Text(
+                  _isEdit ? 'Save Changes' : 'Add Category',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ],
@@ -923,55 +1106,93 @@ class _DeleteConfirmSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-          color: _kSurface, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        color: _kSurface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Center(
-            child: Container(width: 36, height: 3,
-                decoration: BoxDecoration(color: _kBorder, borderRadius: BorderRadius.circular(2))),
+            child: Container(
+              width: 36,
+              height: 3,
+              decoration: BoxDecoration(
+                color: _kBorder,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
           ),
           const SizedBox(height: 24),
           Container(
-            width: 62, height: 62,
+            width: 62,
+            height: 62,
             decoration: BoxDecoration(
-                color: _kRedBg, shape: BoxShape.circle, border: Border.all(color: _kRedBorder)),
-            child: const Icon(Icons.delete_outline_rounded, color: _kRed, size: 30),
+              color: _kRedBg,
+              shape: BoxShape.circle,
+              border: Border.all(color: _kRedBorder),
+            ),
+            child: const Icon(
+              Icons.delete_outline_rounded,
+              color: _kRed,
+              size: 30,
+            ),
           ),
           const SizedBox(height: 16),
-          Text('Delete "$categoryName"?',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _kText),
-              textAlign: TextAlign.center),
+          Text(
+            'Delete "$categoryName"?',
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: _kText,
+            ),
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 8),
-          const Text('Residents will no longer see this category\nin the emergency report form.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: _kText3, height: 1.6)),
+          const Text(
+            'Residents will no longer see this category\nin the emergency report form.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: _kText3, height: 1.6),
+          ),
           const SizedBox(height: 24),
           Row(
             children: [
               Expanded(
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: _kBorder),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 14)),
+                    side: const BorderSide(color: _kBorder),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
                   onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancel',
-                      style: TextStyle(color: _kText2, fontWeight: FontWeight.w600)),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: _kText2,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: _kRed,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      elevation: 0),
+                    backgroundColor: _kRed,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    elevation: 0,
+                  ),
                   onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Delete', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Delete',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],
@@ -991,8 +1212,14 @@ class _FormLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(text,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _kText2)),
+        Text(
+          text,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: _kText2,
+          ),
+        ),
         if (required) ...[
           const SizedBox(width: 3),
           const Text('*', style: TextStyle(color: _kRed, fontSize: 12)),
@@ -1006,7 +1233,11 @@ class _StyledTextField extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
   final int maxLines;
-  const _StyledTextField({required this.controller, required this.hint, this.maxLines = 1});
+  const _StyledTextField({
+    required this.controller,
+    required this.hint,
+    this.maxLines = 1,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1021,11 +1252,17 @@ class _StyledTextField extends StatelessWidget {
         fillColor: _kSurface,
         contentPadding: const EdgeInsets.all(14),
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: _kBorder)),
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: _kBorder),
+        ),
         enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: _kBorder)),
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: _kBorder),
+        ),
         focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: _kAccent)),
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: _kAccent),
+        ),
       ),
     );
   }
@@ -1068,7 +1305,8 @@ class _EmergencyTrackerPageState extends State<EmergencyTrackerPage>
     return items.where((e) {
       final matchLevel = _filterLevel == 'all' || e.level.name == _filterLevel;
       final q = _searchQuery.toLowerCase();
-      final matchSearch = q.isEmpty ||
+      final matchSearch =
+          q.isEmpty ||
           e.type.toLowerCase().contains(q) ||
           e.location.toLowerCase().contains(q) ||
           e.reportedBy.toLowerCase().contains(q);
@@ -1115,17 +1353,24 @@ class _EmergencyTrackerPageState extends State<EmergencyTrackerPage>
           .stream(primaryKey: ['id'])
           .order('created_at', ascending: false),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
 
-        final allItems = (snapshot.data ?? []).map((m) => EmergencyItem.fromMap(m)).toList();
+        final allItems = (snapshot.data ?? [])
+            .map((m) => EmergencyItem.fromMap(m))
+            .toList();
         final filtered = _applyFilters(allItems);
         final live = filtered.where((e) => e.step < 3).toList();
         final resolved = filtered.where((e) => e.step == 3).toList();
 
         final activeCount = allItems.where((e) => e.step < 3).length;
-        final critCount = allItems.where((e) => e.level == EmergencyLevel.critical).length;
+        final critCount = allItems
+            .where((e) => e.level == EmergencyLevel.critical)
+            .length;
         final resCount = allItems.where((e) => e.step == 3).length;
 
         return Scaffold(
@@ -1134,17 +1379,30 @@ class _EmergencyTrackerPageState extends State<EmergencyTrackerPage>
             backgroundColor: _kBg,
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: _kAccent, size: 20),
+              icon: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: _kAccent,
+                size: 20,
+              ),
               onPressed: () => Navigator.pop(context),
             ),
-            title: const Text('Emergency Tracker',
-                style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 15)),
+            title: const Text(
+              'Emergency Tracker',
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
+            ),
             centerTitle: true,
             actions: [
               IconButton(
                 icon: const Icon(Icons.add_rounded, color: _kAccent, size: 20),
                 onPressed: () async {
-                  await Navigator.push(context, instantRoute(const ManageCategoriesPage()));
+                  await Navigator.push(
+                    context,
+                    instantRoute(const ManageCategoriesPage()),
+                  );
                 },
               ),
             ],
@@ -1178,9 +1436,10 @@ class _EmergencyTrackerPageState extends State<EmergencyTrackerPage>
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Container(
                         decoration: BoxDecoration(
-                            color: _kSurface,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: _kBorder)),
+                          color: _kSurface,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: _kBorder),
+                        ),
                         child: TextField(
                           controller: _searchCtrl,
                           onChanged: (v) => setState(() => _searchQuery = v),
@@ -1188,7 +1447,11 @@ class _EmergencyTrackerPageState extends State<EmergencyTrackerPage>
                           decoration: const InputDecoration(
                             hintText: 'Search type, location, reporter…',
                             hintStyle: TextStyle(color: _kText3, fontSize: 13),
-                            prefixIcon: Icon(Icons.search, color: _kText3, size: 18),
+                            prefixIcon: Icon(
+                              Icons.search,
+                              color: _kText3,
+                              size: 18,
+                            ),
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.symmetric(vertical: 12),
                           ),
@@ -1201,23 +1464,51 @@ class _EmergencyTrackerPageState extends State<EmergencyTrackerPage>
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
                         children: [
-                          _FilterChip('All', 'all', _filterLevel, (v) => setState(() => _filterLevel = v)),
+                          _FilterChip(
+                            'All',
+                            'all',
+                            _filterLevel,
+                            (v) => setState(() => _filterLevel = v),
+                          ),
                           const SizedBox(width: 6),
-                          _FilterChip('Critical', 'critical', _filterLevel, (v) => setState(() => _filterLevel = v)),
+                          _FilterChip(
+                            'Critical',
+                            'critical',
+                            _filterLevel,
+                            (v) => setState(() => _filterLevel = v),
+                          ),
                           const SizedBox(width: 6),
-                          _FilterChip('High', 'high', _filterLevel, (v) => setState(() => _filterLevel = v)),
+                          _FilterChip(
+                            'High',
+                            'high',
+                            _filterLevel,
+                            (v) => setState(() => _filterLevel = v),
+                          ),
                           const SizedBox(width: 6),
-                          _FilterChip('Medium', 'medium', _filterLevel, (v) => setState(() => _filterLevel = v)),
+                          _FilterChip(
+                            'Medium',
+                            'medium',
+                            _filterLevel,
+                            (v) => setState(() => _filterLevel = v),
+                          ),
                           const SizedBox(width: 6),
-                          _FilterChip('Low', 'low', _filterLevel, (v) => setState(() => _filterLevel = v)),
+                          _FilterChip(
+                            'Low',
+                            'low',
+                            _filterLevel,
+                            (v) => setState(() => _filterLevel = v),
+                          ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 18),
                     _SectionHeader(
                       title: 'Live Incidents',
-                      count: '${live.length} alert${live.length == 1 ? '' : 's'}',
-                      countColor: _kRed, countBg: _kRedBg, countBorder: _kRedBorder,
+                      count:
+                          '${live.length} alert${live.length == 1 ? '' : 's'}',
+                      countColor: _kRed,
+                      countBg: _kRedBg,
+                      countBorder: _kRedBorder,
                     ),
                     const SizedBox(height: 10),
                   ],
@@ -1225,7 +1516,7 @@ class _EmergencyTrackerPageState extends State<EmergencyTrackerPage>
               ),
               SliverList(
                 delegate: SliverChildBuilderDelegate(
-                      (_, i) => Padding(
+                  (_, i) => Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                     child: _IncidentCard(
                       item: live[i],
@@ -1240,8 +1531,12 @@ class _EmergencyTrackerPageState extends State<EmergencyTrackerPage>
                 const SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 20),
-                    child: Center(child: Text('No active incidents',
-                        style: TextStyle(color: _kText3, fontSize: 12))),
+                    child: Center(
+                      child: Text(
+                        'No active incidents',
+                        style: TextStyle(color: _kText3, fontSize: 12),
+                      ),
+                    ),
                   ),
                 ),
               SliverToBoxAdapter(
@@ -1251,7 +1546,9 @@ class _EmergencyTrackerPageState extends State<EmergencyTrackerPage>
                     _SectionHeader(
                       title: 'Resolved Today',
                       count: '${resolved.length} resolved',
-                      countColor: _kGreen, countBg: _kGreenBg, countBorder: _kGreenBorder,
+                      countColor: _kGreen,
+                      countBg: _kGreenBg,
+                      countBorder: _kGreenBorder,
                     ),
                     const SizedBox(height: 10),
                   ],
@@ -1259,9 +1556,12 @@ class _EmergencyTrackerPageState extends State<EmergencyTrackerPage>
               ),
               SliverList(
                 delegate: SliverChildBuilderDelegate(
-                      (_, i) => Padding(
+                  (_, i) => Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                    child: _ResolvedCard(item: resolved[i], onTap: () => _showDetail(resolved[i])),
+                    child: _ResolvedCard(
+                      item: resolved[i],
+                      onTap: () => _showDetail(resolved[i]),
+                    ),
                   ),
                   childCount: resolved.length,
                 ),
@@ -1288,16 +1588,31 @@ class _StatCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
         decoration: BoxDecoration(
-            color: _kSurface, borderRadius: BorderRadius.circular(12), border: Border.all(color: _kBorder)),
+          color: _kSurface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _kBorder),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('$count', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: color)),
+            Text(
+              '$count',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
             const SizedBox(height: 2),
             Text(label, style: const TextStyle(fontSize: 10, color: _kText3)),
             const SizedBox(height: 8),
-            Container(height: 2,
-                decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
+            Container(
+              height: 2,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
           ],
         ),
       ),
@@ -1336,7 +1651,9 @@ class _InlineMapSectionState extends State<_InlineMapSection> {
   Future<void> _initCache() async {
     try {
       final tmp = await getTemporaryDirectory();
-      final dir = Directory('${tmp.path}${Platform.pathSeparator}$_kOsmCacheFolder');
+      final dir = Directory(
+        '${tmp.path}${Platform.pathSeparator}$_kOsmCacheFolder',
+      );
       if (!dir.existsSync()) dir.createSync(recursive: true);
     } catch (_) {}
     if (mounted) setState(() => _cacheReady = true);
@@ -1359,54 +1676,57 @@ class _InlineMapSectionState extends State<_InlineMapSection> {
           decoration: const BoxDecoration(),
           child: _cacheReady
               ? FlutterMap(
-            mapController: _mapCtrl,
-            options: const MapOptions(
-              initialCenter: LatLng(_kDefaultLat, _kDefaultLng),
-              initialZoom: 14,
-              interactionOptions: InteractionOptions(
-                flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
-              ),
-            ),
-            children: [
-              TileLayer(
-                urlTemplate: _kOsmTile,
-                tileProvider: CancellableNetworkTileProvider(),
-                userAgentPackageName: 'com.barangay.ube',
-                maxNativeZoom: 19,
-                keepBuffer: 4,
-              ),
-              MarkerLayer(
-                markers: widget.items.map((item) {
-                  return Marker(
-                    point: LatLng(item.mapLat, item.mapLng),
-                    width: 36,
-                    height: 44,
-                    alignment: Alignment.topCenter,
-                    child: GestureDetector(
-                      onTap: () => widget.onPinTap(item),
-                      child: _MiniPin(
-                        color: _levelColor(item.level),
-                        icon: _typeIcon(item.type),
-                      ),
+                  mapController: _mapCtrl,
+                  options: const MapOptions(
+                    initialCenter: LatLng(_kDefaultLat, _kDefaultLng),
+                    initialZoom: 14,
+                    interactionOptions: InteractionOptions(
+                      flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
                     ),
-                  );
-                }).toList(),
-              ),
-              RichAttributionWidget(
-                alignment: AttributionAlignment.bottomLeft,
-                popupBackgroundColor: Colors.white.withOpacity(0.9),
-                attributions: [
-                  TextSourceAttribution('© OpenStreetMap contributors'),
-                ],
-              ),
-            ],
-          )
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate: _kOsmTile,
+                      tileProvider: CancellableNetworkTileProvider(),
+                      userAgentPackageName: 'com.barangay.ube',
+                      maxNativeZoom: 19,
+                      keepBuffer: 4,
+                    ),
+                    MarkerLayer(
+                      markers: widget.items.map((item) {
+                        return Marker(
+                          point: LatLng(item.mapLat, item.mapLng),
+                          width: 36,
+                          height: 44,
+                          alignment: Alignment.topCenter,
+                          child: GestureDetector(
+                            onTap: () => widget.onPinTap(item),
+                            child: _MiniPin(
+                              color: _levelColor(item.level),
+                              icon: _typeIcon(item.type),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    RichAttributionWidget(
+                      alignment: AttributionAlignment.bottomLeft,
+                      popupBackgroundColor: Colors.white.withOpacity(0.9),
+                      attributions: [
+                        TextSourceAttribution('© OpenStreetMap contributors'),
+                      ],
+                    ),
+                  ],
+                )
               : Container(
-            color: const Color(0xFFE5E7EB),
-            child: const Center(
-              child: CircularProgressIndicator(color: _kAccent, strokeWidth: 2),
-            ),
-          ),
+                  color: const Color(0xFFE5E7EB),
+                  child: const Center(
+                    child: CircularProgressIndicator(
+                      color: _kAccent,
+                      strokeWidth: 2,
+                    ),
+                  ),
+                ),
         ),
         // Fullscreen button
         Positioned(
@@ -1422,15 +1742,26 @@ class _InlineMapSectionState extends State<_InlineMapSection> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.10), blurRadius: 6)],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.10),
+                    blurRadius: 6,
+                  ),
+                ],
               ),
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.fullscreen_rounded, size: 14, color: _kAccent),
                   SizedBox(width: 4),
-                  Text('Fullscreen',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _kAccent)),
+                  Text(
+                    'Fullscreen',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: _kAccent,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1445,7 +1776,9 @@ class _InlineMapSectionState extends State<_InlineMapSection> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(10),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 4)],
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 4),
+              ],
             ),
             child: const Row(
               mainAxisSize: MainAxisSize.min,
@@ -1476,12 +1809,15 @@ class _MiniPin extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 28, height: 28,
+          width: 28,
+          height: 28,
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
             border: Border.all(color: Colors.white, width: 2),
-            boxShadow: [BoxShadow(color: color.withOpacity(0.35), blurRadius: 6)],
+            boxShadow: [
+              BoxShadow(color: color.withOpacity(0.35), blurRadius: 6),
+            ],
           ),
           child: Icon(icon, size: 14, color: Colors.white),
         ),
@@ -1521,11 +1857,20 @@ class _LegDot extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Container(width: 8, height: 8,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
         const SizedBox(width: 6),
-        Text(label,
-            style: const TextStyle(fontSize: 10, color: _kText, fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10,
+            color: _kText,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }
@@ -1535,8 +1880,11 @@ class _SectionHeader extends StatelessWidget {
   final String title, count;
   final Color countColor, countBg, countBorder;
   const _SectionHeader({
-    required this.title, required this.count,
-    required this.countColor, required this.countBg, required this.countBorder,
+    required this.title,
+    required this.count,
+    required this.countColor,
+    required this.countBg,
+    required this.countBorder,
   });
 
   @override
@@ -1546,17 +1894,30 @@ class _SectionHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title.toUpperCase(),
-              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700,
-                  color: _kText3, letterSpacing: .1)),
+          Text(
+            title.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: _kText3,
+              letterSpacing: .1,
+            ),
+          ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-                color: countBg,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: countBorder)),
-            child: Text(count,
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: countColor)),
+              color: countBg,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: countBorder),
+            ),
+            child: Text(
+              count,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: countColor,
+              ),
+            ),
           ),
         ],
       ),
@@ -1582,10 +1943,14 @@ class _FilterChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: active ? _kAccent : _kBorder),
         ),
-        child: Text(label,
-            style: TextStyle(
-                fontSize: 11, fontWeight: FontWeight.w600,
-                color: active ? Colors.white : _kText3)),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: active ? Colors.white : _kText3,
+          ),
+        ),
       ),
     );
   }
@@ -1594,7 +1959,11 @@ class _FilterChip extends StatelessWidget {
 class _IncidentCard extends StatelessWidget {
   final EmergencyItem item;
   final VoidCallback onTap, onAdvance;
-  const _IncidentCard({required this.item, required this.onTap, required this.onAdvance});
+  const _IncidentCard({
+    required this.item,
+    required this.onTap,
+    required this.onAdvance,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1618,8 +1987,12 @@ class _IncidentCard extends StatelessWidget {
               child: Row(
                 children: [
                   Container(
-                    width: 42, height: 42,
-                    decoration: BoxDecoration(color: lb, borderRadius: BorderRadius.circular(10)),
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: lb,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                     child: Icon(_typeIcon(item.type), color: lc, size: 22),
                   ),
                   const SizedBox(width: 12),
@@ -1627,21 +2000,41 @@ class _IncidentCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(item.type,
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: _kText),
-                            overflow: TextOverflow.ellipsis),
+                        Text(
+                          item.type,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: _kText,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         const SizedBox(height: 2),
-                        Text(item.reportedBy,
-                            style: const TextStyle(fontSize: 11, color: _kText3)),
+                        Text(
+                          item.reportedBy,
+                          style: const TextStyle(fontSize: 11, color: _kText3),
+                        ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
-                        color: lb, borderRadius: BorderRadius.circular(20), border: Border.all(color: lbr)),
-                    child: Text(_levelLabel(item.level),
-                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: lc)),
+                      color: lb,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: lbr),
+                    ),
+                    child: Text(
+                      _levelLabel(item.level),
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        color: lc,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -1650,35 +2043,58 @@ class _IncidentCard extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
               child: Row(
                 children: [
-                  const Icon(Icons.location_on_outlined, size: 13, color: _kText3),
+                  const Icon(
+                    Icons.location_on_outlined,
+                    size: 13,
+                    color: _kText3,
+                  ),
                   const SizedBox(width: 4),
                   Expanded(
-                    child: Text(item.location,
-                        style: const TextStyle(fontSize: 11, color: _kText3),
-                        overflow: TextOverflow.ellipsis),
+                    child: Text(
+                      item.location,
+                      style: const TextStyle(fontSize: 11, color: _kText3),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   const Icon(Icons.access_time, size: 13, color: _kText3),
                   const SizedBox(width: 4),
-                  Text(item.dateTime, style: const TextStyle(fontSize: 11, color: _kText3)),
+                  Text(
+                    item.dateTime,
+                    style: const TextStyle(fontSize: 11, color: _kText3),
+                  ),
                 ],
               ),
             ),
             Container(
               padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
               decoration: const BoxDecoration(
-                  border: Border(top: BorderSide(color: _kBorder, width: 0.5))),
+                border: Border(top: BorderSide(color: _kBorder, width: 0.5)),
+              ),
               child: _Stepper(currentStep: item.step),
             ),
             Container(
               padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
               child: Row(
                 children: [
-                  _ActionBtn(label: 'Manage', icon: Icons.remove_red_eye_outlined, primary: true, onTap: onTap),
+                  _ActionBtn(
+                    label: 'Manage',
+                    icon: Icons.remove_red_eye_outlined,
+                    primary: true,
+                    onTap: onTap,
+                  ),
                   const SizedBox(width: 6),
-                  _ActionBtn(label: 'Chat', icon: Icons.chat_bubble_outline_rounded, onTap: () {}),
+                  _ActionBtn(
+                    label: 'Chat',
+                    icon: Icons.chat_bubble_outline_rounded,
+                    onTap: () {},
+                  ),
                   const SizedBox(width: 6),
-                  _ActionBtn(label: 'Assign', icon: Icons.person_add_alt_1_outlined, onTap: () {}),
+                  _ActionBtn(
+                    label: 'Assign',
+                    icon: Icons.person_add_alt_1_outlined,
+                    onTap: () {},
+                  ),
                 ],
               ),
             ),
@@ -1694,7 +2110,12 @@ class _ActionBtn extends StatelessWidget {
   final IconData icon;
   final bool primary;
   final VoidCallback onTap;
-  const _ActionBtn({required this.label, required this.icon, this.primary = false, required this.onTap});
+  const _ActionBtn({
+    required this.label,
+    required this.icon,
+    this.primary = false,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1713,10 +2134,14 @@ class _ActionBtn extends StatelessWidget {
             children: [
               Icon(icon, size: 13, color: primary ? Colors.white : _kText2),
               const SizedBox(width: 5),
-              Text(label,
-                  style: TextStyle(
-                      fontSize: 11, fontWeight: FontWeight.w600,
-                      color: primary ? Colors.white : _kText2)),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: primary ? Colors.white : _kText2,
+                ),
+              ),
             ],
           ),
         ),
@@ -1746,13 +2171,19 @@ class _Stepper extends StatelessWidget {
                 child: Column(
                   children: [
                     Container(
-                      width: sz, height: sz,
+                      width: sz,
+                      height: sz,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: isDone ? _kAccent : _kSurface2,
                         border: isDone ? null : Border.all(color: _kBorder),
                         boxShadow: isCurrent
-                            ? [BoxShadow(color: _kAccent.withOpacity(0.4), blurRadius: 8)]
+                            ? [
+                                BoxShadow(
+                                  color: _kAccent.withOpacity(0.4),
+                                  blurRadius: 8,
+                                ),
+                              ]
                             : null,
                       ),
                       child: Icon(
@@ -1762,18 +2193,24 @@ class _Stepper extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(_stepLabels[i],
-                        style: TextStyle(
-                            fontSize: fontSize, fontWeight: FontWeight.w600,
-                            color: isDone ? _kAccent2 : _kText3),
-                        textAlign: TextAlign.center),
+                    Text(
+                      _stepLabels[i],
+                      style: TextStyle(
+                        fontSize: fontSize,
+                        fontWeight: FontWeight.w600,
+                        color: isDone ? _kAccent2 : _kText3,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ],
                 ),
               ),
               if (i < _stepLabels.length - 1)
                 Expanded(
-                  child: Container(height: 1.5,
-                      color: i < currentStep ? _kAccent : _kBorder),
+                  child: Container(
+                    height: 1.5,
+                    color: i < currentStep ? _kAccent : _kBorder,
+                  ),
                 ),
             ],
           ),
@@ -1795,41 +2232,63 @@ class _ResolvedCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-            color: _kSurface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _kBorder)),
+          color: _kSurface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _kBorder),
+        ),
         child: Row(
           children: [
             Container(
-              width: 38, height: 38,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
-                  color: _kGreenBg,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: _kGreenBorder)),
-              child: const Icon(Icons.check_circle_outline_rounded, color: _kGreen, size: 20),
+                color: _kGreenBg,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: _kGreenBorder),
+              ),
+              child: const Icon(
+                Icons.check_circle_outline_rounded,
+                color: _kGreen,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item.type,
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _kText)),
+                  Text(
+                    item.type,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: _kText,
+                    ),
+                  ),
                   const SizedBox(height: 2),
-                  Text('${item.location} · ${item.dateTime}',
-                      style: const TextStyle(fontSize: 11, color: _kText3),
-                      overflow: TextOverflow.ellipsis),
+                  Text(
+                    '${item.location} · ${item.dateTime}',
+                    style: const TextStyle(fontSize: 11, color: _kText3),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                  color: _kGreenBg,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: _kGreenBorder)),
-              child: const Text('RESOLVED',
-                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: _kGreen)),
+                color: _kGreenBg,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: _kGreenBorder),
+              ),
+              child: const Text(
+                'RESOLVED',
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w800,
+                  color: _kGreen,
+                ),
+              ),
             ),
           ],
         ),
@@ -1856,27 +2315,47 @@ class _DetailSheet extends StatelessWidget {
         border: Border(top: BorderSide(color: _kBorder, width: 0.5)),
       ),
       padding: EdgeInsets.fromLTRB(
-          20, 16, 20, MediaQuery.of(context).viewInsets.bottom + 30),
+        20,
+        16,
+        20,
+        MediaQuery.of(context).viewInsets.bottom + 30,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Center(
-            child: Container(width: 36, height: 3,
-                decoration: BoxDecoration(color: _kBorder, borderRadius: BorderRadius.circular(2))),
+            child: Container(
+              width: 36,
+              height: 3,
+              decoration: BoxDecoration(
+                color: _kBorder,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
           ),
           const SizedBox(height: 16),
           Row(
             children: [
               Container(
-                width: 38, height: 38,
-                decoration: BoxDecoration(color: lb, borderRadius: BorderRadius.circular(10)),
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: lb,
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 child: Icon(_typeIcon(item.type), color: lc, size: 20),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(item.type,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _kText)),
+                child: Text(
+                  item.type,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: _kText,
+                  ),
+                ),
               ),
               IconButton(
                 onPressed: () => Navigator.pop(context),
@@ -1889,9 +2368,18 @@ class _DetailSheet extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-                color: lb, borderRadius: BorderRadius.circular(20), border: Border.all(color: lbr)),
-            child: Text(_levelLabel(item.level),
-                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: lc)),
+              color: lb,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: lbr),
+            ),
+            child: Text(
+              _levelLabel(item.level),
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: lc,
+              ),
+            ),
           ),
           const SizedBox(height: 14),
           _DetailRow(Icons.person_outline, 'Reporter', item.reportedBy),
@@ -1901,8 +2389,15 @@ class _DetailSheet extends StatelessWidget {
           if (item.responder != null)
             _DetailRow(Icons.shield_outlined, 'Responder', item.responder!),
           const SizedBox(height: 14),
-          const Text('Response Progress',
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _kText3, letterSpacing: .07)),
+          const Text(
+            'Response Progress',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: _kText3,
+              letterSpacing: .07,
+            ),
+          ),
           const SizedBox(height: 12),
           _Stepper(currentStep: item.step, large: true),
           const SizedBox(height: 20),
@@ -1912,12 +2407,19 @@ class _DetailSheet extends StatelessWidget {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _kAccent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 onPressed: onAdvance,
-                child: Text('Advance to "${_stepLabels[item.step + 1]}"',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: Text(
+                  'Advance to "${_stepLabels[item.step + 1]}"',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             )
           else
@@ -1925,12 +2427,15 @@ class _DetailSheet extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 14),
               decoration: BoxDecoration(
-                  color: _kGreenBg,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: _kGreenBorder)),
-              child: const Text('✓  Emergency Resolved',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: _kGreen, fontWeight: FontWeight.bold)),
+                color: _kGreenBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _kGreenBorder),
+              ),
+              child: const Text(
+                '✓  Emergency Resolved',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: _kGreen, fontWeight: FontWeight.bold),
+              ),
             ),
         ],
       ),
@@ -1954,10 +2459,21 @@ class _DetailRow extends StatelessWidget {
           const SizedBox(width: 8),
           SizedBox(
             width: 72,
-            child: Text('$label:',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _kText3)),
+            child: Text(
+              '$label:',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: _kText3,
+              ),
+            ),
           ),
-          Expanded(child: Text(value, style: const TextStyle(fontSize: 12, color: _kText2))),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 12, color: _kText2),
+            ),
+          ),
         ],
       ),
     );
@@ -1981,8 +2497,8 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
 
   // ── Location state ────────────────────────────────────────────────────────
   LatLng _center = const LatLng(_kDefaultLat, _kDefaultLng);
-  LatLng? _deviceLocation;   // live GPS fix
-  LatLng? _lastKnown;        // last good fix (in-memory this session)
+  LatLng? _deviceLocation; // live GPS fix
+  LatLng? _lastKnown; // last good fix (in-memory this session)
   bool _locating = false;
   bool _locationDenied = false;
   bool _trackingDevice = false;
@@ -2015,14 +2531,18 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
       vsync: this,
       duration: const Duration(milliseconds: 1800),
     )..repeat(reverse: true);
-    _pulseAnim = Tween<double>(begin: 0.55, end: 1.45)
-        .animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
+    _pulseAnim = Tween<double>(
+      begin: 0.55,
+      end: 1.45,
+    ).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
   }
 
   Future<void> _initCacheDir() async {
     try {
       final tmp = await getTemporaryDirectory();
-      final dir = Directory('${tmp.path}${Platform.pathSeparator}$_kOsmCacheFolder');
+      final dir = Directory(
+        '${tmp.path}${Platform.pathSeparator}$_kOsmCacheFolder',
+      );
       if (!dir.existsSync()) dir.createSync(recursive: true);
     } catch (_) {}
     if (mounted) setState(() => _cacheReady = true);
@@ -2081,7 +2601,10 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
     // Show last-known while re-fetching
     if (_lastKnown != null) _animateTo(_lastKnown!, 15.5);
 
-    setState(() { _locating = true; _locationDenied = false; });
+    setState(() {
+      _locating = true;
+      _locationDenied = false;
+    });
     final pos = await _resolvePosition();
     if (!mounted) return;
 
@@ -2110,12 +2633,15 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
       if (perm == LocationPermission.denied) {
         perm = await Geolocator.requestPermission();
       }
-      if (perm == LocationPermission.denied || perm == LocationPermission.deniedForever) {
+      if (perm == LocationPermission.denied ||
+          perm == LocationPermission.deniedForever) {
         return null;
       }
       return await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.high, timeLimit: Duration(seconds: 10)),
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        ),
       );
     } catch (_) {
       return null;
@@ -2149,16 +2675,25 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
       duration: const Duration(milliseconds: 560),
     );
     final latT = Tween<double>(
-        begin: _mapCtrl.camera.center.latitude, end: target.latitude);
+      begin: _mapCtrl.camera.center.latitude,
+      end: target.latitude,
+    );
     final lngT = Tween<double>(
-        begin: _mapCtrl.camera.center.longitude, end: target.longitude);
+      begin: _mapCtrl.camera.center.longitude,
+      end: target.longitude,
+    );
     final zoomT = Tween<double>(begin: _mapCtrl.camera.zoom, end: zoom);
-    final curve = CurvedAnimation(parent: _moveCtrl!, curve: Curves.easeInOutCubic);
+    final curve = CurvedAnimation(
+      parent: _moveCtrl!,
+      curve: Curves.easeInOutCubic,
+    );
     _moveCtrl!
-      ..addListener(() => _mapCtrl.move(
-        LatLng(latT.evaluate(curve), lngT.evaluate(curve)),
-        zoomT.evaluate(curve),
-      ))
+      ..addListener(
+        () => _mapCtrl.move(
+          LatLng(latT.evaluate(curve), lngT.evaluate(curve)),
+          zoomT.evaluate(curve),
+        ),
+      )
       ..addStatusListener((s) {
         if (s == AnimationStatus.completed) _moveCtrl?.dispose();
       })
@@ -2193,12 +2728,18 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
               Container(
                 color: _kBg,
                 child: const Center(
-                    child: CircularProgressIndicator(color: _kAccent, strokeWidth: 2.5)),
+                  child: CircularProgressIndicator(
+                    color: _kAccent,
+                    strokeWidth: 2.5,
+                  ),
+                ),
               ),
 
             // 2. Top gradient
             Positioned(
-              top: 0, left: 0, right: 0,
+              top: 0,
+              left: 0,
+              right: 0,
               height: top + 72,
               child: IgnorePointer(
                 child: Container(
@@ -2206,7 +2747,10 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [Colors.white.withOpacity(0.72), Colors.transparent],
+                      colors: [
+                        Colors.white.withOpacity(0.72),
+                        Colors.transparent,
+                      ],
                     ),
                   ),
                 ),
@@ -2214,7 +2758,12 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
             ),
 
             // 3. Top bar
-            Positioned(top: top + 10, left: 12, right: 12, child: _buildTopBar()),
+            Positioned(
+              top: top + 10,
+              left: 12,
+              right: 12,
+              child: _buildTopBar(),
+            ),
 
             // 4. Filter chips
             Positioned(top: top + 64, left: 12, child: _buildFilters()),
@@ -2230,7 +2779,8 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
             AnimatedPositioned(
               duration: const Duration(milliseconds: 290),
               curve: Curves.easeOutCubic,
-              left: 0, right: 0,
+              left: 0,
+              right: 0,
               bottom: _selected != null ? 0 : -300,
               child: _buildPinSheet(),
             ),
@@ -2238,9 +2788,12 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
             // 7. Location denied banner
             if (_locationDenied)
               Positioned(
-                top: top + 116, left: 12, right: 12,
+                top: top + 116,
+                left: 12,
+                right: 12,
                 child: _LocationDeniedBanner(
-                    onDismiss: () => setState(() => _locationDenied = false)),
+                  onDismiss: () => setState(() => _locationDenied = false),
+                ),
               ),
           ],
         ),
@@ -2252,7 +2805,9 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
     return StreamBuilder<List<Map<String, dynamic>>>(
       stream: supabase.from('emergency_incidents').stream(primaryKey: ['id']),
       builder: (context, snapshot) {
-        final allItems = (snapshot.data ?? []).map((m) => EmergencyItem.fromMap(m)).toList();
+        final allItems = (snapshot.data ?? [])
+            .map((m) => EmergencyItem.fromMap(m))
+            .toList();
         final visible = _activeOnly
             ? allItems.where((e) => e.step < 3).toList()
             : allItems;
@@ -2264,10 +2819,15 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
             initialZoom: _lastKnown != null ? 15.5 : 14.0,
             minZoom: 4,
             maxZoom: 19,
-            interactionOptions: const InteractionOptions(flags: InteractiveFlag.all),
-            onTap: (_, __) { if (_selected != null) setState(() => _selected = null); },
+            interactionOptions: const InteractionOptions(
+              flags: InteractiveFlag.all,
+            ),
+            onTap: (_, _) {
+              if (_selected != null) setState(() => _selected = null);
+            },
             onPositionChanged: (_, hasGesture) {
-              if (hasGesture && _trackingDevice) setState(() => _trackingDevice = false);
+              if (hasGesture && _trackingDevice)
+                setState(() => _trackingDevice = false);
             },
           ),
           children: [
@@ -2290,8 +2850,12 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
                   alignment: Alignment.topCenter,
                   child: GestureDetector(
                     onTap: () {
-                      setState(() => _selected = _selected?.id == item.id ? null : item);
-                      if (_selected != null) _animateTo(LatLng(item.mapLat, item.mapLng), 16.5);
+                      setState(
+                        () =>
+                            _selected = _selected?.id == item.id ? null : item,
+                      );
+                      if (_selected != null)
+                        _animateTo(LatLng(item.mapLat, item.mapLng), 16.5);
                     },
                     child: AnimatedScale(
                       scale: isSel ? 1.10 : 1.0,
@@ -2308,39 +2872,46 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
             ),
             // Device location dot
             if (_deviceLocation != null)
-              MarkerLayer(markers: [
-                Marker(
-                  point: _deviceLocation!,
-                  width: 52,
-                  height: 52,
-                  child: _DeviceMarker(pulse: _pulseAnim),
-                ),
-              ]),
+              MarkerLayer(
+                markers: [
+                  Marker(
+                    point: _deviceLocation!,
+                    width: 52,
+                    height: 52,
+                    child: _DeviceMarker(pulse: _pulseAnim),
+                  ),
+                ],
+              ),
             // Last-known location marker (ghost dot, only shown if GPS not yet acquired)
             if (_lastKnown != null && _deviceLocation == null)
-              MarkerLayer(markers: [
-                Marker(
-                  point: _lastKnown!,
-                  width: 40,
-                  height: 40,
-                  child: Container(
-                    width: 16, height: 16,
-                    decoration: BoxDecoration(
-                      color: _kAccent.withOpacity(0.45),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
+              MarkerLayer(
+                markers: [
+                  Marker(
+                    point: _lastKnown!,
+                    width: 40,
+                    height: 40,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: _kAccent.withOpacity(0.45),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
                     ),
                   ),
-                ),
-              ]),
+                ],
+              ),
             RichAttributionWidget(
               alignment: AttributionAlignment.bottomLeft,
               popupBackgroundColor: Colors.white.withOpacity(0.92),
-              attributions: [TextSourceAttribution('© OpenStreetMap contributors')],
+              attributions: [
+                TextSourceAttribution('© OpenStreetMap contributors'),
+              ],
             ),
           ],
         );
-      }
+      },
     );
   }
 
@@ -2350,7 +2921,11 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
       children: [
         _GlassCircle(
           onTap: () => Navigator.pop(context),
-          child: const Icon(Icons.arrow_back_ios_new_rounded, size: 17, color: _kText),
+          child: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 17,
+            color: _kText,
+          ),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -2358,19 +2933,44 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(width: 8, height: 8,
-                    decoration: const BoxDecoration(color: _kGreen, shape: BoxShape.circle)),
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: _kGreen,
+                    shape: BoxShape.circle,
+                  ),
+                ),
                 const SizedBox(width: 7),
                 const Flexible(
-                  child: Text('Emergency Map', overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: _kText)),
+                  child: Text(
+                    'Emergency Map',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: _kText,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                  decoration: BoxDecoration(color: _kRedBg, borderRadius: BorderRadius.circular(20)),
-                  child: Text('$activeCount Active',
-                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: _kRed)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _kRedBg,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '$activeCount Active',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: _kRed,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -2387,9 +2987,17 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
 
   Widget _buildFilters() => Row(
     children: [
-      _MapFilterPill(label: 'All', active: !_activeOnly, onTap: () => setState(() => _activeOnly = false)),
+      _MapFilterPill(
+        label: 'All',
+        active: !_activeOnly,
+        onTap: () => setState(() => _activeOnly = false),
+      ),
       const SizedBox(width: 6),
-      _MapFilterPill(label: 'Active Only', active: _activeOnly, onTap: () => setState(() => _activeOnly = true)),
+      _MapFilterPill(
+        label: 'Active Only',
+        active: _activeOnly,
+        onTap: () => setState(() => _activeOnly = true),
+      ),
     ],
   );
 
@@ -2439,15 +3047,27 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
         color: _kSurface,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: _kBorder),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.11), blurRadius: 24, offset: const Offset(0, 8))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.11),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
             padding: const EdgeInsets.only(top: 10, bottom: 4),
-            child: Container(width: 38, height: 4,
-                decoration: BoxDecoration(color: _kBorder, borderRadius: BorderRadius.circular(2))),
+            child: Container(
+              width: 38,
+              height: 4,
+              decoration: BoxDecoration(
+                color: _kBorder,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 18),
@@ -2457,9 +3077,13 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
                 Row(
                   children: [
                     Container(
-                      width: 46, height: 46,
+                      width: 46,
+                      height: 46,
                       decoration: BoxDecoration(
-                          color: lb, borderRadius: BorderRadius.circular(13), border: Border.all(color: lbr)),
+                        color: lb,
+                        borderRadius: BorderRadius.circular(13),
+                        border: Border.all(color: lbr),
+                      ),
                       child: Icon(_typeIcon(item.type), color: lc, size: 22),
                     ),
                     const SizedBox(width: 12),
@@ -2467,17 +3091,32 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(item.type,
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: _kText)),
+                          Text(
+                            item.type,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: _kText,
+                            ),
+                          ),
                           const SizedBox(height: 3),
                           Row(
                             children: [
-                              const Icon(Icons.location_on_outlined, size: 11, color: _kText3),
+                              const Icon(
+                                Icons.location_on_outlined,
+                                size: 11,
+                                color: _kText3,
+                              ),
                               const SizedBox(width: 3),
                               Expanded(
-                                child: Text(item.location,
-                                    style: const TextStyle(fontSize: 11, color: _kText3),
-                                    overflow: TextOverflow.ellipsis),
+                                child: Text(
+                                  item.location,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: _kText3,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ],
                           ),
@@ -2487,34 +3126,64 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
                     GestureDetector(
                       onTap: () => setState(() => _selected = null),
                       child: Container(
-                        width: 30, height: 30,
-                        decoration: BoxDecoration(color: _kBg, borderRadius: BorderRadius.circular(8)),
-                        child: const Icon(Icons.close, size: 16, color: _kText3),
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: _kBg,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.close,
+                          size: 16,
+                          color: _kText3,
+                        ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
-                      color: lb, borderRadius: BorderRadius.circular(12), border: Border.all(color: lbr)),
+                    color: lb,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: lbr),
+                  ),
                   child: Row(
                     children: [
-                      Icon(item.step == 3 ? Icons.check_circle_outline : Icons.timelapse_rounded,
-                          size: 15, color: lc),
+                      Icon(
+                        item.step == 3
+                            ? Icons.check_circle_outline
+                            : Icons.timelapse_rounded,
+                        size: 15,
+                        color: lc,
+                      ),
                       const SizedBox(width: 7),
-                      Text('Status: ${_stepLabels[item.step]}',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: lc)),
+                      Text(
+                        'Status: ${_stepLabels[item.step]}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: lc,
+                        ),
+                      ),
                       const Spacer(),
                       Row(
-                        children: List.generate(4, (i) => Container(
-                          width: 8, height: 8,
-                          margin: const EdgeInsets.only(left: 4),
-                          decoration: BoxDecoration(
+                        children: List.generate(
+                          4,
+                          (i) => Container(
+                            width: 8,
+                            height: 8,
+                            margin: const EdgeInsets.only(left: 4),
+                            decoration: BoxDecoration(
                               color: i <= item.step ? lc : lc.withOpacity(0.18),
-                              shape: BoxShape.circle),
-                        )),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -2524,14 +3193,19 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
                   children: [
                     const Icon(Icons.person_outline, size: 13, color: _kText3),
                     const SizedBox(width: 4),
-                    Text(item.reportedBy, style: const TextStyle(fontSize: 11, color: _kText3)),
+                    Text(
+                      item.reportedBy,
+                      style: const TextStyle(fontSize: 11, color: _kText3),
+                    ),
                     const SizedBox(width: 14),
                     const Icon(Icons.access_time, size: 13, color: _kText3),
                     const SizedBox(width: 4),
                     Expanded(
-                      child: Text(item.dateTime,
-                          style: const TextStyle(fontSize: 11, color: _kText3),
-                          overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        item.dateTime,
+                        style: const TextStyle(fontSize: 11, color: _kText3),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
@@ -2540,16 +3214,22 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
                   children: [
                     Expanded(
                       child: _SheetActionBtn(
-                          label: 'Manage', icon: Icons.shield_outlined,
-                          filled: true, color: _kAccent,
-                          onTap: () => Navigator.pop(context)),
+                        label: 'Manage',
+                        icon: Icons.shield_outlined,
+                        filled: true,
+                        color: _kAccent,
+                        onTap: () => Navigator.pop(context),
+                      ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: _SheetActionBtn(
-                          label: 'Details', icon: Icons.article_outlined,
-                          filled: false, color: _kText2,
-                          onTap: () {}),
+                        label: 'Details',
+                        icon: Icons.article_outlined,
+                        filled: false,
+                        color: _kText2,
+                        onTap: () {},
+                      ),
                     ),
                   ],
                 ),
@@ -2567,60 +3247,87 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         decoration: const BoxDecoration(
-            color: _kSurface, borderRadius: BorderRadius.vertical(top: Radius.circular(22))),
+          color: _kSurface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+        ),
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Center(
-              child: Container(width: 36, height: 4,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(color: _kBorder, borderRadius: BorderRadius.circular(2))),
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: _kBorder,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
             ),
-            const Text('Map Legend',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _kText)),
+            const Text(
+              'Map Legend',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: _kText,
+              ),
+            ),
             const SizedBox(height: 16),
             ...([
               (_kRed, 'Critical', Icons.crisis_alert_rounded),
               (_kOrange, 'High', Icons.warning_rounded),
               (_kYellow, 'Medium', Icons.info_outline_rounded),
               (_kGreen, 'Low', Icons.check_circle_outline),
-            ].map((e) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                children: [
-                  Container(
-                    width: 30, height: 30,
-                    decoration: BoxDecoration(
-                        color: e.$1.withOpacity(0.12), shape: BoxShape.circle),
-                    child: Icon(e.$3, size: 15, color: e.$1),
-                  ),
-                  const SizedBox(width: 10),
-                  Text('${e.$2} severity',
-                      style: const TextStyle(fontSize: 13, color: _kText2)),
-                ],
+            ].map(
+              (e) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: e.$1.withOpacity(0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(e.$3, size: 15, color: e.$1),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      '${e.$2} severity',
+                      style: const TextStyle(fontSize: 13, color: _kText2),
+                    ),
+                  ],
+                ),
               ),
-            ))),
+            )),
             const Divider(height: 24, color: _kBorder),
             Row(
               children: [
                 Container(
-                  width: 18, height: 18,
+                  width: 18,
+                  height: 18,
                   decoration: BoxDecoration(
-                      color: _kAccent, shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2)),
+                    color: _kAccent,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
                 ),
                 const SizedBox(width: 10),
-                const Text('Your live location (pulsing)',
-                    style: TextStyle(fontSize: 13, color: _kText2)),
+                const Text(
+                  'Your live location (pulsing)',
+                  style: TextStyle(fontSize: 13, color: _kText2),
+                ),
               ],
             ),
             const SizedBox(height: 8),
             Row(
               children: [
                 Container(
-                  width: 18, height: 18,
+                  width: 18,
+                  height: 18,
                   decoration: BoxDecoration(
                     color: _kAccent.withOpacity(0.45),
                     shape: BoxShape.circle,
@@ -2628,8 +3335,10 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
                   ),
                 ),
                 const SizedBox(width: 10),
-                const Text('Last known location (ghost dot)',
-                    style: TextStyle(fontSize: 13, color: _kText2)),
+                const Text(
+                  'Last known location (ghost dot)',
+                  style: TextStyle(fontSize: 13, color: _kText2),
+                ),
               ],
             ),
             SizedBox(height: MediaQuery.of(context).padding.bottom + 20),
@@ -2645,7 +3354,11 @@ class _FullPin extends StatelessWidget {
   final Color color;
   final IconData icon;
   final bool selected;
-  const _FullPin({required this.color, required this.icon, required this.selected});
+  const _FullPin({
+    required this.color,
+    required this.icon,
+    required this.selected,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -2654,15 +3367,22 @@ class _FullPin extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: sz, height: sz,
+          width: sz,
+          height: sz,
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: selected ? 3.5 : 2.5),
-            boxShadow: [BoxShadow(
+            border: Border.all(
+              color: Colors.white,
+              width: selected ? 3.5 : 2.5,
+            ),
+            boxShadow: [
+              BoxShadow(
                 color: color.withOpacity(selected ? 0.50 : 0.28),
                 blurRadius: selected ? 18 : 8,
-                spreadRadius: selected ? 2 : 0)],
+                spreadRadius: selected ? 2 : 0,
+              ),
+            ],
           ),
           child: Icon(icon, color: Colors.white, size: selected ? 26 : 19),
         ),
@@ -2687,19 +3407,23 @@ class _DeviceMarker extends StatelessWidget {
           width: 44 * pulse.value,
           height: 44 * pulse.value,
           decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: _kAccent.withOpacity(0.13 / pulse.value)),
+            shape: BoxShape.circle,
+            color: _kAccent.withOpacity(0.13 / pulse.value),
+          ),
         ),
         child!,
       ],
     ),
     child: Container(
-      width: 18, height: 18,
+      width: 18,
+      height: 18,
       decoration: BoxDecoration(
         color: _kAccent,
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 3),
-        boxShadow: [BoxShadow(color: _kAccent.withOpacity(0.45), blurRadius: 10)],
+        boxShadow: [
+          BoxShadow(color: _kAccent.withOpacity(0.45), blurRadius: 10),
+        ],
       ),
     ),
   );
@@ -2715,12 +3439,15 @@ class _GlassCircle extends StatelessWidget {
   Widget build(BuildContext context) => GestureDetector(
     onTap: onTap,
     child: Container(
-      width: 40, height: 40,
+      width: 40,
+      height: 40,
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.88),
         shape: BoxShape.circle,
         border: Border.all(color: _kBorder),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8)],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8),
+        ],
       ),
       child: Center(child: child),
     ),
@@ -2738,7 +3465,9 @@ class _GlassPill extends StatelessWidget {
       color: Colors.white.withOpacity(0.90),
       borderRadius: BorderRadius.circular(22),
       border: Border.all(color: _kBorder),
-      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 8)],
+      boxShadow: [
+        BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 8),
+      ],
     ),
     child: child,
   );
@@ -2748,7 +3477,11 @@ class _MapFilterPill extends StatelessWidget {
   final String label;
   final bool active;
   final VoidCallback onTap;
-  const _MapFilterPill({required this.label, required this.active, required this.onTap});
+  const _MapFilterPill({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) => GestureDetector(
@@ -2760,11 +3493,18 @@ class _MapFilterPill extends StatelessWidget {
         color: active ? _kAccent : Colors.white.withOpacity(0.88),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: active ? _kAccent : _kBorder),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 6)],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 6),
+        ],
       ),
-      child: Text(label,
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
-              color: active ? Colors.white : _kText3)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: active ? Colors.white : _kText3,
+        ),
+      ),
     ),
   );
 }
@@ -2775,8 +3515,10 @@ class _RoundFab extends StatelessWidget {
   final Color color;
   final VoidCallback onTap;
   const _RoundFab({
-    required this.icon, required this.onTap,
-    this.large = false, this.color = _kText3,
+    required this.icon,
+    required this.onTap,
+    this.large = false,
+    this.color = _kText3,
   });
 
   @override
@@ -2785,15 +3527,21 @@ class _RoundFab extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: sz, height: sz,
+        width: sz,
+        height: sz,
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
           border: Border.all(
-              color: large ? color.withOpacity(0.30) : _kBorder,
-              width: large ? 1.5 : 1.0),
+            color: large ? color.withOpacity(0.30) : _kBorder,
+            width: large ? 1.5 : 1.0,
+          ),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 10, offset: const Offset(0, 3))
+            BoxShadow(
+              color: Colors.black.withOpacity(0.12),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
           ],
         ),
         child: Icon(icon, size: large ? 24 : 20, color: color),
@@ -2809,8 +3557,11 @@ class _SheetActionBtn extends StatelessWidget {
   final Color color;
   final VoidCallback onTap;
   const _SheetActionBtn({
-    required this.label, required this.icon,
-    required this.filled, required this.color, required this.onTap,
+    required this.label,
+    required this.icon,
+    required this.filled,
+    required this.color,
+    required this.onTap,
   });
 
   @override
@@ -2828,9 +3579,14 @@ class _SheetActionBtn extends StatelessWidget {
         children: [
           Icon(icon, size: 16, color: filled ? Colors.white : color),
           const SizedBox(width: 6),
-          Text(label,
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
-                  color: filled ? Colors.white : color)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: filled ? Colors.white : color,
+            ),
+          ),
         ],
       ),
     ),
@@ -2848,18 +3604,24 @@ class _LocationDeniedBanner extends StatelessWidget {
       color: _kRedBg,
       borderRadius: BorderRadius.circular(12),
       border: Border.all(color: _kRedBorder),
-      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.07), blurRadius: 8)],
+      boxShadow: [
+        BoxShadow(color: Colors.black.withOpacity(0.07), blurRadius: 8),
+      ],
     ),
     child: Row(
       children: [
         const Icon(Icons.location_off_outlined, size: 16, color: _kRed),
         const SizedBox(width: 8),
         const Expanded(
-          child: Text('Location access denied — showing last known area.',
-              style: TextStyle(fontSize: 11, color: _kRed)),
+          child: Text(
+            'Location access denied — showing last known area.',
+            style: TextStyle(fontSize: 11, color: _kRed),
+          ),
         ),
-        GestureDetector(onTap: onDismiss,
-            child: const Icon(Icons.close, size: 15, color: _kRed)),
+        GestureDetector(
+          onTap: onDismiss,
+          child: const Icon(Icons.close, size: 15, color: _kRed),
+        ),
       ],
     ),
   );

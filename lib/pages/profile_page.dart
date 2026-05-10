@@ -23,7 +23,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<UserViewModel>().currentUser;
-    final firstName = user?.firstName ?? 'Resident';
+    final firstName = user?.firstName ?? 'Username';
     final userId = user != null ? user.id.substring(0, 8).toUpperCase() : '—';
 
     return Scaffold(

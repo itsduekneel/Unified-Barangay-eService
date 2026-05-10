@@ -139,8 +139,7 @@ class _RbacManagementPageState extends State<RbacManagementPage> {
     ),
   ];
 
-  int get _totalUsers =>
-      _roles.fold<int>(0, (s, r) => s + r.userCount);
+  int get _totalUsers => _roles.fold<int>(0, (s, r) => s + r.userCount);
 
   int get _totalPermissions =>
       _roles.fold<int>(0, (s, r) => s + r.permissions.length);
@@ -176,8 +175,11 @@ class _RbacManagementPageState extends State<RbacManagementPage> {
           child: Container(height: 0.5, color: _kBorder),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: _kPrimary, size: 18),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: _kPrimary,
+            size: 18,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -205,8 +207,11 @@ class _RbacManagementPageState extends State<RbacManagementPage> {
                         color: const Color(0xFFEEEDFE),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.verified_user_outlined,
-                          color: _kPrimary, size: 20),
+                      child: const Icon(
+                        Icons.verified_user_outlined,
+                        color: _kPrimary,
+                        size: 20,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Column(
@@ -215,12 +220,16 @@ class _RbacManagementPageState extends State<RbacManagementPage> {
                         const Text(
                           'Role-based access control',
                           style: TextStyle(
-                              fontWeight: FontWeight.w600, fontSize: 13),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
                         ),
                         Text(
                           '${_roles.length} roles configured',
                           style: TextStyle(
-                              fontSize: 11, color: Colors.grey[600]),
+                            fontSize: 11,
+                            color: Colors.grey[600],
+                          ),
                         ),
                       ],
                     ),
@@ -238,8 +247,7 @@ class _RbacManagementPageState extends State<RbacManagementPage> {
                   const SizedBox(width: 10),
                   _StatCard(value: '$_totalUsers', label: 'Total users'),
                   const SizedBox(width: 10),
-                  _StatCard(
-                      value: '$_totalPermissions', label: 'Permissions'),
+                  _StatCard(value: '$_totalPermissions', label: 'Permissions'),
                 ],
               ),
             ),
@@ -262,7 +270,7 @@ class _RbacManagementPageState extends State<RbacManagementPage> {
               physics: const NeverScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
               itemCount: _roles.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (_, i) => _RoleCard(
                 role: _roles[i],
                 onTap: () => _showRoleDetail(_roles[i]),
@@ -293,13 +301,15 @@ class _StatCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(value,
-                style: const TextStyle(
-                    fontSize: 20, fontWeight: FontWeight.w600)),
+            Text(
+              value,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            ),
             const SizedBox(height: 1),
-            Text(label,
-                style:
-                const TextStyle(fontSize: 10, color: Color(0xFF888780))),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 10, color: Color(0xFF888780)),
+            ),
           ],
         ),
       ),
@@ -337,25 +347,26 @@ class _RoleCard extends StatelessWidget {
                     color: role.bgColor,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child:
-                  Icon(role.icon, color: role.color, size: 18),
+                  child: Icon(role.icon, color: role.color, size: 18),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(role.name,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13)),
+                      Text(
+                        role.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
                       const SizedBox(height: 2),
                       Text(
                         role.description,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                            fontSize: 11, color: Colors.grey[600]),
+                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                       ),
                     ],
                   ),
@@ -366,7 +377,9 @@ class _RoleCard extends StatelessWidget {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 9, vertical: 2),
+                        horizontal: 9,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: role.bgColor,
                         borderRadius: BorderRadius.circular(20),
@@ -381,9 +394,10 @@ class _RoleCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text('users',
-                        style: TextStyle(
-                            fontSize: 9, color: Colors.grey[500])),
+                    Text(
+                      'users',
+                      style: TextStyle(fontSize: 9, color: Colors.grey[500]),
+                    ),
                   ],
                 ),
               ],
@@ -394,8 +408,8 @@ class _RoleCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.only(top: 10),
               decoration: BoxDecoration(
-                  border: Border(
-                      top: BorderSide(color: _kBorder, width: 0.5))),
+                border: Border(top: BorderSide(color: _kBorder, width: 0.5)),
+              ),
               child: Row(
                 children: [
                   Expanded(
@@ -405,13 +419,15 @@ class _RoleCard extends StatelessWidget {
                       children: [
                         ...previewPerms.map((p) => _PermTag(label: p)),
                         if (moreCount > 0)
-                          _PermTag(label: '+$moreCount more',
-                              italic: true),
+                          _PermTag(label: '+$moreCount more', italic: true),
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right,
-                      size: 16, color: Color(0xFFB4B2A9)),
+                  const Icon(
+                    Icons.chevron_right,
+                    size: 16,
+                    color: Color(0xFFB4B2A9),
+                  ),
                 ],
               ),
             ),
@@ -460,7 +476,11 @@ class _RoleDetailSheet extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       padding: EdgeInsets.fromLTRB(
-          20, 16, 20, MediaQuery.of(context).padding.bottom + 24),
+        20,
+        16,
+        20,
+        MediaQuery.of(context).padding.bottom + 24,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -493,13 +513,16 @@ class _RoleDetailSheet extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(role.name,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 15)),
+                    Text(
+                      role.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
                     Text(
                       '${role.userCount} ${role.userCount == 1 ? 'user' : 'users'} assigned',
-                      style: TextStyle(
-                          fontSize: 12, color: role.color),
+                      style: TextStyle(fontSize: 12, color: role.color),
                     ),
                   ],
                 ),
@@ -513,8 +536,11 @@ class _RoleDetailSheet extends StatelessWidget {
                     color: const Color(0xFFF1EFE8),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.close,
-                      size: 15, color: Color(0xFF5F5E5A)),
+                  child: const Icon(
+                    Icons.close,
+                    size: 15,
+                    color: Color(0xFF5F5E5A),
+                  ),
                 ),
               ),
             ],
@@ -522,8 +548,7 @@ class _RoleDetailSheet extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             role.description,
-            style:
-            const TextStyle(fontSize: 12, color: Color(0xFF888780)),
+            style: const TextStyle(fontSize: 12, color: Color(0xFF888780)),
           ),
           const SizedBox(height: 18),
           const Text(
@@ -537,11 +562,13 @@ class _RoleDetailSheet extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           ...role.permissions.map(
-                (p) => Padding(
+            (p) => Padding(
               padding: const EdgeInsets.only(bottom: 6),
               child: Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 9,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF5F4FA),
                   borderRadius: BorderRadius.circular(10),
@@ -555,12 +582,10 @@ class _RoleDetailSheet extends StatelessWidget {
                         color: role.bgColor,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.check,
-                          color: role.color, size: 11),
+                      child: Icon(Icons.check, color: role.color, size: 11),
                     ),
                     const SizedBox(width: 10),
-                    Text(p,
-                        style: const TextStyle(fontSize: 13)),
+                    Text(p, style: const TextStyle(fontSize: 13)),
                   ],
                 ),
               ),
@@ -573,25 +598,26 @@ class _RoleDetailSheet extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: role.color, width: 0.5),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 padding: const EdgeInsets.symmetric(vertical: 13),
               ),
               onPressed: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content:
-                    Text('Edit permissions for ${role.name}'),
+                    content: Text('Edit permissions for ${role.name}'),
                     backgroundColor: role.color,
                   ),
                 );
               },
-              icon: Icon(Icons.edit_outlined,
-                  color: role.color, size: 16),
+              icon: Icon(Icons.edit_outlined, color: role.color, size: 16),
               label: Text(
                 'Edit permissions',
                 style: TextStyle(
-                    color: role.color, fontWeight: FontWeight.w600),
+                  color: role.color,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),

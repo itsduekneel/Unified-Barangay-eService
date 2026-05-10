@@ -25,175 +25,542 @@ class _RegisterScreenState extends State<RegisterScreen>
   late final TabController _tabController;
 
   // ── Controllers ─────────────────────────────────────────────────────────────
-  final _firstNameCtrl       = TextEditingController();
-  final _middleNameCtrl      = TextEditingController();
-  final _lastNameCtrl        = TextEditingController();
-  final _emailCtrl           = TextEditingController();
-  final _streetCtrl          = TextEditingController();
-  final _postalCtrl          = TextEditingController();
-  final _passwordCtrl        = TextEditingController();
+  final _firstNameCtrl = TextEditingController();
+  final _middleNameCtrl = TextEditingController();
+  final _lastNameCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _streetCtrl = TextEditingController();
+  final _postalCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
   final _confirmPasswordCtrl = TextEditingController();
 
   // ── State ────────────────────────────────────────────────────────────────────
-  String?   _suffix;
-  String?   _gender;
-  String?   _citizenship;
-  String?   _country;
-  String?   _stateProvince;
-  String?   _cityMunicipality;
-  String?   _barangay;
+  String? _suffix;
+  String? _gender;
+  String? _citizenship;
+  String? _country;
+  String? _stateProvince;
+  String? _cityMunicipality;
+  String? _barangay;
   DateTime? _birthDate;
   bool _noMiddleName = false;
-  bool _isLoading    = false;
+  bool _isLoading = false;
   bool _showPassword = false;
-  bool _showConfirm  = false;
+  bool _showConfirm = false;
 
   // ── Step (0 = Personal Info, 1 = Address, 2 = Account) ───────────────────
   int _step = 0;
 
   // ── Password strength getters ─────────────────────────────────────────────
-  bool get _pwHas8   => _passwordCtrl.text.length >= 8;
+  bool get _pwHas8 => _passwordCtrl.text.length >= 8;
   bool get _pwHasCap => _passwordCtrl.text.contains(RegExp(r'[A-Z]'));
   bool get _pwHasNum => _passwordCtrl.text.contains(RegExp(r'[0-9!@#\$%^&*]'));
 
   // ── Static data ───────────────────────────────────────────────────────────
   static const _suffixes = ['N/A', 'Jr.', 'Sr.', 'II', 'III', 'IV', 'V'];
-  static const _genders  = ['Male', 'Female', 'Prefer not to say'];
+  static const _genders = ['Male', 'Female', 'Prefer not to say'];
 
   static const _citizenships = [
-    'Filipino', 'American', 'Australian', 'British', 'Canadian',
-    'Chinese', 'Indian', 'Indonesian', 'Japanese', 'Korean',
-    'Malaysian', 'Singaporean', 'Other',
+    'Filipino',
+    'American',
+    'Australian',
+    'British',
+    'Canadian',
+    'Chinese',
+    'Indian',
+    'Indonesian',
+    'Japanese',
+    'Korean',
+    'Malaysian',
+    'Singaporean',
+    'Other',
   ];
 
   static const _countries = [
-    'Philippines', 'United States', 'Australia', 'Canada',
-    'United Kingdom', 'Japan', 'South Korea', 'Singapore',
-    'Malaysia', 'Indonesia', 'Other',
+    'Philippines',
+    'United States',
+    'Australia',
+    'Canada',
+    'United Kingdom',
+    'Japan',
+    'South Korea',
+    'Singapore',
+    'Malaysia',
+    'Indonesia',
+    'Other',
   ];
 
   static const _phProvinces = [
-    'Abra', 'Agusan del Norte', 'Agusan del Sur', 'Aklan', 'Albay',
-    'Antique', 'Apayao', 'Aurora', 'Basilan', 'Bataan', 'Batanes',
-    'Batangas', 'Benguet', 'Biliran', 'Bohol', 'Bukidnon', 'Bulacan',
-    'Cagayan', 'Camarines Norte', 'Camarines Sur', 'Camiguin', 'Capiz',
-    'Catanduanes', 'Cavite', 'Cebu', 'Cotabato', 'Davao de Oro',
-    'Davao del Norte', 'Davao del Sur', 'Davao Occidental',
-    'Davao Oriental', 'Dinagat Islands', 'Eastern Samar', 'Guimaras',
-    'Ifugao', 'Ilocos Norte', 'Ilocos Sur', 'Iloilo', 'Isabela',
-    'Kalinga', 'La Union', 'Laguna', 'Lanao del Norte', 'Lanao del Sur',
-    'Leyte', 'Maguindanao del Norte', 'Maguindanao del Sur',
-    'Marinduque', 'Masbate', 'Metro Manila', 'Misamis Occidental',
-    'Misamis Oriental', 'Mountain Province', 'Negros Occidental',
-    'Negros Oriental', 'Northern Samar', 'Nueva Ecija', 'Nueva Vizcaya',
-    'Occidental Mindoro', 'Oriental Mindoro', 'Palawan', 'Pampanga',
-    'Pangasinan', 'Quezon', 'Quirino', 'Rizal', 'Romblon', 'Samar',
-    'Sarangani', 'Siquijor', 'Sorsogon', 'South Cotabato',
-    'Southern Leyte', 'Sultan Kudarat', 'Sulu', 'Surigao del Norte',
-    'Surigao del Sur', 'Tarlac', 'Tawi-Tawi', 'Zambales',
-    'Zamboanga del Norte', 'Zamboanga del Sur', 'Zamboanga Sibugay',
+    'Abra',
+    'Agusan del Norte',
+    'Agusan del Sur',
+    'Aklan',
+    'Albay',
+    'Antique',
+    'Apayao',
+    'Aurora',
+    'Basilan',
+    'Bataan',
+    'Batanes',
+    'Batangas',
+    'Benguet',
+    'Biliran',
+    'Bohol',
+    'Bukidnon',
+    'Bulacan',
+    'Cagayan',
+    'Camarines Norte',
+    'Camarines Sur',
+    'Camiguin',
+    'Capiz',
+    'Catanduanes',
+    'Cavite',
+    'Cebu',
+    'Cotabato',
+    'Davao de Oro',
+    'Davao del Norte',
+    'Davao del Sur',
+    'Davao Occidental',
+    'Davao Oriental',
+    'Dinagat Islands',
+    'Eastern Samar',
+    'Guimaras',
+    'Ifugao',
+    'Ilocos Norte',
+    'Ilocos Sur',
+    'Iloilo',
+    'Isabela',
+    'Kalinga',
+    'La Union',
+    'Laguna',
+    'Lanao del Norte',
+    'Lanao del Sur',
+    'Leyte',
+    'Maguindanao del Norte',
+    'Maguindanao del Sur',
+    'Marinduque',
+    'Masbate',
+    'Metro Manila',
+    'Misamis Occidental',
+    'Misamis Oriental',
+    'Mountain Province',
+    'Negros Occidental',
+    'Negros Oriental',
+    'Northern Samar',
+    'Nueva Ecija',
+    'Nueva Vizcaya',
+    'Occidental Mindoro',
+    'Oriental Mindoro',
+    'Palawan',
+    'Pampanga',
+    'Pangasinan',
+    'Quezon',
+    'Quirino',
+    'Rizal',
+    'Romblon',
+    'Samar',
+    'Sarangani',
+    'Siquijor',
+    'Sorsogon',
+    'South Cotabato',
+    'Southern Leyte',
+    'Sultan Kudarat',
+    'Sulu',
+    'Surigao del Norte',
+    'Surigao del Sur',
+    'Tarlac',
+    'Tawi-Tawi',
+    'Zambales',
+    'Zamboanga del Norte',
+    'Zamboanga del Sur',
+    'Zamboanga Sibugay',
   ];
 
   static const Map<String, List<String>> _citiesMap = {
     'Laguna': [
-      'Alaminos', 'Bay', 'Biñan', 'Cabuyao', 'Calamba', 'Calauan',
-      'Cavinti', 'Famy', 'Kalayaan', 'Liliw', 'Los Baños', 'Luisiana',
-      'Lumban', 'Mabitac', 'Magdalena', 'Majayjay', 'Nagcarlan',
-      'Paete', 'Pagsanjan', 'Pakil', 'Pangil', 'Pila', 'Rizal',
-      'San Pablo', 'San Pedro', 'Santa Cruz', 'Santa Maria',
-      'Santa Rosa', 'Siniloan', 'Victoria',
+      'Alaminos',
+      'Bay',
+      'Biñan',
+      'Cabuyao',
+      'Calamba',
+      'Calauan',
+      'Cavinti',
+      'Famy',
+      'Kalayaan',
+      'Liliw',
+      'Los Baños',
+      'Luisiana',
+      'Lumban',
+      'Mabitac',
+      'Magdalena',
+      'Majayjay',
+      'Nagcarlan',
+      'Paete',
+      'Pagsanjan',
+      'Pakil',
+      'Pangil',
+      'Pila',
+      'Rizal',
+      'San Pablo',
+      'San Pedro',
+      'Santa Cruz',
+      'Santa Maria',
+      'Santa Rosa',
+      'Siniloan',
+      'Victoria',
     ],
     'Metro Manila': [
-      'Caloocan', 'Las Piñas', 'Makati', 'Malabon', 'Mandaluyong',
-      'Manila', 'Marikina', 'Muntinlupa', 'Navotas', 'Parañaque',
-      'Pasay', 'Pasig', 'Pateros', 'Quezon City', 'San Juan',
-      'Taguig', 'Valenzuela',
+      'Caloocan',
+      'Las Piñas',
+      'Makati',
+      'Malabon',
+      'Mandaluyong',
+      'Manila',
+      'Marikina',
+      'Muntinlupa',
+      'Navotas',
+      'Parañaque',
+      'Pasay',
+      'Pasig',
+      'Pateros',
+      'Quezon City',
+      'San Juan',
+      'Taguig',
+      'Valenzuela',
     ],
     'Cavite': [
-      'Alfonso', 'Amadeo', 'Bacoor', 'Carmona', 'Cavite City',
-      'Dasmariñas', 'General Emilio Aguinaldo', 'General Mariano Alvarez',
-      'General Trias', 'Imus', 'Indang', 'Kawit', 'Magallanes',
-      'Maragondon', 'Mendez', 'Naic', 'Noveleta', 'Rosario',
-      'Silang', 'Tagaytay', 'Tanza', 'Ternate', 'Trece Martires',
+      'Alfonso',
+      'Amadeo',
+      'Bacoor',
+      'Carmona',
+      'Cavite City',
+      'Dasmariñas',
+      'General Emilio Aguinaldo',
+      'General Mariano Alvarez',
+      'General Trias',
+      'Imus',
+      'Indang',
+      'Kawit',
+      'Magallanes',
+      'Maragondon',
+      'Mendez',
+      'Naic',
+      'Noveleta',
+      'Rosario',
+      'Silang',
+      'Tagaytay',
+      'Tanza',
+      'Ternate',
+      'Trece Martires',
     ],
     'Batangas': [
-      'Agoncillo', 'Alitagtag', 'Balayan', 'Balete', 'Batangas City',
-      'Bauan', 'Calaca', 'Calatagan', 'Cuenca', 'Ibaan', 'Laurel',
-      'Lemery', 'Lian', 'Lipa', 'Lobo', 'Mabini', 'Malvar',
-      'Mataas na Kahoy', 'Nasugbu', 'Padre Garcia', 'Rosario',
-      'San Jose', 'San Juan', 'San Luis', 'San Nicolas', 'San Pascual',
-      'Santa Teresita', 'Santo Tomas', 'Taal', 'Talisay', 'Tanauan',
-      'Taysan', 'Tingloy', 'Tuy',
+      'Agoncillo',
+      'Alitagtag',
+      'Balayan',
+      'Balete',
+      'Batangas City',
+      'Bauan',
+      'Calaca',
+      'Calatagan',
+      'Cuenca',
+      'Ibaan',
+      'Laurel',
+      'Lemery',
+      'Lian',
+      'Lipa',
+      'Lobo',
+      'Mabini',
+      'Malvar',
+      'Mataas na Kahoy',
+      'Nasugbu',
+      'Padre Garcia',
+      'Rosario',
+      'San Jose',
+      'San Juan',
+      'San Luis',
+      'San Nicolas',
+      'San Pascual',
+      'Santa Teresita',
+      'Santo Tomas',
+      'Taal',
+      'Talisay',
+      'Tanauan',
+      'Taysan',
+      'Tingloy',
+      'Tuy',
     ],
     'Cebu': [
-      'Alcantara', 'Alcoy', 'Alegria', 'Aloguinsan', 'Argao',
-      'Asturias', 'Badian', 'Balamban', 'Bantayan', 'Barili',
-      'Bogo', 'Boljoon', 'Borbon', 'Carcar', 'Carmen', 'Catmon',
-      'Cebu City', 'Compostela', 'Consolacion', 'Cordova', 'Daanbantayan',
-      'Dalaguete', 'Danao', 'Dumanjug', 'Ginatilan', 'Lapu-Lapu',
-      'Liloan', 'Madridejos', 'Mandaue', 'Medellin', 'Minglanilla',
-      'Moalboal', 'Naga', 'Oslob', 'Pilar', 'Pinamungajan', 'Poro',
-      'Ronda', 'Samboan', 'San Fernando', 'San Francisco', 'San Remigio',
-      'Santa Fe', 'Santander', 'Sibonga', 'Sogod', 'Tabogon', 'Tabuelan',
-      'Talisay', 'Toledo', 'Tuburan', 'Tudela',
+      'Alcantara',
+      'Alcoy',
+      'Alegria',
+      'Aloguinsan',
+      'Argao',
+      'Asturias',
+      'Badian',
+      'Balamban',
+      'Bantayan',
+      'Barili',
+      'Bogo',
+      'Boljoon',
+      'Borbon',
+      'Carcar',
+      'Carmen',
+      'Catmon',
+      'Cebu City',
+      'Compostela',
+      'Consolacion',
+      'Cordova',
+      'Daanbantayan',
+      'Dalaguete',
+      'Danao',
+      'Dumanjug',
+      'Ginatilan',
+      'Lapu-Lapu',
+      'Liloan',
+      'Madridejos',
+      'Mandaue',
+      'Medellin',
+      'Minglanilla',
+      'Moalboal',
+      'Naga',
+      'Oslob',
+      'Pilar',
+      'Pinamungajan',
+      'Poro',
+      'Ronda',
+      'Samboan',
+      'San Fernando',
+      'San Francisco',
+      'San Remigio',
+      'Santa Fe',
+      'Santander',
+      'Sibonga',
+      'Sogod',
+      'Tabogon',
+      'Tabuelan',
+      'Talisay',
+      'Toledo',
+      'Tuburan',
+      'Tudela',
     ],
   };
 
   static const Map<String, List<String>> _barangaysMap = {
     'Los Baños': [
-      'Bagong Silang', 'Bambang', 'Batong Malake', 'Baybayin', 'Bayog',
-      'Lalakay', 'Maahas', 'Malinta', 'Mayondon', 'Putho-Tuntungin',
-      'San Antonio', 'Santo Tomas', 'Tadlak', 'Timugan',
+      'Bagong Silang',
+      'Bambang',
+      'Batong Malake',
+      'Baybayin',
+      'Bayog',
+      'Lalakay',
+      'Maahas',
+      'Malinta',
+      'Mayondon',
+      'Putho-Tuntungin',
+      'San Antonio',
+      'Santo Tomas',
+      'Tadlak',
+      'Timugan',
     ],
     'Calamba': [
-      'Bagong Kalsada', 'Banadero', 'Banlic', 'Batino', 'Bubuyan',
-      'Bucal', 'Bunggo', 'Burol', 'Camaligan', 'Canlubang', 'Casile',
-      'Diezmo', 'Gulod', 'Halang', 'Hornalan', 'Kay-Anlog',
-      'La Mesa', 'Laguerta', 'Lawa', 'Lecheria', 'Lingga',
-      'Looc', 'Mabato', 'Makiling', 'Mapagong', 'Masili',
-      'Maunong', 'Mayapa', 'Milagrosa', 'Paciano Rizal', 'Palingon',
-      'Palo-Alto', 'Pansol', 'Parian', 'Prinza', 'Punta',
-      'Puting Lupa', 'Real', 'Saimsim', 'Sampiruhan', 'San Cristobal',
-      'San Jose', 'San Juan', 'Santisima Cruz', 'Santo Niño',
-      'Santo Tomas', 'Sucol', 'Turbina', 'Ulango', 'Uwisan',
+      'Bagong Kalsada',
+      'Banadero',
+      'Banlic',
+      'Batino',
+      'Bubuyan',
+      'Bucal',
+      'Bunggo',
+      'Burol',
+      'Camaligan',
+      'Canlubang',
+      'Casile',
+      'Diezmo',
+      'Gulod',
+      'Halang',
+      'Hornalan',
+      'Kay-Anlog',
+      'La Mesa',
+      'Laguerta',
+      'Lawa',
+      'Lecheria',
+      'Lingga',
+      'Looc',
+      'Mabato',
+      'Makiling',
+      'Mapagong',
+      'Masili',
+      'Maunong',
+      'Mayapa',
+      'Milagrosa',
+      'Paciano Rizal',
+      'Palingon',
+      'Palo-Alto',
+      'Pansol',
+      'Parian',
+      'Prinza',
+      'Punta',
+      'Puting Lupa',
+      'Real',
+      'Saimsim',
+      'Sampiruhan',
+      'San Cristobal',
+      'San Jose',
+      'San Juan',
+      'Santisima Cruz',
+      'Santo Niño',
+      'Santo Tomas',
+      'Sucol',
+      'Turbina',
+      'Ulango',
+      'Uwisan',
     ],
     'Makati': [
-      'Bangkal', 'Bel-Air', 'Carmona', 'Cembo', 'Comembo',
-      'Dasmariñas', 'East Rembo', 'Forbes Park', 'Guadalupe Nuevo',
-      'Guadalupe Viejo', 'Kasilawan', 'La Paz', 'Magallanes',
-      'Olympia', 'Palanan', 'Pembo', 'Pinagkaisahan', 'Pio Del Pilar',
-      'Pitogo', 'Poblacion', 'Post Proper Northside',
-      'Post Proper Southside', 'Rizal', 'San Antonio', 'San Isidro',
-      'San Lorenzo', 'Santa Cruz', 'Singkamas', 'South Cembo',
-      'Tejeros', 'Urdaneta', 'West Rembo',
+      'Bangkal',
+      'Bel-Air',
+      'Carmona',
+      'Cembo',
+      'Comembo',
+      'Dasmariñas',
+      'East Rembo',
+      'Forbes Park',
+      'Guadalupe Nuevo',
+      'Guadalupe Viejo',
+      'Kasilawan',
+      'La Paz',
+      'Magallanes',
+      'Olympia',
+      'Palanan',
+      'Pembo',
+      'Pinagkaisahan',
+      'Pio Del Pilar',
+      'Pitogo',
+      'Poblacion',
+      'Post Proper Northside',
+      'Post Proper Southside',
+      'Rizal',
+      'San Antonio',
+      'San Isidro',
+      'San Lorenzo',
+      'Santa Cruz',
+      'Singkamas',
+      'South Cembo',
+      'Tejeros',
+      'Urdaneta',
+      'West Rembo',
     ],
     'Quezon City': [
-      'Alicia', 'Amihan', 'Apolonio Samson', 'Aurora', 'Baesa',
-      'Bagbag', 'Bagong Lipunan ng Crame', 'Bagong Pag-Asa', 'Bagong Silangan',
-      'Bagumbayan', 'Bagumbuhay', 'Bahay Toro', 'Balingasa', 'Batasan Hills',
-      'Bayanihan', 'Blue Ridge A', 'Blue Ridge B', 'Botocan',
-      'Bungad', 'Camp Aguinaldo', 'Capri', 'Claro', 'Commonwealth',
-      'Culiat', 'Damar', 'Damayang Lagi', 'Del Monte',
-      'Diliman', 'Dioquino Zobel', 'Don Manuel', 'Doña Aurora',
-      'Doña Imelda', 'Doña Josefa', 'Duyan-Duyan', 'E. Rodriguez',
+      'Alicia',
+      'Amihan',
+      'Apolonio Samson',
+      'Aurora',
+      'Baesa',
+      'Bagbag',
+      'Bagong Lipunan ng Crame',
+      'Bagong Pag-Asa',
+      'Bagong Silangan',
+      'Bagumbayan',
+      'Bagumbuhay',
+      'Bahay Toro',
+      'Balingasa',
+      'Batasan Hills',
+      'Bayanihan',
+      'Blue Ridge A',
+      'Blue Ridge B',
+      'Botocan',
+      'Bungad',
+      'Camp Aguinaldo',
+      'Capri',
+      'Claro',
+      'Commonwealth',
+      'Culiat',
+      'Damar',
+      'Damayang Lagi',
+      'Del Monte',
+      'Diliman',
+      'Dioquino Zobel',
+      'Don Manuel',
+      'Doña Aurora',
+      'Doña Imelda',
+      'Doña Josefa',
+      'Duyan-Duyan',
+      'E. Rodriguez',
     ],
     'Cebu City': [
-      'Apas', 'Bacayan', 'Banilad', 'Basak Pardo', 'Basak San Nicolas',
-      'Binaliw', 'Bonbon', 'Buhisan', 'Bulacao', 'Buot-Taup Pardo',
-      'Busay', 'Calamba', 'Cambinocot', 'Capitol Site', 'Carreta',
-      'Central Pardo', 'Cogon Pardo', 'Cogon Ramos', 'Day-as',
-      'Duljo Fatima', 'Ermita', 'Esperanza', 'Guadalupe',
-      'Guba', 'Hippodromo', 'Inayawan', 'Kalubihan', 'Kalunasan',
-      'Kamagayan', 'Kasambagan', 'Kinasang-an Pardo', 'Labangon',
-      'Lahug', 'Lorega', 'Lusaran', 'Luz', 'Mabini', 'Mabolo',
-      'Malubog', 'Mambaling', 'Pahina Central', 'Pahina San Nicolas',
-      'Pamutan', 'Pardo', 'Pari-an', 'Paril', 'Pasil', 'Pit-os',
-      'Poblacion Pardo', 'Pung-ol Sibugay', 'Punta Princesa',
-      'Quiot Pardo', 'Sambag I', 'Sambag II', 'San Antonio',
-      'San Jose', 'San Nicolas Central', 'San Roque', 'Santa Cruz',
-      'Santo Niño', 'Sawang Calero', 'Sinsin', 'Sirao', 'Suba',
-      'Sudlon I', 'Sudlon II', 'T. Padilla', 'Tabunan', 'Tagba-o',
-      'Talamban', 'Taptap', 'Tejero', 'Tinago', 'Tisa', 'To-ong Pardo',
+      'Apas',
+      'Bacayan',
+      'Banilad',
+      'Basak Pardo',
+      'Basak San Nicolas',
+      'Binaliw',
+      'Bonbon',
+      'Buhisan',
+      'Bulacao',
+      'Buot-Taup Pardo',
+      'Busay',
+      'Calamba',
+      'Cambinocot',
+      'Capitol Site',
+      'Carreta',
+      'Central Pardo',
+      'Cogon Pardo',
+      'Cogon Ramos',
+      'Day-as',
+      'Duljo Fatima',
+      'Ermita',
+      'Esperanza',
+      'Guadalupe',
+      'Guba',
+      'Hippodromo',
+      'Inayawan',
+      'Kalubihan',
+      'Kalunasan',
+      'Kamagayan',
+      'Kasambagan',
+      'Kinasang-an Pardo',
+      'Labangon',
+      'Lahug',
+      'Lorega',
+      'Lusaran',
+      'Luz',
+      'Mabini',
+      'Mabolo',
+      'Malubog',
+      'Mambaling',
+      'Pahina Central',
+      'Pahina San Nicolas',
+      'Pamutan',
+      'Pardo',
+      'Pari-an',
+      'Paril',
+      'Pasil',
+      'Pit-os',
+      'Poblacion Pardo',
+      'Pung-ol Sibugay',
+      'Punta Princesa',
+      'Quiot Pardo',
+      'Sambag I',
+      'Sambag II',
+      'San Antonio',
+      'San Jose',
+      'San Nicolas Central',
+      'San Roque',
+      'Santa Cruz',
+      'Santo Niño',
+      'Sawang Calero',
+      'Sinsin',
+      'Sirao',
+      'Suba',
+      'Sudlon I',
+      'Sudlon II',
+      'T. Padilla',
+      'Tabunan',
+      'Tagba-o',
+      'Talamban',
+      'Taptap',
+      'Tejero',
+      'Tinago',
+      'Tisa',
+      'To-ong Pardo',
       'Zapatera',
     ],
   };
@@ -221,15 +588,16 @@ class _RegisterScreenState extends State<RegisterScreen>
       if (_gender == null) return 'Please select a gender.';
       if (_citizenship == null) return 'Please select a citizenship.';
     } else if (_step == 1) {
-      if (_country == null)          return 'Country is required.';
-      if (_stateProvince == null)    return 'State/Province is required.';
+      if (_country == null) return 'Country is required.';
+      if (_stateProvince == null) return 'State/Province is required.';
       if (_cityMunicipality == null) return 'City/Municipality is required.';
-      if (_barangay == null)         return 'Barangay is required.';
+      if (_barangay == null) return 'Barangay is required.';
       if (_streetCtrl.text.trim().isEmpty) return 'Street Address is required.';
     } else if (_step == 2) {
       if (_emailCtrl.text.trim().isEmpty) return 'Email Address is required.';
-      if (!RegExp(r'^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,4}$')
-          .hasMatch(_emailCtrl.text.trim())) {
+      if (!RegExp(
+        r'^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,4}$',
+      ).hasMatch(_emailCtrl.text.trim())) {
         return 'Please enter a valid email address.';
       }
       if (_passwordCtrl.text.length < 8) {
@@ -244,7 +612,10 @@ class _RegisterScreenState extends State<RegisterScreen>
 
   void _nextStep() {
     final err = _validateStep();
-    if (err != null) { _showError(err); return; }
+    if (err != null) {
+      _showError(err);
+      return;
+    }
     if (_step < 2) {
       setState(() {
         _step++;
@@ -276,7 +647,7 @@ class _RegisterScreenState extends State<RegisterScreen>
   Future<void> _handleSignUp() async {
     setState(() => _isLoading = true);
     try {
-      final email    = _emailCtrl.text.trim();
+      final email = _emailCtrl.text.trim();
       final password = _passwordCtrl.text;
 
       // 1. Create auth user
@@ -288,7 +659,7 @@ class _RegisterScreenState extends State<RegisterScreen>
         password: password,
         data: {
           'first_name': _firstNameCtrl.text.trim(),
-          'last_name' : _lastNameCtrl.text.trim(),
+          'last_name': _lastNameCtrl.text.trim(),
         },
       );
 
@@ -297,21 +668,21 @@ class _RegisterScreenState extends State<RegisterScreen>
 
       // 2. Insert full profile into profiles table manually
       await _supabase.from('profiles').insert({
-        'id'                : uid,
-        'first_name'        : _firstNameCtrl.text.trim(),
-        'middle_name'       : _noMiddleName ? null : _middleNameCtrl.text.trim(),
-        'last_name'         : _lastNameCtrl.text.trim(),
-        'suffix'            : _suffix == 'N/A' ? null : _suffix,
-        'email'             : email,
-        'birth_date'        : _birthDate!.toIso8601String().split('T').first,
-        'gender'            : _gender,
-        'citizenship'       : _citizenship,
-        'country'           : _country,
-        'state_province'    : _stateProvince,
-        'city_municipality' : _cityMunicipality,
-        'barangay'          : _barangay,
-        'street_address'    : _streetCtrl.text.trim(),
-        'postal_code'       : _postalCtrl.text.trim().isEmpty
+        'id': uid,
+        'first_name': _firstNameCtrl.text.trim(),
+        'middle_name': _noMiddleName ? null : _middleNameCtrl.text.trim(),
+        'last_name': _lastNameCtrl.text.trim(),
+        'suffix': _suffix == 'N/A' ? null : _suffix,
+        'email': email,
+        'birth_date': _birthDate!.toIso8601String().split('T').first,
+        'gender': _gender,
+        'citizenship': _citizenship,
+        'country': _country,
+        'state_province': _stateProvince,
+        'city_municipality': _cityMunicipality,
+        'barangay': _barangay,
+        'street_address': _streetCtrl.text.trim(),
+        'postal_code': _postalCtrl.text.trim().isEmpty
             ? null
             : _postalCtrl.text.trim(),
       });
@@ -321,7 +692,6 @@ class _RegisterScreenState extends State<RegisterScreen>
       await Future.delayed(const Duration(seconds: 2));
       if (!mounted) return;
       Navigator.pushReplacement(context, instantRoute(const LoginPage()));
-
     } on AuthException catch (e) {
       _showError(_friendlyAuthError(e.message));
     } on PostgrestException catch (e) {
@@ -364,20 +734,24 @@ class _RegisterScreenState extends State<RegisterScreen>
 
   void _showError(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: Colors.red.shade600,
-      behavior: SnackBarBehavior.floating,
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: Colors.red.shade600,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   void _showSuccess(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: Colors.green,
-      behavior: SnackBarBehavior.floating,
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   Future<void> _pickDate() async {
@@ -505,7 +879,9 @@ class _RegisterScreenState extends State<RegisterScreen>
                         margin: EdgeInsets.only(right: i < 2 ? 6 : 0),
                         height: 4,
                         decoration: BoxDecoration(
-                          color: active ? AppColors.primary : const Color(0xFFEBE0FF),
+                          color: active
+                              ? AppColors.primary
+                              : const Color(0xFFEBE0FF),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -559,9 +935,12 @@ class _RegisterScreenState extends State<RegisterScreen>
 
   Widget _buildStepContent() {
     switch (_step) {
-      case 0:  return _Step0PersonalInfo(key: const ValueKey(0), state: this);
-      case 1:  return _Step1Address(key: const ValueKey(1), state: this);
-      default: return _Step2Account(key: const ValueKey(2), state: this);
+      case 0:
+        return _Step0PersonalInfo(key: const ValueKey(0), state: this);
+      case 1:
+        return _Step1Address(key: const ValueKey(1), state: this);
+      default:
+        return _Step2Account(key: const ValueKey(2), state: this);
     }
   }
 }
@@ -572,7 +951,11 @@ class _BottomBar extends StatelessWidget {
   final int step;
   final bool isLoading;
   final VoidCallback onNext;
-  const _BottomBar({required this.step, required this.isLoading, required this.onNext});
+  const _BottomBar({
+    required this.step,
+    required this.isLoading,
+    required this.onNext,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -591,28 +974,39 @@ class _BottomBar extends StatelessWidget {
             backgroundColor: AppColors.primary,
             disabledBackgroundColor: AppColors.primary.withOpacity(0.6),
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             elevation: 0,
           ),
           child: isLoading
               ? const SizedBox(
-            width: 22, height: 22,
-            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-          )
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2.5,
+                  ),
+                )
               : Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                step < 2 ? 'Next' : 'Create Account',
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(width: 8),
-              Icon(
-                step < 2 ? Icons.arrow_forward_rounded : Icons.check_rounded,
-                size: 17,
-              ),
-            ],
-          ),
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      step < 2 ? 'Next' : 'Create Account',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      step < 2
+                          ? Icons.arrow_forward_rounded
+                          : Icons.check_rounded,
+                      size: 17,
+                    ),
+                  ],
+                ),
         ),
       ),
     );
@@ -678,13 +1072,18 @@ class _Step0PersonalInfo extends StatelessWidget {
                     scale: 0.85,
                     child: Checkbox(
                       value: s._noMiddleName,
-                      onChanged: (v) => s.setState(() => s._noMiddleName = v ?? false),
+                      onChanged: (v) =>
+                          s.setState(() => s._noMiddleName = v ?? false),
                       activeColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(3),
+                      ),
                     ),
                   ),
-                  const Text('I have no middle name',
-                      style: TextStyle(fontSize: 11, color: Colors.black54)),
+                  const Text(
+                    'I have no middle name',
+                    style: TextStyle(fontSize: 11, color: Colors.black54),
+                  ),
                 ],
               ),
               _RegField(
@@ -722,14 +1121,20 @@ class _Step0PersonalInfo extends StatelessWidget {
                       onTap: () => s.setState(() => s._gender = g),
                       child: Container(
                         margin: EdgeInsets.only(
-                          right: g != _RegisterScreenState._genders.last ? 8 : 0,
+                          right: g != _RegisterScreenState._genders.last
+                              ? 8
+                              : 0,
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: selected ? const Color(0xFFF5F0FF) : Colors.white,
+                          color: selected
+                              ? const Color(0xFFF5F0FF)
+                              : Colors.white,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: selected ? AppColors.primary : const Color(0xFFEBE0FF),
+                            color: selected
+                                ? AppColors.primary
+                                : const Color(0xFFEBE0FF),
                             width: selected ? 1.5 : 0.5,
                           ),
                         ),
@@ -751,7 +1156,9 @@ class _Step0PersonalInfo extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
-                                color: selected ? AppColors.primary : Colors.black54,
+                                color: selected
+                                    ? AppColors.primary
+                                    : Colors.black54,
                               ),
                             ),
                           ],
@@ -792,7 +1199,11 @@ class _Step1Address extends StatelessWidget {
           ),
           child: const Row(
             children: [
-              Icon(Icons.info_outline_rounded, color: AppColors.primary, size: 15),
+              Icon(
+                Icons.info_outline_rounded,
+                color: AppColors.primary,
+                size: 15,
+              ),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -816,10 +1227,10 @@ class _Step1Address extends StatelessWidget {
                 value: s._country,
                 items: _RegisterScreenState._countries,
                 onChanged: (v) => s.setState(() {
-                  s._country          = v;
-                  s._stateProvince    = null;
+                  s._country = v;
+                  s._stateProvince = null;
                   s._cityMunicipality = null;
-                  s._barangay         = null;
+                  s._barangay = null;
                 }),
               ),
               const SizedBox(height: 12),
@@ -834,9 +1245,9 @@ class _Step1Address extends StatelessWidget {
                           ? _RegisterScreenState._phProvinces
                           : ['Other'],
                       onChanged: (v) => s.setState(() {
-                        s._stateProvince    = v;
+                        s._stateProvince = v;
                         s._cityMunicipality = null;
-                        s._barangay         = null;
+                        s._barangay = null;
                       }),
                       required: true,
                     ),
@@ -851,9 +1262,9 @@ class _Step1Address extends StatelessWidget {
                       onChanged: s._stateProvince == null
                           ? null
                           : (v) => s.setState(() {
-                        s._cityMunicipality = v;
-                        s._barangay         = null;
-                      }),
+                              s._cityMunicipality = v;
+                              s._barangay = null;
+                            }),
                       required: true,
                     ),
                   ),
@@ -917,8 +1328,11 @@ class _Step2Account extends StatelessWidget {
                 hint: 'you@email.com',
                 controller: s._emailCtrl,
                 keyboardType: TextInputType.emailAddress,
-                prefixIcon: const Icon(Icons.mail_outline_rounded,
-                    size: 16, color: Colors.grey),
+                prefixIcon: const Icon(
+                  Icons.mail_outline_rounded,
+                  size: 16,
+                  color: Colors.grey,
+                ),
                 required: true,
               ),
               const SizedBox(height: 12),
@@ -927,7 +1341,8 @@ class _Step2Account extends StatelessWidget {
                 hint: 'Min. 8 characters',
                 controller: s._passwordCtrl,
                 show: s._showPassword,
-                onToggle: () => s.setState(() => s._showPassword = !s._showPassword),
+                onToggle: () =>
+                    s.setState(() => s._showPassword = !s._showPassword),
                 required: true,
               ),
               const SizedBox(height: 12),
@@ -936,7 +1351,8 @@ class _Step2Account extends StatelessWidget {
                 hint: 'Re-enter password',
                 controller: s._confirmPasswordCtrl,
                 show: s._showConfirm,
-                onToggle: () => s.setState(() => s._showConfirm = !s._showConfirm),
+                onToggle: () =>
+                    s.setState(() => s._showConfirm = !s._showConfirm),
                 required: true,
               ),
             ],
@@ -955,7 +1371,11 @@ class _Step2Account extends StatelessWidget {
             children: [
               const Row(
                 children: [
-                  Icon(Icons.shield_outlined, size: 15, color: AppColors.primary),
+                  Icon(
+                    Icons.shield_outlined,
+                    size: 15,
+                    color: AppColors.primary,
+                  ),
                   SizedBox(width: 6),
                   Text(
                     'Password requirements',
@@ -969,9 +1389,15 @@ class _Step2Account extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               // ── Live password requirement indicators ──────────────
-              _PwReq(text: 'At least 8 characters',              met: s._pwHas8),
-              _PwReq(text: 'One uppercase letter (recommended)', met: s._pwHasCap),
-              _PwReq(text: 'One number or symbol (recommended)', met: s._pwHasNum),
+              _PwReq(text: 'At least 8 characters', met: s._pwHas8),
+              _PwReq(
+                text: 'One uppercase letter (recommended)',
+                met: s._pwHasCap,
+              ),
+              _PwReq(
+                text: 'One number or symbol (recommended)',
+                met: s._pwHasNum,
+              ),
             ],
           ),
         ),
@@ -986,24 +1412,35 @@ class _Step2Account extends StatelessWidget {
           child: RichText(
             textAlign: TextAlign.center,
             text: TextSpan(
-              style: const TextStyle(fontSize: 11, color: Colors.black54, height: 1.6),
+              style: const TextStyle(
+                fontSize: 11,
+                color: Colors.black54,
+                height: 1.6,
+              ),
               children: [
                 const TextSpan(text: 'By tapping '),
                 const TextSpan(
                   text: 'Create Account',
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
                 const TextSpan(text: ', you agree with the '),
                 TextSpan(
                   text: 'Terms and Conditions',
                   style: const TextStyle(
-                      color: AppColors.primary, fontWeight: FontWeight.w600),
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const TextSpan(text: ' and '),
                 TextSpan(
                   text: 'Privacy Notice',
                   style: const TextStyle(
-                      color: AppColors.primary, fontWeight: FontWeight.w600),
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const TextSpan(text: '.'),
               ],
@@ -1035,7 +1472,10 @@ class _PwReq extends StatelessWidget {
             color: met ? Colors.green : const Color(0xFFEBE0FF),
           ),
           const SizedBox(width: 6),
-          Text(text, style: const TextStyle(fontSize: 11, color: Colors.black54)),
+          Text(
+            text,
+            style: const TextStyle(fontSize: 11, color: Colors.black54),
+          ),
         ],
       ),
     );
@@ -1068,11 +1508,15 @@ class _Card extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  width: 40, height: 40,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
                     color: const Color(0xFFF5F0FF),
                     borderRadius: BorderRadius.circular(11),
-                    border: Border.all(color: const Color(0xFFEBE0FF), width: 0.5),
+                    border: Border.all(
+                      color: const Color(0xFFEBE0FF),
+                      width: 0.5,
+                    ),
                   ),
                   child: Icon(icon, size: 18, color: AppColors.primary),
                 ),
@@ -1091,7 +1535,10 @@ class _Card extends StatelessWidget {
                     if (subtitle != null)
                       Text(
                         subtitle!,
-                        style: const TextStyle(fontSize: 11, color: Colors.grey),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey,
+                        ),
                       ),
                   ],
                 ),
@@ -1120,7 +1567,8 @@ class _SectionLabel extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 3, height: 14,
+          width: 3,
+          height: 14,
           decoration: BoxDecoration(
             color: AppColors.primary,
             borderRadius: BorderRadius.circular(2),
@@ -1223,19 +1671,30 @@ class _RegField extends StatelessWidget {
             prefixIcon: prefixIcon,
             filled: true,
             fillColor: enabled ? Colors.white : Colors.grey.shade50,
-            contentPadding:
-            const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 13,
+              vertical: 11,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFEBE0FF), width: 0.5),
+              borderSide: const BorderSide(
+                color: Color(0xFFEBE0FF),
+                width: 0.5,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFEBE0FF), width: 0.5),
+              borderSide: const BorderSide(
+                color: Color(0xFFEBE0FF),
+                width: 0.5,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+              borderSide: const BorderSide(
+                color: AppColors.primary,
+                width: 1.5,
+              ),
             ),
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
@@ -1275,10 +1734,16 @@ class _RegDropdown extends StatelessWidget {
         _FieldLabel(text: label, required: required),
         const SizedBox(height: 5),
         DropdownButtonFormField<String>(
-          value: value,
-          hint: Text(hint, style: TextStyle(color: Colors.grey.shade400, fontSize: 13)),
-          icon: const Icon(Icons.keyboard_arrow_down_rounded,
-              color: Colors.black54, size: 18),
+          initialValue: value,
+          hint: Text(
+            hint,
+            style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+          ),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: Colors.black54,
+            size: 18,
+          ),
           isExpanded: true,
           style: const TextStyle(
             fontSize: 13,
@@ -1288,19 +1753,30 @@ class _RegDropdown extends StatelessWidget {
           decoration: InputDecoration(
             filled: true,
             fillColor: onChanged == null ? Colors.grey.shade50 : Colors.white,
-            contentPadding:
-            const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 13,
+              vertical: 11,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFEBE0FF), width: 0.5),
+              borderSide: const BorderSide(
+                color: Color(0xFFEBE0FF),
+                width: 0.5,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFEBE0FF), width: 0.5),
+              borderSide: const BorderSide(
+                color: Color(0xFFEBE0FF),
+                width: 0.5,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+              borderSide: const BorderSide(
+                color: AppColors.primary,
+                width: 1.5,
+              ),
             ),
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
@@ -1358,16 +1834,20 @@ class _DateField extends StatelessWidget {
                     value != null ? _format(value!) : 'mm/dd/yyyy',
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight:
-                      value != null ? FontWeight.w500 : FontWeight.normal,
+                      fontWeight: value != null
+                          ? FontWeight.w500
+                          : FontWeight.normal,
                       color: value != null
                           ? const Color(0xFF1E0447)
                           : Colors.grey.shade400,
                     ),
                   ),
                 ),
-                const Icon(Icons.calendar_month_outlined,
-                    color: Colors.black45, size: 16),
+                const Icon(
+                  Icons.calendar_month_outlined,
+                  color: Colors.black45,
+                  size: 16,
+                ),
               ],
             ),
           ),
@@ -1417,19 +1897,30 @@ class _PasswordField extends StatelessWidget {
             hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
             filled: true,
             fillColor: Colors.white,
-            contentPadding:
-            const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 13,
+              vertical: 11,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFEBE0FF), width: 0.5),
+              borderSide: const BorderSide(
+                color: Color(0xFFEBE0FF),
+                width: 0.5,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFEBE0FF), width: 0.5),
+              borderSide: const BorderSide(
+                color: Color(0xFFEBE0FF),
+                width: 0.5,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+              borderSide: const BorderSide(
+                color: AppColors.primary,
+                width: 1.5,
+              ),
             ),
             suffixIcon: IconButton(
               icon: Icon(

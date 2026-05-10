@@ -180,7 +180,9 @@ class ProfileService {
 
   /// Update profile fields
   static Future<void> updateProfile(
-      String id, Map<String, dynamic> payload) async {
+    String id,
+    Map<String, dynamic> payload,
+  ) async {
     await _db
         .from('profiles')
         .update({...payload, 'updated_at': DateTime.now().toIso8601String()})
@@ -200,13 +202,6 @@ class ProfileService {
 String _fmtDate(DateTime dt) =>
     '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
 
-String _fmtDateReadable(DateTime dt) {
-  const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-  ];
-  return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
-}
 
 const _kGenderOptions = ['Male', 'Female', 'Other', 'Prefer not to say'];
 const _kStaffRoles = [
@@ -328,8 +323,9 @@ class _UserManagementPageState extends State<UserManagementPage>
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
           title: Row(
             children: [
               Container(
@@ -338,13 +334,17 @@ class _UserManagementPageState extends State<UserManagementPage>
                   color: _kPrimaryLight,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.person_add_outlined,
-                    color: _kPrimary, size: 18),
+                child: const Icon(
+                  Icons.person_add_outlined,
+                  color: _kPrimary,
+                  size: 18,
+                ),
               ),
               const SizedBox(width: 10),
-              const Text('Add Staff Account',
-                  style:
-                  TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+              const Text(
+                'Add Staff Account',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           content: SizedBox(
@@ -358,18 +358,18 @@ class _UserManagementPageState extends State<UserManagementPage>
                   children: [
                     _sectionLabel('Personal Information'),
                     _ValidatedField(
-                        ctrl: firstCtrl,
-                        label: 'First Name *',
-                        validator: _required),
+                      ctrl: firstCtrl,
+                      label: 'First Name *',
+                      validator: _required,
+                    ),
                     const SizedBox(height: 8),
-                    _Field(
-                        ctrl: middleCtrl,
-                        label: 'Middle Name (optional)'),
+                    _Field(ctrl: middleCtrl, label: 'Middle Name (optional)'),
                     const SizedBox(height: 8),
                     _ValidatedField(
-                        ctrl: lastCtrl,
-                        label: 'Last Name *',
-                        validator: _required),
+                      ctrl: lastCtrl,
+                      label: 'Last Name *',
+                      validator: _required,
+                    ),
                     const SizedBox(height: 8),
                     _Field(ctrl: suffixCtrl, label: 'Suffix (Jr., Sr., etc.)'),
                     const SizedBox(height: 8),
@@ -384,32 +384,39 @@ class _UserManagementPageState extends State<UserManagementPage>
                           builder: (ctx, child) => Theme(
                             data: ThemeData.light().copyWith(
                               colorScheme: const ColorScheme.light(
-                                  primary: _kPrimary),
+                                primary: _kPrimary,
+                              ),
                             ),
                             child: child!,
                           ),
                         );
                         if (picked != null) {
-                          setDialogState(
-                                  () => selectedBirthDate = picked);
+                          setDialogState(() => selectedBirthDate = picked);
                         }
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 13),
+                          horizontal: 12,
+                          vertical: 13,
+                        ),
                         decoration: BoxDecoration(
                           border: Border.all(color: _kBorder),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.cake_outlined,
-                                size: 16, color: _kPrimary),
+                            const Icon(
+                              Icons.cake_outlined,
+                              size: 16,
+                              color: _kPrimary,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               'Birth Date: ${_fmtDate(selectedBirthDate)}',
                               style: const TextStyle(
-                                  fontSize: 12, color: _kPrimary),
+                                fontSize: 12,
+                                color: _kPrimary,
+                              ),
                             ),
                           ],
                         ),
@@ -425,32 +432,32 @@ class _UserManagementPageState extends State<UserManagementPage>
                           setDialogState(() => selectedGender = v!),
                     ),
                     const SizedBox(height: 8),
-                    _Field(
-                        ctrl: citizenshipCtrl, label: 'Citizenship'),
+                    _Field(ctrl: citizenshipCtrl, label: 'Citizenship'),
                     const SizedBox(height: 12),
                     _sectionLabel('Account'),
                     _ValidatedField(
-                        ctrl: emailCtrl,
-                        label: 'Email *',
-                        validator: _requiredEmail,
-                        keyboardType: TextInputType.emailAddress),
+                      ctrl: emailCtrl,
+                      label: 'Email *',
+                      validator: _requiredEmail,
+                      keyboardType: TextInputType.emailAddress,
+                    ),
                     const SizedBox(height: 8),
                     // Role dropdown
                     _DropdownField<String>(
                       label: 'Role',
                       value: selectedRole,
                       items: _kStaffRoles,
-                      onChanged: (v) =>
-                          setDialogState(() => selectedRole = v!),
+                      onChanged: (v) => setDialogState(() => selectedRole = v!),
                     ),
                     const SizedBox(height: 12),
                     _sectionLabel('Address'),
                     _Field(ctrl: streetCtrl, label: 'Street Address'),
                     const SizedBox(height: 8),
                     _ValidatedField(
-                        ctrl: barangayCtrl,
-                        label: 'Barangay *',
-                        validator: _required),
+                      ctrl: barangayCtrl,
+                      label: 'Barangay *',
+                      validator: _required,
+                    ),
                     const SizedBox(height: 8),
                     _Field(ctrl: cityCtrl, label: 'City / Municipality'),
                     const SizedBox(height: 8),
@@ -467,14 +474,14 @@ class _UserManagementPageState extends State<UserManagementPage>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text('Cancel',
-                  style: TextStyle(color: Colors.grey[600])),
+              child: Text('Cancel', style: TextStyle(color: Colors.grey[600])),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: _kPrimary,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 elevation: 0,
               ),
               onPressed: () async {
@@ -526,15 +533,20 @@ class _UserManagementPageState extends State<UserManagementPage>
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                          content: Text('Error: $e'),
-                          backgroundColor: Colors.red),
+                        content: Text('Error: $e'),
+                        backgroundColor: Colors.red,
+                      ),
                     );
                   }
                 }
               },
-              child: const Text('Create',
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold)),
+              child: const Text(
+                'Create',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),
@@ -550,8 +562,7 @@ class _UserManagementPageState extends State<UserManagementPage>
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        shape:
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           p.isActive ? 'Deactivate Account' : 'Activate Account',
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
@@ -563,8 +574,7 @@ class _UserManagementPageState extends State<UserManagementPage>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel',
-                style: TextStyle(color: Colors.grey[600])),
+            child: Text('Cancel', style: TextStyle(color: Colors.grey[600])),
           ),
           TextButton(
             onPressed: () async {
@@ -576,8 +586,9 @@ class _UserManagementPageState extends State<UserManagementPage>
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content: Text('Error: $e'),
-                        backgroundColor: Colors.red),
+                      content: Text('Error: $e'),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                 }
               }
@@ -605,10 +616,11 @@ class _UserManagementPageState extends State<UserManagementPage>
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        shape:
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Delete Profile',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Delete Profile',
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+        ),
         content: Text(
           'Permanently delete "${p.fullName}"? This action cannot be undone.',
           style: const TextStyle(fontSize: 13),
@@ -616,8 +628,7 @@ class _UserManagementPageState extends State<UserManagementPage>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel',
-                style: TextStyle(color: Colors.grey[600])),
+            child: Text('Cancel', style: TextStyle(color: Colors.grey[600])),
           ),
           TextButton(
             onPressed: () async {
@@ -637,16 +648,20 @@ class _UserManagementPageState extends State<UserManagementPage>
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content: Text('Error: $e'),
-                        backgroundColor: Colors.red),
+                      content: Text('Error: $e'),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                 }
               }
             },
-            child: const Text('Delete',
-                style: TextStyle(
-                    color: Color(0xFFDC2626),
-                    fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Delete',
+              style: TextStyle(
+                color: Color(0xFFDC2626),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -659,29 +674,24 @@ class _UserManagementPageState extends State<UserManagementPage>
 
   void _showEditDialog(ProfileModel p) {
     final firstCtrl = TextEditingController(text: p.firstName);
-    final middleCtrl =
-    TextEditingController(text: p.middleName ?? '');
+    final middleCtrl = TextEditingController(text: p.middleName ?? '');
     final lastCtrl = TextEditingController(text: p.lastName);
     final suffixCtrl = TextEditingController(text: p.suffix ?? '');
     final emailCtrl = TextEditingController(text: p.email);
     final barangayCtrl = TextEditingController(text: p.barangay);
-    final cityCtrl =
-    TextEditingController(text: p.cityMunicipality);
-    final stateCtrl =
-    TextEditingController(text: p.stateProvince);
+    final cityCtrl = TextEditingController(text: p.cityMunicipality);
+    final stateCtrl = TextEditingController(text: p.stateProvince);
     final countryCtrl = TextEditingController(text: p.country);
-    final streetCtrl =
-    TextEditingController(text: p.streetAddress);
-    final postalCtrl =
-    TextEditingController(text: p.postalCode ?? '');
-    final citizenshipCtrl =
-    TextEditingController(text: p.citizenship);
+    final streetCtrl = TextEditingController(text: p.streetAddress);
+    final postalCtrl = TextEditingController(text: p.postalCode ?? '');
+    final citizenshipCtrl = TextEditingController(text: p.citizenship);
 
     String selectedGender = _kGenderOptions.contains(p.gender)
         ? p.gender
         : _kGenderOptions.first;
-    String selectedRole =
-    _kStaffRoles.contains(p.role) ? p.role : _kStaffRoles.last;
+    String selectedRole = _kStaffRoles.contains(p.role)
+        ? p.role
+        : _kStaffRoles.last;
     DateTime selectedBirthDate = p.birthDate;
     final formKey = GlobalKey<FormState>();
 
@@ -690,7 +700,8 @@ class _UserManagementPageState extends State<UserManagementPage>
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18)),
+            borderRadius: BorderRadius.circular(18),
+          ),
           title: Row(
             children: [
               Container(
@@ -699,14 +710,18 @@ class _UserManagementPageState extends State<UserManagementPage>
                   color: _kPrimaryLight,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.edit_outlined,
-                    color: _kPrimary, size: 18),
+                child: const Icon(
+                  Icons.edit_outlined,
+                  color: _kPrimary,
+                  size: 18,
+                ),
               ),
               const SizedBox(width: 10),
               const Expanded(
-                child: Text('Edit Profile',
-                    style: TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.bold)),
+                child: Text(
+                  'Edit Profile',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),
@@ -721,22 +736,20 @@ class _UserManagementPageState extends State<UserManagementPage>
                   children: [
                     _sectionLabel('Personal Information'),
                     _ValidatedField(
-                        ctrl: firstCtrl,
-                        label: 'First Name *',
-                        validator: _required),
+                      ctrl: firstCtrl,
+                      label: 'First Name *',
+                      validator: _required,
+                    ),
                     const SizedBox(height: 8),
-                    _Field(
-                        ctrl: middleCtrl,
-                        label: 'Middle Name (optional)'),
+                    _Field(ctrl: middleCtrl, label: 'Middle Name (optional)'),
                     const SizedBox(height: 8),
                     _ValidatedField(
-                        ctrl: lastCtrl,
-                        label: 'Last Name *',
-                        validator: _required),
+                      ctrl: lastCtrl,
+                      label: 'Last Name *',
+                      validator: _required,
+                    ),
                     const SizedBox(height: 8),
-                    _Field(
-                        ctrl: suffixCtrl,
-                        label: 'Suffix (Jr., Sr., etc.)'),
+                    _Field(ctrl: suffixCtrl, label: 'Suffix (Jr., Sr., etc.)'),
                     const SizedBox(height: 8),
                     // Birth Date picker
                     GestureDetector(
@@ -749,32 +762,39 @@ class _UserManagementPageState extends State<UserManagementPage>
                           builder: (ctx, child) => Theme(
                             data: ThemeData.light().copyWith(
                               colorScheme: const ColorScheme.light(
-                                  primary: _kPrimary),
+                                primary: _kPrimary,
+                              ),
                             ),
                             child: child!,
                           ),
                         );
                         if (picked != null) {
-                          setDialogState(
-                                  () => selectedBirthDate = picked);
+                          setDialogState(() => selectedBirthDate = picked);
                         }
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 13),
+                          horizontal: 12,
+                          vertical: 13,
+                        ),
                         decoration: BoxDecoration(
                           border: Border.all(color: _kBorder),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.cake_outlined,
-                                size: 16, color: _kPrimary),
+                            const Icon(
+                              Icons.cake_outlined,
+                              size: 16,
+                              color: _kPrimary,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               'Birth Date: ${_fmtDate(selectedBirthDate)}',
                               style: const TextStyle(
-                                  fontSize: 12, color: _kPrimary),
+                                fontSize: 12,
+                                color: _kPrimary,
+                              ),
                             ),
                           ],
                         ),
@@ -789,46 +809,39 @@ class _UserManagementPageState extends State<UserManagementPage>
                           setDialogState(() => selectedGender = v!),
                     ),
                     const SizedBox(height: 8),
-                    _Field(
-                        ctrl: citizenshipCtrl,
-                        label: 'Citizenship'),
+                    _Field(ctrl: citizenshipCtrl, label: 'Citizenship'),
                     const SizedBox(height: 12),
                     _sectionLabel('Account'),
                     _ValidatedField(
-                        ctrl: emailCtrl,
-                        label: 'Email *',
-                        validator: _requiredEmail,
-                        keyboardType: TextInputType.emailAddress),
+                      ctrl: emailCtrl,
+                      label: 'Email *',
+                      validator: _requiredEmail,
+                      keyboardType: TextInputType.emailAddress,
+                    ),
                     const SizedBox(height: 8),
                     _DropdownField<String>(
                       label: 'Role',
                       value: selectedRole,
                       items: _kStaffRoles,
-                      onChanged: (v) =>
-                          setDialogState(() => selectedRole = v!),
+                      onChanged: (v) => setDialogState(() => selectedRole = v!),
                     ),
                     const SizedBox(height: 12),
                     _sectionLabel('Address'),
-                    _Field(
-                        ctrl: streetCtrl, label: 'Street Address'),
+                    _Field(ctrl: streetCtrl, label: 'Street Address'),
                     const SizedBox(height: 8),
                     _ValidatedField(
-                        ctrl: barangayCtrl,
-                        label: 'Barangay *',
-                        validator: _required),
+                      ctrl: barangayCtrl,
+                      label: 'Barangay *',
+                      validator: _required,
+                    ),
                     const SizedBox(height: 8),
-                    _Field(
-                        ctrl: cityCtrl,
-                        label: 'City / Municipality'),
+                    _Field(ctrl: cityCtrl, label: 'City / Municipality'),
                     const SizedBox(height: 8),
-                    _Field(
-                        ctrl: stateCtrl,
-                        label: 'State / Province'),
+                    _Field(ctrl: stateCtrl, label: 'State / Province'),
                     const SizedBox(height: 8),
                     _Field(ctrl: countryCtrl, label: 'Country'),
                     const SizedBox(height: 8),
-                    _Field(
-                        ctrl: postalCtrl, label: 'Postal Code'),
+                    _Field(ctrl: postalCtrl, label: 'Postal Code'),
                   ],
                 ),
               ),
@@ -837,14 +850,14 @@ class _UserManagementPageState extends State<UserManagementPage>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text('Cancel',
-                  style: TextStyle(color: Colors.grey[600])),
+              child: Text('Cancel', style: TextStyle(color: Colors.grey[600])),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: _kPrimary,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 elevation: 0,
               ),
               onPressed: () async {
@@ -887,16 +900,20 @@ class _UserManagementPageState extends State<UserManagementPage>
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                          content: Text('Error: $e'),
-                          backgroundColor: Colors.red),
+                        content: Text('Error: $e'),
+                        backgroundColor: Colors.red,
+                      ),
                     );
                   }
                 }
               },
-              child: const Text('Save Changes',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold)),
+              child: const Text(
+                'Save Changes',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),
@@ -953,20 +970,25 @@ class _UserManagementPageState extends State<UserManagementPage>
         centerTitle: true,
         backgroundColor: _kBg,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: _kPrimary, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: _kPrimary,
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon:
-            const Icon(Icons.refresh_rounded, color: _kPrimary, size: 22),
+            icon: const Icon(Icons.refresh_rounded, color: _kPrimary, size: 22),
             onPressed: _load,
             tooltip: 'Refresh',
           ),
           IconButton(
-            icon: const Icon(Icons.person_add_outlined,
-                color: _kPrimary, size: 22),
+            icon: const Icon(
+              Icons.person_add_outlined,
+              color: _kPrimary,
+              size: 22,
+            ),
             onPressed: _showAddStaffDialog,
             tooltip: 'Add Staff',
           ),
@@ -976,8 +998,10 @@ class _UserManagementPageState extends State<UserManagementPage>
           labelColor: _kPrimary,
           unselectedLabelColor: Colors.grey,
           indicatorColor: _kPrimary,
-          labelStyle:
-          const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          labelStyle: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
           tabs: const [
             Tab(text: 'Staff'),
             Tab(text: 'Residents'),
@@ -985,70 +1009,68 @@ class _UserManagementPageState extends State<UserManagementPage>
         ),
       ),
       body: _isLoading
-          ? const Center(
-          child: CircularProgressIndicator(color: _kPrimary))
+          ? const Center(child: CircularProgressIndicator(color: _kPrimary))
           : _errorMessage != null
           ? _buildError()
           : Column(
-        children: [
-          const SizedBox(height: 10),
-          Padding(
-            padding:
-            const EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
-              controller: _searchCtrl,
-              onChanged: (v) =>
-                  setState(() => _searchQuery = v),
-              decoration: InputDecoration(
-                hintText: 'Search by name, role, email, location...',
-                hintStyle: const TextStyle(
-                    color: _kPrimary, fontSize: 13),
-                prefixIcon: const Icon(Icons.search,
-                    color: _kPrimary, size: 20),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                  icon: const Icon(Icons.clear,
-                      color: _kPrimary, size: 18),
-                  onPressed: () {
-                    _searchCtrl.clear();
-                    setState(() => _searchQuery = '');
-                  },
-                )
-                    : null,
-                filled: true,
-                fillColor: _kPrimaryLight,
-                contentPadding:
-                const EdgeInsets.symmetric(vertical: 0),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide:
-                  const BorderSide(color: _kBorder),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide:
-                  const BorderSide(color: _kBorder),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide:
-                  const BorderSide(color: _kPrimary),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Expanded(
-            child: TabBarView(
-              controller: _tabCtrl,
               children: [
-                _buildStaffTab(),
-                _buildResidentTab(),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: TextField(
+                    controller: _searchCtrl,
+                    onChanged: (v) => setState(() => _searchQuery = v),
+                    decoration: InputDecoration(
+                      hintText: 'Search by name, role, email, location...',
+                      hintStyle: const TextStyle(
+                        color: _kPrimary,
+                        fontSize: 13,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: _kPrimary,
+                        size: 20,
+                      ),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(
+                                Icons.clear,
+                                color: _kPrimary,
+                                size: 18,
+                              ),
+                              onPressed: () {
+                                _searchCtrl.clear();
+                                setState(() => _searchQuery = '');
+                              },
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: _kPrimaryLight,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: _kBorder),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: _kBorder),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: _kPrimary),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabCtrl,
+                    children: [_buildStaffTab(), _buildResidentTab()],
+                  ),
+                ),
               ],
             ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1059,17 +1081,19 @@ class _UserManagementPageState extends State<UserManagementPage>
         children: [
           const Icon(Icons.error_outline, color: Colors.red, size: 40),
           const SizedBox(height: 10),
-          Text(_errorMessage!,
-              style: const TextStyle(fontSize: 13, color: Colors.red),
-              textAlign: TextAlign.center),
+          Text(
+            _errorMessage!,
+            style: const TextStyle(fontSize: 13, color: Colors.red),
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 12),
           ElevatedButton(
             onPressed: _load,
-            style:
-            ElevatedButton.styleFrom(backgroundColor: _kPrimary),
-            child: const Text('Retry',
-                style:
-                TextStyle(color: Colors.white, fontSize: 13)),
+            style: ElevatedButton.styleFrom(backgroundColor: _kPrimary),
+            child: const Text(
+              'Retry',
+              style: TextStyle(color: Colors.white, fontSize: 13),
+            ),
           ),
         ],
       ),
@@ -1089,18 +1113,21 @@ class _UserManagementPageState extends State<UserManagementPage>
     return Column(
       children: [
         Padding(
-          padding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           child: Row(
             children: [
-              Text('${staff.length} staff  ·  ',
-                  style: TextStyle(
-                      fontSize: 12, color: Colors.grey[600])),
-              Text('$activeCount active',
-                  style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF16A34A),
-                      fontWeight: FontWeight.w600)),
+              Text(
+                '${staff.length} staff  ·  ',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+              Text(
+                '$activeCount active',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF16A34A),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
         ),
@@ -1108,7 +1135,7 @@ class _UserManagementPageState extends State<UserManagementPage>
           child: ListView.separated(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
             itemCount: staff.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
             itemBuilder: (_, i) => _StaffCard(
               profile: staff[i],
               onTap: () => _showProfileSheet(staff[i]),
@@ -1135,18 +1162,21 @@ class _UserManagementPageState extends State<UserManagementPage>
     return Column(
       children: [
         Padding(
-          padding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           child: Row(
             children: [
-              Text('${residents.length} residents  ·  ',
-                  style: TextStyle(
-                      fontSize: 12, color: Colors.grey[600])),
-              Text('$activeCount active',
-                  style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF16A34A),
-                      fontWeight: FontWeight.w600)),
+              Text(
+                '${residents.length} residents  ·  ',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+              Text(
+                '$activeCount active',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF16A34A),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
         ),
@@ -1154,7 +1184,7 @@ class _UserManagementPageState extends State<UserManagementPage>
           child: ListView.separated(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
             itemCount: residents.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
             itemBuilder: (_, i) => _ResidentCard(
               profile: residents[i],
               onTap: () => _showProfileSheet(residents[i]),
@@ -1174,8 +1204,10 @@ class _UserManagementPageState extends State<UserManagementPage>
         children: [
           Icon(Icons.search_off_rounded, size: 40, color: Colors.grey[400]),
           const SizedBox(height: 10),
-          Text(message,
-              style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+          Text(
+            message,
+            style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+          ),
         ],
       ),
     );
@@ -1210,9 +1242,15 @@ class _ProfileDetailSheet extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Text('User Details', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text(
+                'User Details',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
               const Spacer(),
-              IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(context),
+              ),
             ],
           ),
           const Divider(),
@@ -1226,9 +1264,14 @@ class _ProfileDetailSheet extends StatelessWidget {
             children: [
               Expanded(
                 child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: p.isActive ? Colors.orange : Colors.green),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: p.isActive ? Colors.orange : Colors.green,
+                  ),
                   onPressed: onToggle,
-                  child: Text(p.isActive ? 'Deactivate' : 'Activate', style: const TextStyle(color: Colors.white)),
+                  child: Text(
+                    p.isActive ? 'Deactivate' : 'Activate',
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -1236,7 +1279,10 @@ class _ProfileDetailSheet extends StatelessWidget {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                   onPressed: onDelete,
-                  child: const Text('Delete User', style: TextStyle(color: Colors.white)),
+                  child: const Text(
+                    'Delete User',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ),
             ],
@@ -1254,96 +1300,9 @@ class _ProfileDetailSheet extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-        ],
-      ),
-    );
-  }
-
-}
-
-class _SheetSection extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final List<_InfoRow> rows;
-
-  const _SheetSection(
-      {required this.title, required this.icon, required this.rows});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-                width: 3,
-                height: 14,
-                decoration: BoxDecoration(
-                    color: _kPrimary,
-                    borderRadius: BorderRadius.circular(2))),
-            const SizedBox(width: 8),
-            Icon(icon, size: 14, color: _kPrimary),
-            const SizedBox(width: 5),
-            Text(title,
-                style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: _kPrimary)),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _kBorder),
-          ),
-          child: Column(
-            children: rows
-                .asMap()
-                .entries
-                .map((e) => _InfoRowTile(
-                row: e.value,
-                isLast: e.key == rows.length - 1))
-                .toList(),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _InfoRowTile extends StatelessWidget {
-  final _InfoRow row;
-  final bool isLast;
-  const _InfoRowTile({required this.row, required this.isLast});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-      decoration: BoxDecoration(
-        border: isLast
-            ? null
-            : const Border(bottom: BorderSide(color: _kBorder)),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(row.label,
-                style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500)),
-          ),
-          Expanded(
-            child: Text(row.value,
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w600),
-                textAlign: TextAlign.right),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
           ),
         ],
       ),
@@ -1351,47 +1310,6 @@ class _InfoRowTile extends StatelessWidget {
   }
 }
 
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: color.withOpacity(0.25)),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, size: 18, color: color),
-              const SizedBox(height: 3),
-              Text(label,
-                  style: TextStyle(
-                      fontSize: 10,
-                      color: color,
-                      fontWeight: FontWeight.w600)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 // ============================================================================
 // REUSABLE CARD WIDGETS
@@ -1429,29 +1347,43 @@ class _StaffCard extends StatelessWidget {
               width: 42,
               height: 42,
               decoration: const BoxDecoration(
-                  color: _kPrimaryLight, shape: BoxShape.circle),
-              child: const Icon(Icons.person_outline,
-                  color: _kPrimary, size: 22),
+                color: _kPrimaryLight,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.person_outline,
+                color: _kPrimary,
+                size: 22,
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(profile.fullName,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w700, fontSize: 13)),
-                  Text(profile.role,
-                      style: const TextStyle(
-                          fontSize: 11,
-                          color: _kPrimary,
-                          fontWeight: FontWeight.w600)),
-                  Text(profile.email,
-                      style: TextStyle(
-                          fontSize: 10, color: Colors.grey[600])),
-                  Text(profile.barangay,
-                      style: TextStyle(
-                          fontSize: 10, color: Colors.grey[500])),
+                  Text(
+                    profile.fullName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                  Text(
+                    profile.role,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: _kPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    profile.email,
+                    style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                  ),
+                  Text(
+                    profile.barangay,
+                    style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+                  ),
                 ],
               ),
             ),
@@ -1472,8 +1404,11 @@ class _StaffCard extends StatelessWidget {
                           color: _kPrimaryLight,
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: const Icon(Icons.edit_outlined,
-                            size: 13, color: _kPrimary),
+                        child: const Icon(
+                          Icons.edit_outlined,
+                          size: 13,
+                          color: _kPrimary,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 5),
@@ -1501,8 +1436,11 @@ class _StaffCard extends StatelessWidget {
                           color: const Color(0xFFFFEEEE),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: const Icon(Icons.delete_outline,
-                            size: 13, color: Color(0xFFDC2626)),
+                        child: const Icon(
+                          Icons.delete_outline,
+                          size: 13,
+                          color: Color(0xFFDC2626),
+                        ),
                       ),
                     ),
                   ],
@@ -1547,36 +1485,43 @@ class _ResidentCard extends StatelessWidget {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: isFemale
-                    ? const Color(0xFFFFF0F5)
-                    : _kPrimaryLight,
+                color: isFemale ? const Color(0xFFFFF0F5) : _kPrimaryLight,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.person_outline,
-                  color:
-                  isFemale ? const Color(0xFFDB2777) : _kPrimary,
-                  size: 22),
+              child: Icon(
+                Icons.person_outline,
+                color: isFemale ? const Color(0xFFDB2777) : _kPrimary,
+                size: 22,
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(profile.fullName,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w700, fontSize: 13)),
                   Text(
-                      '${profile.barangay} · ${profile.cityMunicipality}',
-                      style: const TextStyle(
-                          fontSize: 11,
-                          color: _kPrimary,
-                          fontWeight: FontWeight.w600)),
-                  Text(profile.email,
-                      style: TextStyle(
-                          fontSize: 10, color: Colors.grey[600])),
-                  Text(profile.gender,
-                      style: TextStyle(
-                          fontSize: 10, color: Colors.grey[500])),
+                    profile.fullName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                  Text(
+                    '${profile.barangay} · ${profile.cityMunicipality}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: _kPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    profile.email,
+                    style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                  ),
+                  Text(
+                    profile.gender,
+                    style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+                  ),
                 ],
               ),
             ),
@@ -1596,8 +1541,11 @@ class _ResidentCard extends StatelessWidget {
                           color: _kPrimaryLight,
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: const Icon(Icons.edit_outlined,
-                            size: 13, color: _kPrimary),
+                        child: const Icon(
+                          Icons.edit_outlined,
+                          size: 13,
+                          color: _kPrimary,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 5),
@@ -1609,8 +1557,11 @@ class _ResidentCard extends StatelessWidget {
                           color: const Color(0xFFFFEEEE),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: const Icon(Icons.delete_outline,
-                            size: 13, color: Color(0xFFDC2626)),
+                        child: const Icon(
+                          Icons.delete_outline,
+                          size: 13,
+                          color: Color(0xFFDC2626),
+                        ),
                       ),
                     ),
                   ],
@@ -1637,9 +1588,7 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: isActive
-            ? const Color(0xFFEDFAF3)
-            : const Color(0xFFFFEEEE),
+        color: isActive ? const Color(0xFFEDFAF3) : const Color(0xFFFFEEEE),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
@@ -1647,24 +1596,13 @@ class _StatusBadge extends StatelessWidget {
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w700,
-          color: isActive
-              ? const Color(0xFF16A34A)
-              : const Color(0xFFDC2626),
+          color: isActive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
         ),
       ),
     );
   }
 }
 
-// ============================================================================
-// INFO ROW (for dialogs / sheet)
-// ============================================================================
-
-class _InfoRow {
-  final String label;
-  final String value;
-  const _InfoRow({required this.label, required this.value});
-}
 
 // ============================================================================
 // FORM FIELD WIDGETS
@@ -1691,8 +1629,10 @@ class _Field extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(fontSize: 12, color: _kPrimary),
-        contentPadding:
-        const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: _kBorder),
@@ -1734,8 +1674,10 @@ class _ValidatedField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(fontSize: 12, color: _kPrimary),
-        contentPadding:
-        const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: _kBorder),
@@ -1778,14 +1720,16 @@ class _DropdownField<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       onChanged: onChanged,
       style: const TextStyle(fontSize: 13, color: Colors.black87),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(fontSize: 12, color: _kPrimary),
-        contentPadding:
-        const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: _kBorder),
@@ -1800,11 +1744,12 @@ class _DropdownField<T> extends StatelessWidget {
         ),
       ),
       items: items
-          .map((e) => DropdownMenuItem<T>(
-        value: e,
-        child: Text(e.toString(),
-            style: const TextStyle(fontSize: 13)),
-      ))
+          .map(
+            (e) => DropdownMenuItem<T>(
+              value: e,
+              child: Text(e.toString(), style: const TextStyle(fontSize: 13)),
+            ),
+          )
           .toList(),
     );
   }
@@ -1838,15 +1783,19 @@ Widget _sectionLabel(String text) {
           width: 3,
           height: 13,
           decoration: BoxDecoration(
-              color: _kPrimary,
-              borderRadius: BorderRadius.circular(2)),
+            color: _kPrimary,
+            borderRadius: BorderRadius.circular(2),
+          ),
         ),
         const SizedBox(width: 7),
-        Text(text,
-            style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: _kPrimary)),
+        Text(
+          text,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: _kPrimary,
+          ),
+        ),
       ],
     ),
   );

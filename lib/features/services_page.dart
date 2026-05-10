@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:ube/features/announcement_page.dart';
 import 'package:ube/features/appointment_request_page..dart';
 
-
 import 'package:ube/features/document_request_page.dart';
 import 'package:ube/features/emergency_page.dart';
 import 'package:ube/features/residents_household_page.dart';
@@ -20,12 +19,6 @@ import 'hall/documentcreation_page.dart';
 
 // ── NEW: Resident modules ────────────────────────────────────────────────────
 import 'package:ube/features/incident_report_page.dart';
-
-// ── NEW: Staff modules ───────────────────────────────────────────────────────
-import 'package:ube/features/staff/attendance_tracking_page.dart';
-import 'package:ube/features/staff/task_assignment_page.dart';
-import 'package:ube/features/staff/patrol_tracking_page.dart';
-import 'package:ube/features/staff/route_planning_page.dart';
 
 // ── NEW: Barangay Hall modules ───────────────────────────────────────────────
 import 'package:ube/features/hall/user_management_page.dart';
@@ -116,10 +109,7 @@ class _ViewAllPageState extends State<ViewAllPage> {
       'Announcement',
       Icons.campaign_rounded,
       onTap: (context) {
-        Navigator.push(
-          context,
-          instantRoute(const CreateAnnouncementScreen()),
-        );
+        Navigator.push(context, instantRoute(const CreateAnnouncementScreen()));
       },
     ),
     IconItem(
@@ -153,36 +143,6 @@ class _ViewAllPageState extends State<ViewAllPage> {
       Icons.report_outlined,
       onTap: (context) {
         Navigator.push(context, instantRoute(const IncidentReportPage()));
-      },
-    ),
-
-    // ── NEW: STAFF MODULES ──────────────────────────────────────────────────
-    IconItem(
-      'Attendance Tracking',
-      Icons.fingerprint,
-      onTap: (context) {
-        Navigator.push(context, instantRoute(const AttendanceTrackingPage()));
-      },
-    ),
-    IconItem(
-      'Task Dashboard',
-      Icons.task_alt,
-      onTap: (context) {
-        Navigator.push(context, instantRoute(const TaskAssignmentPage()));
-      },
-    ),
-    IconItem(
-      'Patrol Tracking',
-      Icons.directions_walk,
-      onTap: (context) {
-        Navigator.push(context, instantRoute(const PatrolTrackingPage()));
-      },
-    ),
-    IconItem(
-      'Route Planning',
-      Icons.route,
-      onTap: (context) {
-        Navigator.push(context, instantRoute(const RoutePlanningPage()));
       },
     ),
 

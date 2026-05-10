@@ -239,8 +239,8 @@ class _IncidentReportPageState extends State<IncidentReportPage> {
                       // Resolve final category label
                       final finalCategory = selectedCategory == 'Others'
                           ? (othersCtrl.text.trim().isEmpty
-                          ? 'Others'
-                          : othersCtrl.text.trim())
+                                ? 'Others'
+                                : othersCtrl.text.trim())
                           : (selectedCategory ?? '');
 
                       Navigator.pop(ctx);
@@ -327,108 +327,108 @@ class _IncidentReportPageState extends State<IncidentReportPage> {
           : _incidents.isEmpty
           ? _EmptyState(onTap: _showReportForm)
           : ListView.separated(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-        itemCount: _incidents.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
-        itemBuilder: (_, i) {
-          final inc = _incidents[i];
-          final sc = _severityColor(inc.severity);
-          return Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: _kBorder),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        inc.title,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _statusColor(inc.status)
-                            .withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: _statusColor(inc.status)
-                              .withOpacity(0.4),
-                        ),
-                      ),
-                      child: Text(
-                        _statusLabel(inc.status),
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: _statusColor(inc.status),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: sc.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        inc.severity.name,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: sc,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                if (inc.assignedOfficer != null) ...[
-                  const SizedBox(height: 6),
-                  Row(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+              itemCount: _incidents.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
+              itemBuilder: (_, i) {
+                final inc = _incidents[i];
+                final sc = _severityColor(inc.severity);
+                return Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: _kBorder),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.shield_outlined,
-                        size: 13,
-                        color: _kPrimary,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              inc.title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _statusColor(inc.status).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: _statusColor(
+                                  inc.status,
+                                ).withOpacity(0.4),
+                              ),
+                            ),
+                            child: Text(
+                              _statusLabel(inc.status),
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: _statusColor(inc.status),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Assigned: ${inc.assignedOfficer}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: _kPrimary,
-                          fontWeight: FontWeight.w600,
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: sc.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              inc.severity.name,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: sc,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (inc.assignedOfficer != null) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.shield_outlined,
+                              size: 13,
+                              color: _kPrimary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Assigned: ${inc.assignedOfficer}',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: _kPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
+                      ],
                     ],
                   ),
-                ],
-              ],
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 }
@@ -462,8 +462,7 @@ class _EmptyState extends StatelessWidget {
           GestureDetector(
             onTap: onTap,
             child: Container(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
                 color: _kPrimary,
                 borderRadius: BorderRadius.circular(20),

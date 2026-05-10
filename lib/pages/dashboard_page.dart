@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ube/features/appointment_request_page..dart';
 
-
 import 'package:ube/features/emergency_page.dart';
 import 'package:ube/features/user_management.dart';
 import 'package:ube/features/services_page.dart';
@@ -33,22 +32,26 @@ class _HomePageState extends State<HomePage> {
 
     // Mas robust na check para sa Name at Role
     // Kung walang data o empty string, gagamit ng default values
-    final String firstName = (user?.firstName != null && user!.firstName.isNotEmpty)
+    final String firstName =
+        (user?.firstName != null && user!.firstName.isNotEmpty)
         ? user.firstName
-        : 'Resident';
+        : 'Username';
 
     final String role = (user?.role != null && user!.role!.isNotEmpty)
         ? user.role!
         : 'User';
 
     final String userId = (user != null && user.id.isNotEmpty)
-        ? (user.id.length > 8 ? user.id.substring(0, 8).toUpperCase() : user.id.toUpperCase())
+        ? (user.id.length > 8
+              ? user.id.substring(0, 8).toUpperCase()
+              : user.id.toUpperCase())
         : '—';
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       body: RefreshIndicator(
-        onRefresh: () => context.read<UserViewModel>().fetchCurrentUserProfile(),
+        onRefresh: () =>
+            context.read<UserViewModel>().fetchCurrentUserProfile(),
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
@@ -79,27 +82,27 @@ class _HomePageState extends State<HomePage> {
                     child: _ResidentCard(
                       title: role,
                       residentId: "ID: $userId",
-                      onViewProfile: () => debugPrint("View Profile Clicked"),
                     ),
                   ),
                 ],
               ),
               // ... rest of your code
-            // 2. BOTTOM SECTION (Quick Actions)
-            // Added margin-top of 40 to account for the floating card overlay
-            Padding(
-              padding: const EdgeInsets.only(
-                top: 40,
-                left: 10,
-                right: 10,
-                bottom: 10,
+              // 2. BOTTOM SECTION (Quick Actions)
+              // Added margin-top of 40 to account for the floating card overlay
+              Padding(
+                padding: const EdgeInsets.only(
+                  top: 40,
+                  left: 10,
+                  right: 10,
+                  bottom: 10,
+                ),
+                child: _buildQuickActions(context),
               ),
-              child: _buildQuickActions(context),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),);
+    );
   }
 
   /// Extracted Quick Actions to keep the main build method clean
@@ -123,10 +126,8 @@ class _HomePageState extends State<HomePage> {
         QuickActionItem(
           title: 'Appointment',
           icon: Icons.calendar_today_rounded,
-          onTap: () => Navigator.push(
-            context,
-            instantRoute(const AppointmentPage()),
-          ),
+          onTap: () =>
+              Navigator.push(context, instantRoute(const AppointmentPage())),
         ),
         QuickActionItem(
           title: 'View All',
@@ -231,13 +232,8 @@ class _HeaderSection extends StatelessWidget {
 class _ResidentCard extends StatelessWidget {
   final String title;
   final String residentId;
-  final VoidCallback onViewProfile;
 
-  const _ResidentCard({
-    required this.title,
-    required this.residentId,
-    required this.onViewProfile,
-  });
+  const _ResidentCard({required this.title, required this.residentId});
 
   @override
   Widget build(BuildContext context) {
@@ -291,24 +287,6 @@ class _ResidentCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
-              ),
-            ),
-
-            // View Button
-            SizedBox(
-              height: 30,
-              child: OutlinedButton(
-                onPressed: onViewProfile,
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  minimumSize: const Size(0, 30),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  side: const BorderSide(color: Color(0xFF8B2CF5), width: 1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: const Text("View", style: TextStyle(fontSize: 11)),
               ),
             ),
           ],

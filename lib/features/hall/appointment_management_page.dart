@@ -4,27 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SUPABASE SQL — run once:
-//
-//   create table appointments (
-//     id uuid primary key default gen_random_uuid(),
-//     created_at timestamptz default now(),
-//     service_name text not null,
-//     service_duration text,
-//     appointment_date date not null,
-//     appointment_time text not null,
-//     full_name text not null,
-//     contact_no text not null,
-//     purpose text,
-//     status text default 'pending',   -- pending | confirmed | completed | cancelled
-//     reference_no text,
-//     notes text,                      -- admin notes
-//     requirements jsonb,              -- [{label, value, required}]
-//     resident_info jsonb              -- [{label, value, required}]
-//   );
-// ─────────────────────────────────────────────────────────────────────────────
-
 final _sb = Supabase.instance.client;
 
 // ─── Design Tokens ─────────────────────────────────────────────────────────────
@@ -53,6 +32,41 @@ const _kBlueBorder = Color(0xFFBFDBFE);
 const _kAccentBg = Color(0xFFF5F0FF);
 const _kAccentBorder = Color(0xFFEBE0FF);
 
+// ─── Responsive Breakpoints ────────────────────────────────────────────────────
+class _R {
+  final double w;
+  const _R(this.w);
+
+  bool get isSmall => w < 360;
+  bool get isMedium => w >= 360 && w < 600;
+  bool get isLarge => w >= 600;
+
+  // Font sizes
+  double get fsTitle => isSmall ? 13 : 15;
+  double get fsCardName => isSmall ? 12 : 14;
+  double get fsCardSub => isSmall ? 10 : 11;
+  double get fsLabel => isSmall ? 10 : 12;
+  double get fsBody => isSmall ? 11 : 13;
+  double get fsStat => isSmall ? 15 : 18;
+  double get fsStatLabel => isSmall ? 8 : 10;
+
+  // Spacing / sizing
+  double get hPad => isSmall ? 12 : 16;
+  double get cardDateW => isSmall ? 40 : 48;
+  double get cardDateH => isSmall ? 46 : 52;
+  double get cardDateFs => isSmall ? 15 : 18;
+  double get statPillV => isSmall ? 8 : 10;
+  double get pillGap => isSmall ? 6 : 8;
+  double get gridAspect => isSmall
+      ? 3.1
+      : isLarge
+      ? 4.0
+      : 2.8;
+  int get gridCols => isLarge ? 4 : 2;
+}
+
+_R _r(BuildContext ctx) => _R(MediaQuery.of(ctx).size.width);
+
 // ─── Status Config ─────────────────────────────────────────────────────────────
 class _StatusCfg {
   final String label;
@@ -63,13 +77,33 @@ class _StatusCfg {
 
 const _statusMap = {
   'pending': _StatusCfg(
-      'Pending', _kOrange, _kOrangeBg, _kOrangeBorder, Icons.hourglass_empty_rounded),
+    'Pending',
+    _kOrange,
+    _kOrangeBg,
+    _kOrangeBorder,
+    Icons.hourglass_empty_rounded,
+  ),
   'confirmed': _StatusCfg(
-      'Confirmed', _kBlue, _kBlueBg, _kBlueBorder, Icons.event_available_rounded),
+    'Confirmed',
+    _kBlue,
+    _kBlueBg,
+    _kBlueBorder,
+    Icons.event_available_rounded,
+  ),
   'completed': _StatusCfg(
-      'Completed', _kGreen, _kGreenBg, _kGreenBorder, Icons.check_circle_outline_rounded),
+    'Completed',
+    _kGreen,
+    _kGreenBg,
+    _kGreenBorder,
+    Icons.check_circle_outline_rounded,
+  ),
   'cancelled': _StatusCfg(
-      'Cancelled', _kRed, _kRedBg, _kRedBorder, Icons.cancel_outlined),
+    'Cancelled',
+    _kRed,
+    _kRedBg,
+    _kRedBorder,
+    Icons.cancel_outlined,
+  ),
 };
 
 _StatusCfg _cfg(String s) => _statusMap[s] ?? _statusMap['pending']!;
@@ -80,11 +114,11 @@ const _kStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
 class _ReqField {
   final TextEditingController labelCtrl;
   final TextEditingController valueCtrl;
-  bool isRequired;
+  bool isRequired = false;
 
-  _ReqField({String label = '', String value = '', this.isRequired = false})
-      : labelCtrl = TextEditingController(text: label),
-        valueCtrl = TextEditingController(text: value);
+  _ReqField({String label = '', String value = ''})
+    : labelCtrl = TextEditingController(text: label),
+      valueCtrl = TextEditingController(text: value);
 
   void dispose() {
     labelCtrl.dispose();
@@ -101,7 +135,7 @@ class _ReqField {
 // ─── Model ────────────────────────────────────────────────────────────────────
 class _Appt {
   final String id;
-  final String? userId; // Added userId
+  final String? userId;
   final String serviceName;
   final String? serviceDuration;
   final String date;
@@ -112,7 +146,6 @@ class _Appt {
   String status;
   final String? referenceNo;
   final String? notes;
-  final List<Map<String, dynamic>> requirements;
   final List<Map<String, dynamic>> residentInfo;
   final String createdAt;
 
@@ -129,7 +162,6 @@ class _Appt {
     required this.status,
     this.referenceNo,
     this.notes,
-    this.requirements = const [],
     this.residentInfo = const [],
     required this.createdAt,
   });
@@ -137,10 +169,14 @@ class _Appt {
   static List<Map<String, dynamic>> _parseJsonbList(dynamic raw) {
     if (raw == null) return [];
     try {
-      if (raw is List) return raw.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      if (raw is List)
+        return raw.map((e) => Map<String, dynamic>.from(e as Map)).toList();
       if (raw is String) {
         final decoded = jsonDecode(raw);
-        if (decoded is List) return decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        if (decoded is List)
+          return decoded
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .toList();
       }
     } catch (_) {}
     return [];
@@ -149,7 +185,7 @@ class _Appt {
   factory _Appt.fromMap(Map<String, dynamic> m) {
     return _Appt(
       id: m['id'].toString(),
-      userId: m['user_id']?.toString(), // Map user_id
+      userId: m['user_id']?.toString(),
       serviceName: m['service_name'] ?? '',
       serviceDuration: m['service_duration'],
       date: m['appointment_date'] ?? '',
@@ -160,10 +196,11 @@ class _Appt {
       status: m['status'] ?? 'pending',
       referenceNo: m['reference_no'],
       notes: m['notes'],
-      requirements: _parseJsonbList(m['requirements']),
       residentInfo: _parseJsonbList(m['resident_info']),
       createdAt: m['created_at'] != null
-          ? DateFormat('MMM dd, hh:mm a').format(DateTime.parse(m['created_at']))
+          ? DateFormat(
+              'MMM dd, hh:mm a',
+            ).format(DateTime.parse(m['created_at']))
           : '',
     );
   }
@@ -201,6 +238,10 @@ class _AdminAppointmentPageState extends State<AdminAppointmentPage>
   final _searchCtrl = TextEditingController();
   late TabController _tabCtrl;
 
+  // Cached data from the stream so pull-to-refresh can use it
+  List<_Appt> _cachedAll = [];
+  bool _isRefreshing = false;
+
   final _statusTabs = ['all', 'pending', 'confirmed', 'completed', 'cancelled'];
 
   @override
@@ -221,11 +262,34 @@ class _AdminAppointmentPageState extends State<AdminAppointmentPage>
     super.dispose();
   }
 
+  /// Pull-to-refresh: manually re-fetches from Supabase
+  Future<void> _onRefresh() async {
+    setState(() => _isRefreshing = true);
+    try {
+      final data = await _sb
+          .from('appointments')
+          .select()
+          .order('appointment_date', ascending: true);
+      if (mounted) {
+        setState(() {
+          _cachedAll = (data as List<dynamic>)
+              .map((e) => _Appt.fromMap(Map<String, dynamic>.from(e as Map)))
+              .toList();
+        });
+      }
+    } catch (_) {
+      // Stream will keep data current; silently ignore fetch errors
+    } finally {
+      if (mounted) setState(() => _isRefreshing = false);
+    }
+  }
+
   List<_Appt> _filter(List<_Appt> all) {
     return all.where((a) {
       final matchStatus = _filterStatus == 'all' || a.status == _filterStatus;
       final q = _search.toLowerCase();
-      final matchSearch = q.isEmpty ||
+      final matchSearch =
+          q.isEmpty ||
           a.fullName.toLowerCase().contains(q) ||
           a.serviceName.toLowerCase().contains(q) ||
           a.contactNo.contains(q) ||
@@ -236,18 +300,29 @@ class _AdminAppointmentPageState extends State<AdminAppointmentPage>
 
   @override
   Widget build(BuildContext context) {
+    final r = _r(context);
+
     return StreamBuilder<List<Map<String, dynamic>>>(
       stream: _sb
           .from('appointments')
           .stream(primaryKey: ['id'])
           .order('appointment_date', ascending: true),
       builder: (context, snapshot) {
-        final all = (snapshot.data ?? []).map(_Appt.fromMap).toList();
+        // Prefer live stream data; fall back to cached on refresh
+        final all = snapshot.hasData
+            ? snapshot.data!.map(_Appt.fromMap).toList()
+            : _cachedAll;
+
+        // Keep cache in sync with stream
+        if (snapshot.hasData && !_isRefreshing) {
+          _cachedAll = all;
+        }
+
         final filtered = _filter(all);
 
         final counts = {
           for (var s in _statusTabs)
-            s: s == 'all' ? all.length : all.where((a) => a.status == s).length
+            s: s == 'all' ? all.length : all.where((a) => a.status == s).length,
         };
 
         return Scaffold(
@@ -256,33 +331,39 @@ class _AdminAppointmentPageState extends State<AdminAppointmentPage>
             backgroundColor: _kBg,
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                  color: _kAccent, size: 20),
+              icon: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: _kAccent,
+                size: 20,
+              ),
               onPressed: () => Navigator.pop(context),
             ),
-            title: const Text(
+            title: Text(
               'Appointments',
               style: TextStyle(
-                  color: _kText, fontWeight: FontWeight.bold, fontSize: 15),
+                color: _kText,
+                fontWeight: FontWeight.bold,
+                fontSize: r.fsTitle,
+              ),
             ),
             centerTitle: true,
             actions: [
               Padding(
-                padding: const EdgeInsets.only(right: 12),
+                padding: EdgeInsets.only(right: r.hPad * 0.75),
                 child: _PillBtn(
                   icon: Icons.add_rounded,
                   label: 'New',
-                  onTap: () => Navigator.push(
-                      context, _slide(const _CreateApptPage())),
+                  onTap: () =>
+                      Navigator.push(context, _slide(const _CreateApptPage())),
                 ),
               ),
             ],
           ),
           body: Column(
             children: [
-              _buildSummary(counts),
+              _buildSummary(counts, r),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                padding: EdgeInsets.fromLTRB(r.hPad, 12, r.hPad, 0),
                 child: Container(
                   decoration: BoxDecoration(
                     color: _kSurface,
@@ -292,47 +373,66 @@ class _AdminAppointmentPageState extends State<AdminAppointmentPage>
                   child: TextField(
                     controller: _searchCtrl,
                     onChanged: (v) => setState(() => _search = v),
-                    style: const TextStyle(color: _kText, fontSize: 13),
-                    decoration: const InputDecoration(
+                    style: TextStyle(color: _kText, fontSize: r.fsBody),
+                    decoration: InputDecoration(
                       hintText: 'Search name, service, reference…',
-                      hintStyle: TextStyle(color: _kText3, fontSize: 13),
-                      prefixIcon:
-                      Icon(Icons.search, color: _kText3, size: 18),
+                      hintStyle: TextStyle(color: _kText3, fontSize: r.fsBody),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: _kText3,
+                        size: 18,
+                      ),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
                 ),
               ),
-              _buildTabs(counts),
+              _buildTabs(counts, r),
               Expanded(
-                child: snapshot.connectionState == ConnectionState.waiting &&
-                    !snapshot.hasData
+                child:
+                    snapshot.connectionState == ConnectionState.waiting &&
+                        !snapshot.hasData &&
+                        _cachedAll.isEmpty
                     ? const Center(
-                    child:
-                    CircularProgressIndicator(color: _kAccent))
-                    : filtered.isEmpty
-                    ? _EmptyState(filter: _filterStatus)
-                    : ListView.separated(
-                  padding:
-                  const EdgeInsets.fromLTRB(16, 12, 16, 80),
-                  itemCount: filtered.length,
-                  separatorBuilder: (_, __) =>
-                  const SizedBox(height: 8),
-                  itemBuilder: (_, i) => _ApptCard(
-                    appt: filtered[i],
-                    onTap: () => Navigator.push(
-                      context,
-                      _slide(_ApptDetailPage(appt: filtered[i])),
-                    ),
-                    onStatusChange: (s) async {
-                      await _sb
-                          .from('appointments')
-                          .update({'status': s}).eq(
-                          'id', filtered[i].id);
-                    },
-                  ),
-                ),
+                        child: CircularProgressIndicator(color: _kAccent),
+                      )
+                    : RefreshIndicator(
+                        color: _kAccent,
+                        backgroundColor: _kSurface,
+                        displacement: 20,
+                        onRefresh: _onRefresh,
+                        child: filtered.isEmpty
+                            ? _EmptyScrollable(
+                                child: _EmptyState(filter: _filterStatus),
+                              )
+                            : ListView.separated(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                padding: EdgeInsets.fromLTRB(
+                                  r.hPad,
+                                  12,
+                                  r.hPad,
+                                  80,
+                                ),
+                                itemCount: filtered.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: 8),
+                                itemBuilder: (_, i) => _ApptCard(
+                                  appt: filtered[i],
+                                  r: r,
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    _slide(_ApptDetailPage(appt: filtered[i])),
+                                  ),
+                                  onStatusChange: (s) async {
+                                    await _sb
+                                        .from('appointments')
+                                        .update({'status': s})
+                                        .eq('id', filtered[i].id);
+                                  },
+                                ),
+                              ),
+                      ),
               ),
             ],
           ),
@@ -341,28 +441,52 @@ class _AdminAppointmentPageState extends State<AdminAppointmentPage>
     );
   }
 
-  Widget _buildSummary(Map<String, int> counts) {
+  Widget _buildSummary(Map<String, int> counts, _R r) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+      padding: EdgeInsets.fromLTRB(r.hPad, 14, r.hPad, 0),
       child: Row(
         children: [
-          _StatPill('${counts['pending']}', 'Pending', _kOrange, _kOrangeBg,
-              _kOrangeBorder),
-          const SizedBox(width: 8),
-          _StatPill('${counts['confirmed']}', 'Today', _kBlue, _kBlueBg,
-              _kBlueBorder),
-          const SizedBox(width: 8),
-          _StatPill('${counts['completed']}', 'Done', _kGreen, _kGreenBg,
-              _kGreenBorder),
-          const SizedBox(width: 8),
           _StatPill(
-              '${counts['all']}', 'Total', _kAccent, _kAccentBg, _kAccentBorder),
+            '${counts['pending']}',
+            'Pending',
+            _kOrange,
+            _kOrangeBg,
+            _kOrangeBorder,
+            r,
+          ),
+          SizedBox(width: r.pillGap),
+          _StatPill(
+            '${counts['confirmed']}',
+            'Today',
+            _kBlue,
+            _kBlueBg,
+            _kBlueBorder,
+            r,
+          ),
+          SizedBox(width: r.pillGap),
+          _StatPill(
+            '${counts['completed']}',
+            'Done',
+            _kGreen,
+            _kGreenBg,
+            _kGreenBorder,
+            r,
+          ),
+          SizedBox(width: r.pillGap),
+          _StatPill(
+            '${counts['all']}',
+            'Total',
+            _kAccent,
+            _kAccentBg,
+            _kAccentBorder,
+            r,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildTabs(Map<String, int> counts) {
+  Widget _buildTabs(Map<String, int> counts, _R r) {
     const labels = ['All', 'Pending', 'Confirmed', 'Done', 'Cancelled'];
     return Container(
       margin: const EdgeInsets.only(top: 12),
@@ -374,10 +498,11 @@ class _AdminAppointmentPageState extends State<AdminAppointmentPage>
         isScrollable: true,
         labelColor: _kAccent,
         unselectedLabelColor: _kText3,
-        labelStyle:
-        const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
-        unselectedLabelStyle:
-        const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+        labelStyle: TextStyle(fontWeight: FontWeight.w700, fontSize: r.fsLabel),
+        unselectedLabelStyle: TextStyle(
+          fontWeight: FontWeight.w500,
+          fontSize: r.fsLabel,
+        ),
         indicatorColor: _kAccent,
         indicatorWeight: 2.5,
         tabAlignment: TabAlignment.start,
@@ -391,7 +516,9 @@ class _AdminAppointmentPageState extends State<AdminAppointmentPage>
                 const SizedBox(width: 5),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 6, vertical: 1),
+                    horizontal: 6,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: _tabCtrl.index == i
                         ? _kAccentBg
@@ -401,7 +528,7 @@ class _AdminAppointmentPageState extends State<AdminAppointmentPage>
                   child: Text(
                     '${counts[key]}',
                     style: TextStyle(
-                      fontSize: 9,
+                      fontSize: r.isSmall ? 8 : 9,
                       fontWeight: FontWeight.w800,
                       color: _tabCtrl.index == i ? _kAccent : _kText3,
                     ),
@@ -416,17 +543,41 @@ class _AdminAppointmentPageState extends State<AdminAppointmentPage>
   }
 }
 
+// ─── Empty Scrollable Wrapper (enables pull-to-refresh on empty lists) ─────────
+class _EmptyScrollable extends StatelessWidget {
+  final Widget child;
+  const _EmptyScrollable({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: SizedBox(height: constraints.maxHeight, child: child),
+      ),
+    );
+  }
+}
+
 // ─── Stat Pill ────────────────────────────────────────────────────────────────
 class _StatPill extends StatelessWidget {
   final String count, label;
   final Color fg, bg, border;
-  const _StatPill(this.count, this.label, this.fg, this.bg, this.border);
+  final _R r;
+  const _StatPill(
+    this.count,
+    this.label,
+    this.fg,
+    this.bg,
+    this.border,
+    this.r,
+  );
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: EdgeInsets.symmetric(vertical: r.statPillV),
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(12),
@@ -434,17 +585,23 @@ class _StatPill extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(count,
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: fg)),
+            Text(
+              count,
+              style: TextStyle(
+                fontSize: r.fsStat,
+                fontWeight: FontWeight.w800,
+                color: fg,
+              ),
+            ),
             const SizedBox(height: 2),
-            Text(label,
-                style: const TextStyle(
-                    fontSize: 10,
-                    color: _kText3,
-                    fontWeight: FontWeight.w600)),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: r.fsStatLabel,
+                color: _kText3,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
@@ -457,11 +614,13 @@ class _ApptCard extends StatelessWidget {
   final _Appt appt;
   final VoidCallback onTap;
   final void Function(String) onStatusChange;
+  final _R r;
 
   const _ApptCard({
     required this.appt,
     required this.onTap,
     required this.onStatusChange,
+    required this.r,
   });
 
   @override
@@ -477,20 +636,27 @@ class _ApptCard extends StatelessWidget {
           border: Border.all(color: _kBorder),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 6,
-                offset: const Offset(0, 2)),
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+              padding: EdgeInsets.fromLTRB(
+                r.isSmall ? 10 : 14,
+                r.isSmall ? 10 : 14,
+                r.isSmall ? 10 : 14,
+                10,
+              ),
               child: Row(
                 children: [
+                  // Date badge
                   Container(
-                    width: 48,
-                    height: 52,
+                    width: r.cardDateW,
+                    height: r.cardDateH,
                     decoration: BoxDecoration(
                       color: _kSurface2,
                       borderRadius: BorderRadius.circular(11),
@@ -501,74 +667,105 @@ class _ApptCard extends StatelessWidget {
                       children: [
                         Text(
                           _dayNum(appt.date),
-                          style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: _kAccent),
+                          style: TextStyle(
+                            fontSize: r.cardDateFs,
+                            fontWeight: FontWeight.w800,
+                            color: _kAccent,
+                          ),
                         ),
                         Text(
                           _monthShort(appt.date),
-                          style: const TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w700,
-                              color: _kText3),
+                          style: TextStyle(
+                            fontSize: r.isSmall ? 8 : 9,
+                            fontWeight: FontWeight.w700,
+                            color: _kText3,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: r.isSmall ? 8 : 12),
+                  // Info
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Text(
-                              appt.fullName,
-                              style: const TextStyle(
-                                  fontSize: 14,
+                            Expanded(
+                              child: Text(
+                                appt.fullName,
+                                style: TextStyle(
+                                  fontSize: r.fsCardName,
                                   fontWeight: FontWeight.w700,
-                                  color: _kText),
-                              overflow: TextOverflow.ellipsis,
+                                  color: _kText,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                             if (appt.userId != null) ...[
                               const SizedBox(width: 5),
-                              const Icon(Icons.verified_user_rounded, size: 12, color: _kAccent),
+                              const Icon(
+                                Icons.verified_user_rounded,
+                                size: 12,
+                                color: _kAccent,
+                              ),
                             ],
                           ],
                         ),
                         const SizedBox(height: 3),
                         Text(
                           appt.serviceName,
-                          style: const TextStyle(
-                              fontSize: 11, color: _kText3),
+                          style: TextStyle(
+                            fontSize: r.fsCardSub,
+                            color: _kText3,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 3),
-                        Row(
-                          children: [
-                            const Icon(Icons.access_time_rounded,
-                                size: 11, color: _kText3),
-                            const SizedBox(width: 3),
-                            Text(appt.time,
-                                style: const TextStyle(
-                                    fontSize: 11, color: _kText3)),
-                            const SizedBox(width: 8),
-                            const Icon(Icons.phone_outlined,
-                                size: 11, color: _kText3),
-                            const SizedBox(width: 3),
-                            Text(appt.contactNo,
-                                style: const TextStyle(
-                                    fontSize: 11, color: _kText3)),
-                          ],
-                        ),
+                        // On very small screens, stack time and contact
+                        r.isSmall
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _IconText(
+                                    Icons.access_time_rounded,
+                                    appt.time,
+                                    r.fsCardSub,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  _IconText(
+                                    Icons.phone_outlined,
+                                    appt.contactNo,
+                                    r.fsCardSub,
+                                  ),
+                                ],
+                              )
+                            : Row(
+                                children: [
+                                  _IconText(
+                                    Icons.access_time_rounded,
+                                    appt.time,
+                                    r.fsCardSub,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _IconText(
+                                    Icons.phone_outlined,
+                                    appt.contactNo,
+                                    r.fsCardSub,
+                                  ),
+                                ],
+                              ),
                       ],
                     ),
                   ),
                   const SizedBox(width: 8),
+                  // Status badge
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: cfg.bg,
                       borderRadius: BorderRadius.circular(20),
@@ -579,11 +776,14 @@ class _ApptCard extends StatelessWidget {
                       children: [
                         Icon(cfg.icon, size: 10, color: cfg.fg),
                         const SizedBox(width: 4),
-                        Text(cfg.label,
-                            style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w800,
-                                color: cfg.fg)),
+                        Text(
+                          cfg.label,
+                          style: TextStyle(
+                            fontSize: r.isSmall ? 8 : 9,
+                            fontWeight: FontWeight.w800,
+                            color: cfg.fg,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -592,23 +792,27 @@ class _ApptCard extends StatelessWidget {
             ),
             Container(
               decoration: const BoxDecoration(
-                border: Border(
-                    top: BorderSide(color: _kBorder, width: 0.5)),
+                border: Border(top: BorderSide(color: _kBorder, width: 0.5)),
               ),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 14, vertical: 8),
+              padding: EdgeInsets.symmetric(
+                horizontal: r.isSmall ? 10 : 14,
+                vertical: 8,
+              ),
               child: Row(
                 children: [
                   if (appt.referenceNo != null) ...[
-                    const Icon(Icons.sell_outlined,
-                        size: 11, color: _kText3),
+                    const Icon(Icons.sell_outlined, size: 11, color: _kText3),
                     const SizedBox(width: 4),
-                    Text(
-                      appt.referenceNo!,
-                      style: const TextStyle(
-                          fontSize: 10,
+                    Flexible(
+                      child: Text(
+                        appt.referenceNo!,
+                        style: TextStyle(
+                          fontSize: r.isSmall ? 9 : 10,
                           color: _kText3,
-                          fontWeight: FontWeight.w600),
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     const Spacer(),
                   ] else
@@ -619,6 +823,7 @@ class _ApptCard extends StatelessWidget {
                       icon: Icons.event_available_rounded,
                       color: _kBlue,
                       onTap: () => onStatusChange('confirmed'),
+                      r: r,
                     ),
                   if (appt.status == 'confirmed') ...[
                     _QuickAction(
@@ -626,22 +831,25 @@ class _ApptCard extends StatelessWidget {
                       icon: Icons.check_rounded,
                       color: _kGreen,
                       onTap: () => onStatusChange('completed'),
+                      r: r,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     _QuickAction(
                       label: 'Cancel',
                       icon: Icons.close_rounded,
                       color: _kRed,
                       onTap: () => onStatusChange('cancelled'),
+                      r: r,
                     ),
                   ],
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   _QuickAction(
                     label: 'View',
                     icon: Icons.arrow_forward_ios_rounded,
                     color: _kAccent,
                     onTap: onTap,
                     filled: true,
+                    r: r,
                   ),
                 ],
               ),
@@ -653,17 +861,45 @@ class _ApptCard extends StatelessWidget {
   }
 }
 
+// ─── Icon + Text helper ───────────────────────────────────────────────────────
+class _IconText extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final double fs;
+  const _IconText(this.icon, this.text, this.fs);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 11, color: _kText3),
+        const SizedBox(width: 3),
+        Flexible(
+          child: Text(
+            text,
+            style: TextStyle(fontSize: fs, color: _kText3),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _QuickAction extends StatelessWidget {
   final String label;
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
   final bool filled;
+  final _R r;
   const _QuickAction({
     required this.label,
     required this.icon,
     required this.color,
     required this.onTap,
+    required this.r,
     this.filled = false,
   });
 
@@ -672,24 +908,24 @@ class _QuickAction extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding:
-        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        padding: EdgeInsets.symmetric(
+          horizontal: r.isSmall ? 7 : 10,
+          vertical: 5,
+        ),
         decoration: BoxDecoration(
           color: filled ? color : color.withOpacity(0.08),
           borderRadius: BorderRadius.circular(8),
-          border:
-          Border.all(color: color.withOpacity(filled ? 1 : 0.25)),
+          border: Border.all(color: color.withOpacity(filled ? 1 : 0.25)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon,
-                size: 11, color: filled ? Colors.white : color),
+            Icon(icon, size: 11, color: filled ? Colors.white : color),
             const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
-                fontSize: 10,
+                fontSize: r.isSmall ? 9 : 10,
                 fontWeight: FontWeight.w700,
                 color: filled ? Colors.white : color,
               ),
@@ -720,16 +956,20 @@ class _EmptyState extends StatelessWidget {
               shape: BoxShape.circle,
               border: Border.all(color: _kAccentBorder),
             ),
-            child: const Icon(Icons.calendar_today_outlined,
-                color: _kAccent, size: 30),
+            child: const Icon(
+              Icons.calendar_today_outlined,
+              color: _kAccent,
+              size: 30,
+            ),
           ),
           const SizedBox(height: 14),
           const Text(
             'No appointments',
             style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: _kText),
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: _kText,
+            ),
           ),
           const SizedBox(height: 5),
           Text(
@@ -737,8 +977,16 @@ class _EmptyState extends StatelessWidget {
                 ? 'Create a new appointment using the\nbutton in the top right.'
                 : 'No $filter appointments found.',
             textAlign: TextAlign.center,
-            style: const TextStyle(
-                fontSize: 12, color: _kText3, height: 1.6),
+            style: const TextStyle(fontSize: 12, color: _kText3, height: 1.6),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Pull down to refresh',
+            style: TextStyle(
+              fontSize: 11,
+              color: _kText3,
+              fontStyle: FontStyle.italic,
+            ),
           ),
         ],
       ),
@@ -751,16 +999,18 @@ class _PillBtn extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  const _PillBtn(
-      {required this.icon, required this.label, required this.onTap});
+  const _PillBtn({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding:
-        const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
           color: _kAccentBg,
           borderRadius: BorderRadius.circular(10),
@@ -771,11 +1021,14 @@ class _PillBtn extends StatelessWidget {
           children: [
             Icon(icon, size: 16, color: _kAccent),
             const SizedBox(width: 4),
-            Text(label,
-                style: const TextStyle(
-                    color: _kAccent,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13)),
+            Text(
+              label,
+              style: const TextStyle(
+                color: _kAccent,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
           ],
         ),
       ),
@@ -788,7 +1041,7 @@ class _PillBtn extends StatelessWidget {
 // ============================================================================
 class _ApptDetailPage extends StatefulWidget {
   final _Appt appt;
-  const _ApptDetailPage({super.key, required this.appt});
+  const _ApptDetailPage({required this.appt});
 
   @override
   State<_ApptDetailPage> createState() => _ApptDetailPageState();
@@ -814,29 +1067,33 @@ class _ApptDetailPageState extends State<_ApptDetailPage> {
 
   Future<void> _save() async {
     setState(() => _saving = true);
-    await _sb.from('appointments').update({
-      'status': _status,
-      'notes': _notesCtrl.text.trim().isEmpty
-          ? null
-          : _notesCtrl.text.trim(),
-    }).eq('id', widget.appt.id);
+    await _sb
+        .from('appointments')
+        .update({
+          'status': _status,
+          'notes': _notesCtrl.text.trim().isEmpty
+              ? null
+              : _notesCtrl.text.trim(),
+        })
+        .eq('id', widget.appt.id);
     setState(() => _saving = false);
     if (mounted) Navigator.pop(context);
   }
 
   Future<void> _delete() async {
     final confirmed = await _confirm(
-        context, 'Delete this appointment?', 'This action cannot be undone.');
+      context,
+      'Delete this appointment?',
+      'This action cannot be undone.',
+    );
     if (confirmed != true) return;
-    await _sb
-        .from('appointments')
-        .delete()
-        .eq('id', widget.appt.id);
+    await _sb.from('appointments').delete().eq('id', widget.appt.id);
     if (mounted) Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
+    final r = _r(context);
     final cfg = _cfg(_status);
 
     return Scaffold(
@@ -845,30 +1102,38 @@ class _ApptDetailPageState extends State<_ApptDetailPage> {
         backgroundColor: _kBg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: _kAccent, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: _kAccent,
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Appointment Detail',
           style: TextStyle(
-              color: _kText, fontWeight: FontWeight.bold, fontSize: 15),
+            color: _kText,
+            fontWeight: FontWeight.bold,
+            fontSize: r.fsTitle,
+          ),
         ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete_outline_rounded,
-                color: _kRed, size: 20),
+            icon: const Icon(
+              Icons.delete_outline_rounded,
+              color: _kRed,
+              size: 20,
+            ),
             onPressed: _delete,
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 120),
+        padding: EdgeInsets.fromLTRB(r.hPad, 4, r.hPad, 120),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Reference & Status ──
             _DetailCard(
               child: Row(
                 children: [
@@ -880,8 +1145,11 @@ class _ApptDetailPageState extends State<_ApptDetailPage> {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: _kAccentBorder),
                     ),
-                    child: const Icon(Icons.calendar_month_rounded,
-                        color: _kAccent, size: 22),
+                    child: const Icon(
+                      Icons.calendar_month_rounded,
+                      color: _kAccent,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -890,23 +1158,28 @@ class _ApptDetailPageState extends State<_ApptDetailPage> {
                       children: [
                         Text(
                           widget.appt.serviceName,
-                          style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: _kText),
+                          style: TextStyle(
+                            fontSize: r.isSmall ? 13 : 15,
+                            fontWeight: FontWeight.w700,
+                            color: _kText,
+                          ),
                         ),
                         if (widget.appt.referenceNo != null)
                           Text(
                             widget.appt.referenceNo!,
-                            style: const TextStyle(
-                                fontSize: 11, color: _kText3),
+                            style: TextStyle(
+                              fontSize: r.fsCardSub,
+                              color: _kText3,
+                            ),
                           ),
                       ],
                     ),
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 5),
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: cfg.bg,
                       borderRadius: BorderRadius.circular(20),
@@ -917,11 +1190,14 @@ class _ApptDetailPageState extends State<_ApptDetailPage> {
                       children: [
                         Icon(cfg.icon, size: 11, color: cfg.fg),
                         const SizedBox(width: 4),
-                        Text(cfg.label,
-                            style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                color: cfg.fg)),
+                        Text(
+                          cfg.label,
+                          style: TextStyle(
+                            fontSize: r.isSmall ? 9 : 10,
+                            fontWeight: FontWeight.w800,
+                            color: cfg.fg,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -930,93 +1206,95 @@ class _ApptDetailPageState extends State<_ApptDetailPage> {
             ),
 
             const SizedBox(height: 12),
-
-            // ── Schedule ──
-            _SectionLabel(label: 'Schedule'),
+            const _SectionLabel(label: 'Schedule'),
             const SizedBox(height: 8),
             _DetailCard(
               child: Column(
                 children: [
-                  _DetailRow(Icons.event_rounded, 'Date',
-                      widget.appt.formattedDate),
+                  _DetailRow(
+                    Icons.event_rounded,
+                    'Date',
+                    widget.appt.formattedDate,
+                  ),
                   _DividerLine(),
                   _DetailRow(
-                      Icons.access_time_rounded, 'Time', widget.appt.time),
+                    Icons.access_time_rounded,
+                    'Time',
+                    widget.appt.time,
+                  ),
                   if (widget.appt.serviceDuration != null) ...[
                     _DividerLine(),
-                    _DetailRow(Icons.timer_outlined, 'Duration',
-                        widget.appt.serviceDuration!),
+                    _DetailRow(
+                      Icons.timer_outlined,
+                      'Duration',
+                      widget.appt.serviceDuration!,
+                    ),
                   ],
                   _DividerLine(),
-                  _DetailRow(Icons.calendar_today_rounded, 'Filed',
-                      widget.appt.createdAt),
+                  _DetailRow(
+                    Icons.calendar_today_rounded,
+                    'Filed',
+                    widget.appt.createdAt,
+                  ),
                 ],
               ),
             ),
 
             const SizedBox(height: 12),
-
-            // ── Resident Info — dynamic fields if present, fallback to legacy ──
-            _SectionLabel(label: 'Resident'),
+            const _SectionLabel(label: 'Resident'),
             const SizedBox(height: 8),
             _DetailCard(
               child: widget.appt.residentInfo.isNotEmpty
                   ? Column(
-                children: [
-                  for (int i = 0; i < widget.appt.residentInfo.length; i++) ...[
-                    if (i > 0) _DividerLine(),
-                    _RequirementDetailRow(req: widget.appt.residentInfo[i]),
-                  ],
-                ],
-              )
+                      children: [
+                        for (
+                          int i = 0;
+                          i < widget.appt.residentInfo.length;
+                          i++
+                        ) ...[
+                          if (i > 0) _DividerLine(),
+                          _RequirementDetailRow(
+                            req: widget.appt.residentInfo[i],
+                          ),
+                        ],
+                      ],
+                    )
                   : Column(
-                children: [
-                  _DetailRow(Icons.person_outline_rounded, 'Name',
-                      widget.appt.fullName),
-                  _DividerLine(),
-                  _DetailRow(Icons.phone_outlined, 'Contact',
-                      widget.appt.contactNo),
-                  if (widget.appt.purpose?.isNotEmpty == true) ...[
-                    _DividerLine(),
-                    _DetailRow(Icons.notes_rounded, 'Purpose',
-                        widget.appt.purpose!),
-                  ],
-                ],
-              ),
+                      children: [
+                        _DetailRow(
+                          Icons.person_outline_rounded,
+                          'Name',
+                          widget.appt.fullName,
+                        ),
+                        _DividerLine(),
+                        _DetailRow(
+                          Icons.phone_outlined,
+                          'Contact',
+                          widget.appt.contactNo,
+                        ),
+                        if (widget.appt.purpose?.isNotEmpty == true) ...[
+                          _DividerLine(),
+                          _DetailRow(
+                            Icons.notes_rounded,
+                            'Purpose',
+                            widget.appt.purpose!,
+                          ),
+                        ],
+                      ],
+                    ),
             ),
 
-            // ── Requirements (if any) ──
-            if (widget.appt.requirements.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              _SectionLabel(label: 'Service Requirements'),
-              const SizedBox(height: 8),
-              _DetailCard(
-                child: Column(
-                  children: [
-                    for (int i = 0;
-                    i < widget.appt.requirements.length;
-                    i++) ...[
-                      if (i > 0) _DividerLine(),
-                      _RequirementDetailRow(
-                          req: widget.appt.requirements[i]),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-
             const SizedBox(height: 20),
-
-            // ── Update Status ──
-            _SectionLabel(label: 'Update Status'),
+            const _SectionLabel(label: 'Update Status'),
             const SizedBox(height: 10),
+            // Responsive grid: 4 cols on wide, 2 on narrow
             GridView.count(
-              crossAxisCount: 2,
+              crossAxisCount: r.gridCols,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: 8,
               mainAxisSpacing: 8,
-              childAspectRatio: 2.8,
+              childAspectRatio: r.gridAspect,
               children: _kStatuses.map((s) {
                 final c = _cfg(s);
                 final active = _status == s;
@@ -1035,14 +1313,12 @@ class _ApptDetailPageState extends State<_ApptDetailPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(c.icon,
-                            size: 14,
-                            color: active ? c.fg : _kText3),
+                        Icon(c.icon, size: 14, color: active ? c.fg : _kText3),
                         const SizedBox(width: 6),
                         Text(
                           c.label,
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: r.isSmall ? 10 : 11,
                             fontWeight: active
                                 ? FontWeight.w800
                                 : FontWeight.w500,
@@ -1051,8 +1327,11 @@ class _ApptDetailPageState extends State<_ApptDetailPage> {
                         ),
                         if (active) ...[
                           const SizedBox(width: 5),
-                          Icon(Icons.check_circle_rounded,
-                              size: 11, color: c.fg),
+                          Icon(
+                            Icons.check_circle_rounded,
+                            size: 11,
+                            color: c.fg,
+                          ),
                         ],
                       ],
                     ),
@@ -1062,9 +1341,7 @@ class _ApptDetailPageState extends State<_ApptDetailPage> {
             ),
 
             const SizedBox(height: 18),
-
-            // ── Admin Notes ──
-            _SectionLabel(label: 'Admin Notes'),
+            const _SectionLabel(label: 'Admin Notes'),
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
@@ -1075,48 +1352,50 @@ class _ApptDetailPageState extends State<_ApptDetailPage> {
               child: TextField(
                 controller: _notesCtrl,
                 maxLines: 3,
-                style:
-                const TextStyle(fontSize: 13, color: _kText),
-                decoration: const InputDecoration(
+                style: TextStyle(fontSize: r.fsBody, color: _kText),
+                decoration: InputDecoration(
                   hintText: 'Add internal notes or remarks…',
-                  hintStyle:
-                  TextStyle(color: _kText3, fontSize: 12),
+                  hintStyle: TextStyle(
+                    color: _kText3,
+                    fontSize: r.isSmall ? 11 : 12,
+                  ),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.all(14),
+                  contentPadding: const EdgeInsets.all(14),
                 ),
               ),
             ),
 
             const SizedBox(height: 24),
-
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _kAccent,
-                  disabledBackgroundColor:
-                  _kAccent.withOpacity(0.45),
+                  disabledBackgroundColor: _kAccent.withOpacity(0.45),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding:
-                  const EdgeInsets.symmetric(vertical: 14),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   elevation: 0,
                 ),
                 onPressed: _saving ? null : _save,
                 child: _saving
                     ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                      color: Colors.white, strokeWidth: 2),
-                )
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
                     : const Text(
-                  'Save Changes',
-                  style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold),
-                ),
+                        'Save Changes',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
           ],
@@ -1147,8 +1426,7 @@ class _RequirementDetailRow extends StatelessWidget {
             decoration: BoxDecoration(
               color: isRequired ? _kAccentBg : const Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                  color: isRequired ? _kAccentBorder : _kBorder),
+              border: Border.all(color: isRequired ? _kAccentBorder : _kBorder),
             ),
             child: Icon(
               isRequired
@@ -1169,15 +1447,18 @@ class _RequirementDetailRow extends StatelessWidget {
                       child: Text(
                         label.isEmpty ? 'Unnamed Field' : label,
                         style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: _kText2),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: _kText2,
+                        ),
                       ),
                     ),
                     if (isRequired)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: _kRedBg,
                           borderRadius: BorderRadius.circular(6),
@@ -1186,9 +1467,10 @@ class _RequirementDetailRow extends StatelessWidget {
                         child: const Text(
                           'Required',
                           style: TextStyle(
-                              fontSize: 9,
-                              color: _kRed,
-                              fontWeight: FontWeight.w700),
+                            fontSize: 9,
+                            color: _kRed,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                   ],
@@ -1197,7 +1479,10 @@ class _RequirementDetailRow extends StatelessWidget {
                 Text(
                   value.isEmpty ? '—' : value,
                   style: const TextStyle(
-                      fontSize: 12, color: _kText3, height: 1.4),
+                    fontSize: 12,
+                    color: _kText3,
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),
@@ -1209,9 +1494,7 @@ class _RequirementDetailRow extends StatelessWidget {
 }
 
 // ============================================================================
-//  CREATE APPOINTMENT PAGE (Admin)
-//  — Schedule & Initial Status removed
-//  — Resident Details now uses the same dynamic field system as Requirements
+//  CREATE APPOINTMENT PAGE
 // ============================================================================
 class _CreateApptPage extends StatefulWidget {
   const _CreateApptPage();
@@ -1222,20 +1505,10 @@ class _CreateApptPage extends StatefulWidget {
 
 class _CreateApptPageState extends State<_CreateApptPage> {
   final _formKey = GlobalKey<FormState>();
-
-  // ── Service ──
   final _serviceNameCtrl = TextEditingController();
   final _serviceDurationCtrl = TextEditingController();
-
-  // ── Resident Details — dynamic fields ──
   final List<_ReqField> _residentFields = [];
-
-  // ── Service Requirements — dynamic fields ──
-  final List<_ReqField> _requirements = [];
-
-  // ── Admin Notes ──
   final _notesCtrl = TextEditingController();
-
   bool _saving = false;
 
   @override
@@ -1244,22 +1517,13 @@ class _CreateApptPageState extends State<_CreateApptPage> {
     _serviceDurationCtrl.dispose();
     _notesCtrl.dispose();
     for (final r in _residentFields) r.dispose();
-    for (final r in _requirements) r.dispose();
     super.dispose();
   }
 
-  // ── Resident field helpers ──
   void _addResidentField() => setState(() => _residentFields.add(_ReqField()));
   void _removeResidentField(int i) => setState(() {
     _residentFields[i].dispose();
     _residentFields.removeAt(i);
-  });
-
-  // ── Requirement field helpers ──
-  void _addRequirement() => setState(() => _requirements.add(_ReqField()));
-  void _removeRequirement(int i) => setState(() {
-    _requirements[i].dispose();
-    _requirements.removeAt(i);
   });
 
   Future<void> _save() async {
@@ -1268,21 +1532,11 @@ class _CreateApptPageState extends State<_CreateApptPage> {
       _snack('Please enter a service name.');
       return;
     }
-
-    // Validate required resident fields
     for (final r in _residentFields) {
       if (r.isRequired && r.valueCtrl.text.trim().isEmpty) {
         _snack(
-            '"${r.labelCtrl.text.isEmpty ? 'A required resident field' : r.labelCtrl.text}" cannot be empty.');
-        return;
-      }
-    }
-
-    // Validate required requirement fields
-    for (final r in _requirements) {
-      if (r.isRequired && r.valueCtrl.text.trim().isEmpty) {
-        _snack(
-            '"${r.labelCtrl.text.isEmpty ? 'A required field' : r.labelCtrl.text}" cannot be empty.');
+          '"${r.labelCtrl.text.isEmpty ? 'A required resident field' : r.labelCtrl.text}" cannot be empty.',
+        );
         return;
       }
     }
@@ -1291,17 +1545,15 @@ class _CreateApptPageState extends State<_CreateApptPage> {
     final refNo = 'APT-${Random().nextInt(90000) + 10000}';
     final now = DateTime.now();
 
-    // Extract full_name / contact_no from resident fields for DB compat.
-    // Looks for a field whose label contains "name" → full_name.
-    // Looks for a field whose label contains "contact" or "phone" → contact_no.
-    // Falls back to first / second field if no match; defaults to "N/A" if empty.
-    String _extractField(List<_ReqField> fields, List<String> keywords,
-        {int fallbackIndex = 0}) {
+    String extractField(
+      List<_ReqField> fields,
+      List<String> keywords, {
+      int fallbackIndex = 0,
+    }) {
       final match = fields.firstWhere(
-            (f) => keywords.any(
-                (k) => f.labelCtrl.text.toLowerCase().contains(k)),
+        (f) => keywords.any((k) => f.labelCtrl.text.toLowerCase().contains(k)),
         orElse: () =>
-        fields.length > fallbackIndex ? fields[fallbackIndex] : _ReqField(),
+            fields.length > fallbackIndex ? fields[fallbackIndex] : _ReqField(),
       );
       final v = match.valueCtrl.text.trim();
       return v.isEmpty ? 'N/A' : v;
@@ -1309,24 +1561,21 @@ class _CreateApptPageState extends State<_CreateApptPage> {
 
     final fullName = _residentFields.isEmpty
         ? 'N/A'
-        : _extractField(_residentFields, ['name', 'full'], fallbackIndex: 0);
+        : extractField(_residentFields, ['name', 'full'], fallbackIndex: 0);
     final contactNo = _residentFields.isEmpty
         ? 'N/A'
-        : _extractField(_residentFields, ['contact', 'phone', 'mobile'],
-        fallbackIndex: 1);
+        : extractField(_residentFields, [
+            'contact',
+            'phone',
+            'mobile',
+          ], fallbackIndex: 1);
 
-    // Build jsonb lists — skip completely empty rows
-    bool _hasContent(_ReqField f) =>
+    bool hasContent(_ReqField f) =>
         f.labelCtrl.text.trim().isNotEmpty ||
-            f.valueCtrl.text.trim().isNotEmpty;
+        f.valueCtrl.text.trim().isNotEmpty;
 
     final residentList = _residentFields
-        .where(_hasContent)
-        .map((r) => r.toMap())
-        .toList();
-
-    final reqList = _requirements
-        .where(_hasContent)
+        .where(hasContent)
         .map((r) => r.toMap())
         .toList();
 
@@ -1336,7 +1585,6 @@ class _CreateApptPageState extends State<_CreateApptPage> {
         'service_duration': _serviceDurationCtrl.text.trim().isEmpty
             ? null
             : _serviceDurationCtrl.text.trim(),
-        // Default to today's date and current time since schedule is set later
         'appointment_date': _isoDate(now),
         'appointment_time': TimeOfDay.fromDateTime(now).format(context),
         'full_name': fullName,
@@ -1344,11 +1592,8 @@ class _CreateApptPageState extends State<_CreateApptPage> {
         'purpose': null,
         'status': 'pending',
         'reference_no': refNo,
-        'notes': _notesCtrl.text.trim().isEmpty
-            ? null
-            : _notesCtrl.text.trim(),
+        'notes': _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
         'resident_info': residentList.isEmpty ? null : residentList,
-        'requirements': reqList.isEmpty ? null : reqList,
       });
       if (mounted) Navigator.pop(context);
     } catch (e) {
@@ -1359,60 +1604,69 @@ class _CreateApptPageState extends State<_CreateApptPage> {
   }
 
   void _snack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(msg), backgroundColor: _kRed));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: _kRed));
   }
 
   @override
   Widget build(BuildContext context) {
+    final r = _r(context);
+
     return Scaffold(
       backgroundColor: _kBg,
       appBar: AppBar(
         backgroundColor: _kBg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: _kAccent, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: _kAccent,
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'New Appointment',
+        title: Text(
+          'Appointment',
           style: TextStyle(
-              color: _kText, fontWeight: FontWeight.bold, fontSize: 15),
+            color: _kText,
+            fontWeight: FontWeight.bold,
+            fontSize: r.fsTitle,
+          ),
         ),
         centerTitle: true,
         actions: [
           _saving
               ? const Padding(
-            padding: EdgeInsets.all(14),
-            child: SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                  strokeWidth: 2, color: _kAccent),
-            ),
-          )
+                  padding: EdgeInsets.all(14),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: _kAccent,
+                    ),
+                  ),
+                )
               : IconButton(
-            icon: const Icon(Icons.check_rounded,
-                color: _kAccent, size: 22),
-            onPressed: _save,
-          ),
+                  icon: const Icon(
+                    Icons.check_rounded,
+                    color: _kAccent,
+                    size: 22,
+                  ),
+                  onPressed: _save,
+                ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
+        padding: EdgeInsets.fromLTRB(r.hPad, 8, r.hPad, 80),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
-              // ══════════════════════════════════════════════════
-              //  SERVICE SECTION
-              // ══════════════════════════════════════════════════
-              _SectionLabel(label: 'Service'),
+              const _SectionLabel(label: 'Service'),
               const SizedBox(height: 10),
-
               _AdminFormField(
                 label: 'Service Name',
                 controller: _serviceNameCtrl,
@@ -1421,62 +1675,30 @@ class _CreateApptPageState extends State<_CreateApptPage> {
                 required: true,
               ),
               const SizedBox(height: 10),
-
               _AdminFormField(
                 label: 'Estimated Duration',
                 controller: _serviceDurationCtrl,
                 icon: Icons.timer_outlined,
                 hint: 'e.g. 15 mins, 30 mins',
               ),
-
               const SizedBox(height: 20),
-
-              // ══════════════════════════════════════════════════
-              //  RESIDENT DETAILS — dynamic fields
-              // ══════════════════════════════════════════════════
               _DynamicFieldSection(
                 sectionLabel: 'Resident Details',
                 addButtonLabel: 'Add Field',
                 infoText:
-                'Add fields for the resident\'s personal information '
+                    'Add fields for the resident\'s personal information '
                     '(e.g. Full Name, Contact No, Address). Toggle "Required" '
                     'to mark fields as mandatory.',
                 emptyHint:
-                'No resident fields added yet.\nTap "Add Field" to define what info to collect.',
+                    'No resident fields added yet.\nTap "Add Field" to define what info to collect.',
                 fields: _residentFields,
                 onAdd: _addResidentField,
                 onRemove: _removeResidentField,
                 onToggleRequired: (i, val) =>
                     setState(() => _residentFields[i].isRequired = val),
               ),
-
               const SizedBox(height: 20),
-
-              // ══════════════════════════════════════════════════
-              //  SERVICE REQUIREMENTS — dynamic fields
-              // ══════════════════════════════════════════════════
-              _DynamicFieldSection(
-                sectionLabel: 'Service Requirements',
-                addButtonLabel: 'Add Field',
-                infoText:
-                'Add fields for information the resident must provide '
-                    '(e.g. Valid ID, Proof of Residency). Toggle "Required" '
-                    'to mark fields as mandatory.',
-                emptyHint:
-                'No requirements added yet.\nTap "Add Field" to define what info is needed.',
-                fields: _requirements,
-                onAdd: _addRequirement,
-                onRemove: _removeRequirement,
-                onToggleRequired: (i, val) =>
-                    setState(() => _requirements[i].isRequired = val),
-              ),
-
-              const SizedBox(height: 20),
-
-              // ══════════════════════════════════════════════════
-              //  ADMIN NOTES
-              // ══════════════════════════════════════════════════
-              _SectionLabel(label: 'Admin Notes'),
+              const _SectionLabel(label: 'Admin Notes'),
               const SizedBox(height: 8),
               Container(
                 decoration: BoxDecoration(
@@ -1487,20 +1709,19 @@ class _CreateApptPageState extends State<_CreateApptPage> {
                 child: TextField(
                   controller: _notesCtrl,
                   maxLines: 3,
-                  style:
-                  const TextStyle(fontSize: 13, color: _kText),
-                  decoration: const InputDecoration(
+                  style: TextStyle(fontSize: r.fsBody, color: _kText),
+                  decoration: InputDecoration(
                     hintText: 'Internal remarks (optional)…',
-                    hintStyle:
-                    TextStyle(color: _kText3, fontSize: 12),
+                    hintStyle: TextStyle(
+                      color: _kText3,
+                      fontSize: r.isSmall ? 11 : 12,
+                    ),
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.all(14),
+                    contentPadding: const EdgeInsets.all(14),
                   ),
                 ),
               ),
-
               const SizedBox(height: 28),
-
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -1508,26 +1729,25 @@ class _CreateApptPageState extends State<_CreateApptPage> {
                     backgroundColor: _kAccent,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 14),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     elevation: 0,
                   ),
                   onPressed: _saving ? null : _save,
                   icon: _saving
                       ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                        color: Colors.white, strokeWidth: 2),
-                  )
-                      : const Icon(
-                      Icons.calendar_today_rounded,
-                      size: 18),
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Icon(Icons.calendar_today_rounded, size: 18),
                   label: const Text(
                     'Create Appointment',
-                    style: TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -1540,8 +1760,7 @@ class _CreateApptPageState extends State<_CreateApptPage> {
 }
 
 // ============================================================================
-//  DYNAMIC FIELD SECTION — shared widget for both Resident Details
-//  and Service Requirements, keeps things DRY
+//  DYNAMIC FIELD SECTION
 // ============================================================================
 class _DynamicFieldSection extends StatelessWidget {
   final String sectionLabel;
@@ -1576,7 +1795,9 @@ class _DynamicFieldSection extends StatelessWidget {
               onTap: onAdd,
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 5),
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: _kAccentBg,
                   borderRadius: BorderRadius.circular(8),
@@ -1585,15 +1806,15 @@ class _DynamicFieldSection extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.add_rounded,
-                        size: 13, color: _kAccent),
+                    const Icon(Icons.add_rounded, size: 13, color: _kAccent),
                     const SizedBox(width: 4),
                     Text(
                       addButtonLabel,
                       style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: _kAccent),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: _kAccent,
+                      ),
                     ),
                   ],
                 ),
@@ -1612,14 +1833,16 @@ class _DynamicFieldSection extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.info_outline_rounded,
-                  size: 13, color: _kAccent),
+              const Icon(Icons.info_outline_rounded, size: 13, color: _kAccent),
               const SizedBox(width: 7),
               Expanded(
                 child: Text(
                   infoText,
                   style: const TextStyle(
-                      fontSize: 11, color: _kText2, height: 1.5),
+                    fontSize: 11,
+                    color: _kText2,
+                    height: 1.5,
+                  ),
                 ),
               ),
             ],
@@ -1628,8 +1851,7 @@ class _DynamicFieldSection extends StatelessWidget {
         const SizedBox(height: 10),
         if (fields.isEmpty)
           Container(
-            padding: const EdgeInsets.symmetric(
-                vertical: 20, horizontal: 16),
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
             decoration: BoxDecoration(
               color: _kSurface,
               borderRadius: BorderRadius.circular(12),
@@ -1638,29 +1860,36 @@ class _DynamicFieldSection extends StatelessWidget {
             child: Center(
               child: Column(
                 children: [
-                  const Icon(Icons.playlist_add_rounded,
-                      color: _kText3, size: 26),
+                  const Icon(
+                    Icons.playlist_add_rounded,
+                    color: _kText3,
+                    size: 26,
+                  ),
                   const SizedBox(height: 6),
                   Text(
                     emptyHint,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                        fontSize: 11, color: _kText3, height: 1.6),
+                      fontSize: 11,
+                      color: _kText3,
+                      height: 1.6,
+                    ),
                   ),
                 ],
               ),
             ),
           )
         else
-          ...List.generate(fields.length, (i) {
-            return _RequirementFieldCard(
+          ...List.generate(
+            fields.length,
+            (i) => _RequirementFieldCard(
               key: ObjectKey(fields[i]),
               field: fields[i],
               index: i + 1,
               onRemove: () => onRemove(i),
               onToggleRequired: (val) => onToggleRequired(i, val),
-            );
-          }),
+            ),
+          ),
       ],
     );
   }
@@ -1682,12 +1911,10 @@ class _RequirementFieldCard extends StatefulWidget {
   });
 
   @override
-  State<_RequirementFieldCard> createState() =>
-      _RequirementFieldCardState();
+  State<_RequirementFieldCard> createState() => _RequirementFieldCardState();
 }
 
-class _RequirementFieldCardState
-    extends State<_RequirementFieldCard> {
+class _RequirementFieldCardState extends State<_RequirementFieldCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -1696,8 +1923,7 @@ class _RequirementFieldCardState
         color: _kSurface,
         borderRadius: BorderRadius.circular(13),
         border: Border.all(
-          color:
-          widget.field.isRequired ? _kAccentBorder : _kBorder,
+          color: widget.field.isRequired ? _kAccentBorder : _kBorder,
           width: widget.field.isRequired ? 1.5 : 1,
         ),
         boxShadow: [
@@ -1710,7 +1936,6 @@ class _RequirementFieldCardState
       ),
       child: Column(
         children: [
-          // ── Card Header ──
           Container(
             padding: const EdgeInsets.fromLTRB(13, 10, 10, 10),
             decoration: BoxDecoration(
@@ -1718,9 +1943,11 @@ class _RequirementFieldCardState
                   ? _kSurface2
                   : const Color(0xFFFAFAFA),
               borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(12)),
+                top: Radius.circular(12),
+              ),
               border: const Border(
-                  bottom: BorderSide(color: _kBorder, width: 0.5)),
+                bottom: BorderSide(color: _kBorder, width: 0.5),
+              ),
             ),
             child: Row(
               children: [
@@ -1728,18 +1955,17 @@ class _RequirementFieldCardState
                   width: 22,
                   height: 22,
                   decoration: BoxDecoration(
-                    color: widget.field.isRequired
-                        ? _kAccent
-                        : _kBorder,
+                    color: widget.field.isRequired ? _kAccent : _kBorder,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Center(
                     child: Text(
                       '${widget.index}',
                       style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -1752,32 +1978,28 @@ class _RequirementFieldCardState
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: widget.field.isRequired
-                          ? _kAccent
-                          : _kText2,
+                      color: widget.field.isRequired ? _kAccent : _kText2,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                // Required toggle
                 GestureDetector(
-                  onTap: () {
-                    widget.onToggleRequired(
-                        !widget.field.isRequired);
-                  },
+                  onTap: () =>
+                      widget.onToggleRequired(!widget.field.isRequired),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: widget.field.isRequired
                           ? _kRedBg
                           : const Color(0xFFF3F4F6),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
-                          color: widget.field.isRequired
-                              ? _kRedBorder
-                              : _kBorder),
+                        color: widget.field.isRequired ? _kRedBorder : _kBorder,
+                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -1787,21 +2009,15 @@ class _RequirementFieldCardState
                               ? Icons.star_rounded
                               : Icons.star_border_rounded,
                           size: 11,
-                          color: widget.field.isRequired
-                              ? _kRed
-                              : _kText3,
+                          color: widget.field.isRequired ? _kRed : _kText3,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          widget.field.isRequired
-                              ? 'Required'
-                              : 'Optional',
+                          widget.field.isRequired ? 'Required' : 'Optional',
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
-                            color: widget.field.isRequired
-                                ? _kRed
-                                : _kText3,
+                            color: widget.field.isRequired ? _kRed : _kText3,
                           ),
                         ),
                       ],
@@ -1809,7 +2025,6 @@ class _RequirementFieldCardState
                   ),
                 ),
                 const SizedBox(width: 6),
-                // Remove button
                 GestureDetector(
                   onTap: widget.onRemove,
                   child: Container(
@@ -1819,15 +2034,16 @@ class _RequirementFieldCardState
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: _kRedBorder),
                     ),
-                    child: const Icon(Icons.close_rounded,
-                        size: 12, color: _kRed),
+                    child: const Icon(
+                      Icons.close_rounded,
+                      size: 12,
+                      color: _kRed,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-
-          // ── Field Inputs ──
           Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
@@ -1888,9 +2104,10 @@ class _InlineInput extends StatelessWidget {
         children: [
           Padding(
             padding: EdgeInsets.only(
-                left: 10,
-                top: maxLines > 1 ? 11 : 0,
-                right: 2),
+              left: 10,
+              top: maxLines > 1 ? 11 : 0,
+              right: 2,
+            ),
             child: Icon(icon, size: 14, color: _kText3),
           ),
           Expanded(
@@ -1898,15 +2115,15 @@ class _InlineInput extends StatelessWidget {
               controller: controller,
               maxLines: maxLines,
               onChanged: onChanged,
-              style:
-              const TextStyle(fontSize: 12, color: _kText),
+              style: const TextStyle(fontSize: 12, color: _kText),
               decoration: InputDecoration(
                 hintText: hint,
-                hintStyle:
-                const TextStyle(color: _kText3, fontSize: 12),
+                hintStyle: const TextStyle(color: _kText3, fontSize: 12),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 10),
+                  horizontal: 8,
+                  vertical: 10,
+                ),
               ),
             ),
           ),
@@ -1942,14 +2159,16 @@ class _AdminFormField extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(label,
-                style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: _kText2)),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: _kText2,
+              ),
+            ),
             if (required)
-              const Text(' *',
-                  style: TextStyle(color: _kRed, fontSize: 12)),
+              const Text(' *', style: TextStyle(color: _kRed, fontSize: 12)),
           ],
         ),
         const SizedBox(height: 6),
@@ -1960,40 +2179,40 @@ class _AdminFormField extends StatelessWidget {
           style: const TextStyle(fontSize: 13, color: _kText),
           validator: required
               ? (v) => (v == null || v.trim().isEmpty)
-              ? '$label is required'
-              : null
+                    ? '$label is required'
+                    : null
               : null,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle:
-            const TextStyle(color: _kText3, fontSize: 13),
-            prefixIcon:
-            Icon(icon, size: 17, color: _kText3),
+            hintStyle: const TextStyle(color: _kText3, fontSize: 13),
+            prefixIcon: Icon(icon, size: 17, color: _kText3),
             filled: true,
             fillColor: _kSurface,
             contentPadding: EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: maxLines > 1 ? 14 : 13),
+              horizontal: 14,
+              vertical: maxLines > 1 ? 14 : 13,
+            ),
             border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(11),
-                borderSide: const BorderSide(color: _kBorder)),
+              borderRadius: BorderRadius.circular(11),
+              borderSide: const BorderSide(color: _kBorder),
+            ),
             enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(11),
-                borderSide: const BorderSide(color: _kBorder)),
+              borderRadius: BorderRadius.circular(11),
+              borderSide: const BorderSide(color: _kBorder),
+            ),
             focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(11),
-                borderSide: const BorderSide(
-                    color: _kAccent, width: 1.5)),
+              borderRadius: BorderRadius.circular(11),
+              borderSide: const BorderSide(color: _kAccent, width: 1.5),
+            ),
             errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(11),
-                borderSide: const BorderSide(
-                    color: _kRed, width: 1.5)),
+              borderRadius: BorderRadius.circular(11),
+              borderSide: const BorderSide(color: _kRed, width: 1.5),
+            ),
             focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(11),
-                borderSide: const BorderSide(
-                    color: _kRed, width: 1.5)),
-            errorStyle: const TextStyle(
-                fontSize: 11, color: _kRed),
+              borderRadius: BorderRadius.circular(11),
+              borderSide: const BorderSide(color: _kRed, width: 1.5),
+            ),
+            errorStyle: const TextStyle(fontSize: 11, color: _kRed),
           ),
         ),
       ],
@@ -2014,15 +2233,19 @@ class _SectionLabel extends StatelessWidget {
           width: 3,
           height: 14,
           decoration: BoxDecoration(
-              color: _kAccent,
-              borderRadius: BorderRadius.circular(2)),
+            color: _kAccent,
+            borderRadius: BorderRadius.circular(2),
+          ),
         ),
         const SizedBox(width: 8),
-        Text(label,
-            style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: _kText)),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: _kText,
+          ),
+        ),
       ],
     );
   }
@@ -2043,9 +2266,10 @@ class _DetailCard extends StatelessWidget {
         border: Border.all(color: _kBorder),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 6,
-              offset: const Offset(0, 2)),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: child,
@@ -2069,19 +2293,23 @@ class _DetailRow extends StatelessWidget {
           const SizedBox(width: 8),
           SizedBox(
             width: 68,
-            child: Text(label,
-                style: const TextStyle(
-                    fontSize: 12,
-                    color: _kText3,
-                    fontWeight: FontWeight.w600)),
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                color: _kText3,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
           Expanded(
             child: Text(
               value.isEmpty ? '—' : value,
               style: const TextStyle(
-                  fontSize: 12,
-                  color: _kText2,
-                  fontWeight: FontWeight.w500),
+                fontSize: 12,
+                color: _kText2,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -2107,8 +2335,18 @@ String _dayNum(String date) {
 
 String _monthShort(String date) {
   const m = [
-    'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
-    'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'
+    'JAN',
+    'FEB',
+    'MAR',
+    'APR',
+    'MAY',
+    'JUN',
+    'JUL',
+    'AUG',
+    'SEP',
+    'OCT',
+    'NOV',
+    'DEC',
   ];
   try {
     return m[DateTime.parse(date).month - 1];
@@ -2120,29 +2358,27 @@ String _monthShort(String date) {
 String _isoDate(DateTime d) =>
     '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
-Future<bool?> _confirm(
-    BuildContext context, String title, String body) {
+Future<bool?> _confirm(BuildContext context, String title, String body) {
   return showDialog<bool>(
     context: context,
     builder: (_) => AlertDialog(
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16)),
-      title: Text(title,
-          style: const TextStyle(
-              fontSize: 15, fontWeight: FontWeight.bold)),
-      content: Text(body,
-          style: const TextStyle(fontSize: 13)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Text(
+        title,
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+      ),
+      content: Text(body, style: const TextStyle(fontSize: 13)),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel',
-              style: TextStyle(color: _kText3)),
+          child: const Text('Cancel', style: TextStyle(color: _kText3)),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context, true),
-          child: const Text('Confirm',
-              style: TextStyle(
-                  color: _kRed, fontWeight: FontWeight.bold)),
+          child: const Text(
+            'Confirm',
+            style: TextStyle(color: _kRed, fontWeight: FontWeight.bold),
+          ),
         ),
       ],
     ),
