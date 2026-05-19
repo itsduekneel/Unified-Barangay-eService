@@ -3,8 +3,8 @@ class UserInfo {
   final String middleName;
   final String lastName;
   final String suffix;
-  final String emailAddress;
-  final String dateOfBirth;
+  final String email;
+  final String birthDate;
   final String gender;
   final String password;
 
@@ -13,7 +13,7 @@ class UserInfo {
   final String stateProvince;
   final String cityMunicipality;
   final String barangay;
-  final String houseStreet;
+  final String streetAddress;
   final String addressLine2;
   final String postalCode;
 
@@ -22,15 +22,15 @@ class UserInfo {
     required this.middleName,
     required this.lastName,
     required this.suffix,
-    required this.emailAddress,
-    required this.dateOfBirth,
+    required this.email,
+    required this.birthDate,
     required this.gender,
     required this.password,
     required this.country,
     required this.stateProvince,
     required this.cityMunicipality,
     required this.barangay,
-    required this.houseStreet,
+    required this.streetAddress,
     this.addressLine2 = '',
     this.postalCode = '',
   });
@@ -40,15 +40,15 @@ class UserInfo {
     String? middleName,
     String? lastName,
     String? suffix,
-    String? emailAddress,
-    String? dateOfBirth,
+    String? email,
+    String? birthDate,
     String? gender,
     String? password,
     String? country,
     String? stateProvince,
     String? cityMunicipality,
     String? barangay,
-    String? houseStreet,
+    String? streetAddress,
     String? addressLine2,
     String? postalCode,
   }) {
@@ -57,15 +57,15 @@ class UserInfo {
       middleName:       middleName       ?? this.middleName,
       lastName:         lastName         ?? this.lastName,
       suffix:           suffix           ?? this.suffix,
-      emailAddress:     emailAddress     ?? this.emailAddress,
-      dateOfBirth:      dateOfBirth      ?? this.dateOfBirth,
+      email:            email            ?? this.email,
+      birthDate:        birthDate        ?? this.birthDate,
       gender:           gender           ?? this.gender,
       password:         password         ?? this.password,
       country:          country          ?? this.country,
       stateProvince:    stateProvince    ?? this.stateProvince,
       cityMunicipality: cityMunicipality ?? this.cityMunicipality,
       barangay:         barangay         ?? this.barangay,
-      houseStreet:      houseStreet      ?? this.houseStreet,
+      streetAddress:    streetAddress    ?? this.streetAddress,
       addressLine2:     addressLine2     ?? this.addressLine2,
       postalCode:       postalCode       ?? this.postalCode,
     );
@@ -79,16 +79,18 @@ class UserInfo {
       'middle_name':       middleName,
       'last_name':         lastName,
       'suffix':            suffix,
-      'email':             emailAddress,
-      'date_of_birth':     dateOfBirth,
+      'email':             email,
+      'birth_date':        birthDate,
       'gender':            gender,
       'country':           country,
       'state_province':    stateProvince,
       'city_municipality': cityMunicipality,
       'barangay':          barangay,
-      'house_street':      houseStreet,
+      'street_address':    streetAddress,
       'address_line2':     addressLine2,
       'postal_code':       postalCode,
+      'is_active':         true,
+      'role':              'Resident',
     };
   }
 }

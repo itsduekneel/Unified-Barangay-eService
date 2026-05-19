@@ -137,9 +137,6 @@ class _LoginPageState extends State<LoginPage> {
                     rememberMe: _rememberMe,
                     onChanged: (val) =>
                         setState(() => _rememberMe = val ?? false),
-                    onForgotPassword: () {
-                      // TODO: Navigate to forgot-password screen.
-                    },
                   ),
 
                   const Spacer(),
@@ -294,12 +291,10 @@ class _LoginFieldState extends State<_LoginField> {
 class _RememberMeRow extends StatelessWidget {
   final bool rememberMe;
   final ValueChanged<bool?> onChanged;
-  final VoidCallback onForgotPassword;
 
   const _RememberMeRow({
     required this.rememberMe,
     required this.onChanged,
-    required this.onForgotPassword,
   });
 
   @override
@@ -324,17 +319,6 @@ class _RememberMeRow extends StatelessWidget {
             const SizedBox(width: 6),
             const Text('Remember me', style: TextStyle(fontSize: 13)),
           ],
-        ),
-        GestureDetector(
-          onTap: onForgotPassword,
-          child: const Text(
-            'Forgot password?',
-            style: TextStyle(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-            ),
-          ),
         ),
       ],
     );
@@ -391,7 +375,7 @@ class _SignUpCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.5),
+        color: Colors.white.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

@@ -3,9 +3,7 @@ import 'package:flutter/rendering.dart'; // para sa ScrollDirection
 import 'package:ube/authentication/authentication_page.dart';
 import 'package:ube/pages/notification_page.dart';
 import 'package:ube/core/utils/route_utils.dart';
-
 import '../pages/dashboard_page.dart';
-
 import '../pages/profile_page.dart';
 
 class AppShell extends StatefulWidget {
@@ -50,8 +48,10 @@ class _AppShellState extends State<AppShell> {
     );
   }
 
-  void _logout() {
+  void _logout() async {
     Navigator.of(context).pop();
+    // Use Supabase to sign out
+    // await Supabase.instance.client.auth.signOut();
     Navigator.pushReplacement(
       context,
       instantRoute(const LoginPage()),
@@ -66,7 +66,6 @@ class _AppShellState extends State<AppShell> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         padding: const EdgeInsets.all(10),
-
         child: Icon(
           icon,
           size: 25,

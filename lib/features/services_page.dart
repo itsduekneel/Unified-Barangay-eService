@@ -7,29 +7,31 @@
 
 import 'package:flutter/material.dart';
 import 'package:ube/features/announcement_page.dart';
-import 'package:ube/features/appointment_request_page..dart';
-
+import 'package:ube/features/appointment_request_page.dart';
 import 'package:ube/features/document_request_page.dart';
 import 'package:ube/features/emergency_page.dart';
 import 'package:ube/features/residents_household_page.dart';
 import 'package:ube/features/rolebased_access_control_page.dart';
 import 'package:ube/features/tracking_services_request_page.dart';
 import 'package:ube/features/audit_log_page.dart';
-import 'hall/documentcreation_page.dart';
+import 'package:ube/features/hall/documentcreation_page.dart';
 
 // ── NEW: Resident modules ────────────────────────────────────────────────────
 import 'package:ube/features/incident_report_page.dart';
+import 'package:ube/features/barangay_management.dart';
+import 'package:ube/features/barangay_activities_page.dart';
+import 'package:ube/features/barangay_service_transaction_page.dart';
+import 'package:ube/features/task_page.dart';
+import 'package:ube/features/attendance_admin.dart';
 
-// ── NEW: Barangay Hall modules ───────────────────────────────────────────────
-import 'package:ube/features/hall/user_management_page.dart';
+
 import 'package:ube/features/hall/rbac_management_page.dart';
-import 'package:ube/features/hall/staff_activity_tracking_page.dart';
 import 'package:ube/features/hall/smart_queue_page.dart';
 import 'package:ube/features/hall/appointment_management_page.dart';
 import 'package:ube/features/hall/emergency_tracker_page.dart' as hall_emg;
 import 'package:ube/features/hall/incident_tracking_page.dart';
 import 'package:ube/features/hall/household_creation_page.dart';
-import 'package:ube/features/hall/satisfaction_reports_page.dart';
+
 import 'package:ube/core/utils/route_utils.dart';
 
 /// ─────────────────────────────────────────
@@ -87,7 +89,10 @@ class _ViewAllPageState extends State<ViewAllPage> {
       'Appointment Request',
       Icons.calendar_today_rounded,
       onTap: (context) {
-        Navigator.push(context, instantRoute(const AppointmentPage()));
+        Navigator.push(
+          context,
+          instantRoute(const ResidentAppointmentRequestPage()),
+        );
       },
     ),
     IconItem(
@@ -142,7 +147,10 @@ class _ViewAllPageState extends State<ViewAllPage> {
       'Incident Report',
       Icons.report_outlined,
       onTap: (context) {
-        Navigator.push(context, instantRoute(const IncidentReportPage()));
+        Navigator.push(
+          context,
+          instantRoute(const ResidentIncidentReportPage()),
+        );
       },
     ),
 
@@ -151,7 +159,7 @@ class _ViewAllPageState extends State<ViewAllPage> {
       'User Management',
       Icons.manage_accounts_outlined,
       onTap: (context) {
-        Navigator.push(context, instantRoute(const UserManagementPage()));
+        Navigator.push(context, instantRoute(const BarangayManagementPage()));
       },
     ),
     IconItem(
@@ -165,10 +173,13 @@ class _ViewAllPageState extends State<ViewAllPage> {
       'Staff Activity',
       Icons.groups_outlined,
       onTap: (context) {
-        Navigator.push(
-          context,
-          instantRoute(const StaffActivityTrackingPage()),
-        );
+        Navigator.push(context, instantRoute(const AdminTaskPage()));
+      },
+    ),  IconItem(
+      'Staff Activity',
+      Icons.groups_outlined,
+      onTap: (context) {
+        Navigator.push(context, instantRoute(const AdminServiceTransactionsPage()));
       },
     ),
     IconItem(
@@ -214,9 +225,17 @@ class _ViewAllPageState extends State<ViewAllPage> {
       'Satisfaction Reports',
       Icons.star_outline,
       onTap: (context) {
-        Navigator.push(context, instantRoute(const SatisfactionReportsPage()));
+        Navigator.push(context, instantRoute(const BarangayActivitiesPage()));
       },
     ),
+    IconItem(
+      'Satisfaction Reports',
+      Icons.star_outline,
+      onTap: (context) {
+        Navigator.push(context, instantRoute(const BarangayAttendancePage()));
+      },
+    )
+
   ];
 
   List<IconItem> get _filteredItems {
@@ -224,8 +243,8 @@ class _ViewAllPageState extends State<ViewAllPage> {
     return _allItems
         .where(
           (item) =>
-              item.title.toLowerCase().contains(_searchQuery.toLowerCase()),
-        )
+          item.title.toLowerCase().contains(_searchQuery.toLowerCase()),
+    )
         .toList();
   }
 

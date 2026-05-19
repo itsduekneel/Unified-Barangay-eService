@@ -320,47 +320,6 @@ class _NotificationReadPagesState extends State<NotificationReadPages> {
 
             const SizedBox(height: 20),
 
-            // ── Add to Calendar button ─────────────────────────────────────
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  // TODO: integrate calendar plugin
-                },
-                icon: const Icon(Icons.calendar_month_outlined, size: 20),
-                label: const Text(
-                  'Add to Calendar',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _C.primary,
-                  foregroundColor: _C.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 2,
-                  shadowColor: _C.primary.withOpacity(0.35),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 14),
-
-            // ── Mark as Unread / Read toggle ───────────────────────────────
-            Center(
-              child: TextButton(
-                onPressed: () => setState(() => _isRead = !_isRead),
-                child: Text(
-                  _isRead ? 'Mark as Unread' : 'Mark as Read',
-                  style: const TextStyle(
-                    color: _C.primary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ),
           ],
         ),
       ),

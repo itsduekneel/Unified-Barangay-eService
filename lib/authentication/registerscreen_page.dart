@@ -981,32 +981,32 @@ class _BottomBar extends StatelessWidget {
           ),
           child: isLoading
               ? const SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2.5,
-                  ),
-                )
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(
+              color: Colors.white,
+              strokeWidth: 2.5,
+            ),
+          )
               : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      step < 2 ? 'Next' : 'Create Account',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(
-                      step < 2
-                          ? Icons.arrow_forward_rounded
-                          : Icons.check_rounded,
-                      size: 17,
-                    ),
-                  ],
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                step < 2 ? 'Next' : 'Create Account',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
                 ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                step < 2
+                    ? Icons.arrow_forward_rounded
+                    : Icons.check_rounded,
+                size: 17,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1262,9 +1262,9 @@ class _Step1Address extends StatelessWidget {
                       onChanged: s._stateProvince == null
                           ? null
                           : (v) => s.setState(() {
-                              s._cityMunicipality = v;
-                              s._barangay = null;
-                            }),
+                        s._cityMunicipality = v;
+                        s._barangay = null;
+                      }),
                       required: true,
                     ),
                   ),

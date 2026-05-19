@@ -1,13 +1,10 @@
-// lib/widgets/notification_card.dart
-
 import 'package:flutter/material.dart';
-
-// lib/widgets/notification_card.dart
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NotificationCard extends StatelessWidget {
   final NotificationItem item;
   final VoidCallback onTap;
-  final VoidCallback? onMarkRead; // ← add this
+  final VoidCallback? onMarkRead;
 
   const NotificationCard({
     super.key,
@@ -18,12 +15,42 @@ class NotificationCard extends StatelessWidget {
 
   static const Color primaryColor = Color(0xFF8B2CF5);
 
+  // ── Mark as read: update Supabase then call onMarkRead to refresh UI ───────
+  Future<void> _handleTap(BuildContext context) async {
+    onTap(); // run any existing onTap logic
+
+    final bool isRead = item.status == 'Read';
+    if (isRead) return; // already read, nothing to do
+
+    try {
+      await Supabase.instance.client
+          .from('notifications')
+          .update({'status': 'Read'})
+          .eq('id', item.id);
+
+      // Update local object so the card reflects immediately
+      item.status = 'Read';
+
+      // Notify parent to call setState / refresh list
+      onMarkRead?.call();
+    } on PostgrestException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to mark as read: ${e.message}'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool isRead = item.status == 'Read';
 
     return InkWell(
-      onTap: onTap,
+      onTap: () => _handleTap(context), // ← use the new handler
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
         child: Row(
@@ -75,9 +102,8 @@ class NotificationCard extends StatelessWidget {
                         child: Text(
                           item.title,
                           style: TextStyle(
-                            fontWeight: isRead
-                                ? FontWeight.normal
-                                : FontWeight.bold,
+                            fontWeight:
+                            isRead ? FontWeight.normal : FontWeight.bold,
                             fontSize: 15,
                             color: isRead ? Colors.black54 : Colors.black87,
                           ),
@@ -119,7 +145,7 @@ class NotificationItem {
   final String title;
   final String description;
   final String time;
-  String status;
+  String status; // mutable so UI can update locally
   final String author;
 
   NotificationItem({
@@ -130,4 +156,27 @@ class NotificationItem {
     required this.status,
     required this.author,
   });
+
+  // ── Factory from Supabase row ──────────────────────────────────────────────
+  factory NotificationItem.fromMap(Map<String, dynamic> map) {
+    return NotificationItem(
+      id: map['id'].toString(),
+      title: map['title'] ?? '',
+      description: map['description'] ?? '',
+      time: map['created_at'] ?? '',
+      status: map['status'] ?? 'Unread',
+      author: map['author'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'status': status,
+      'author': author,
+    };
+  }
 }
+

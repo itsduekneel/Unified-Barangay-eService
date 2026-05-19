@@ -107,7 +107,7 @@ const _colorPresets = [
 ];
 
 _CatColorPreset _presetByKey(String key) => _colorPresets.firstWhere(
-  (p) => p.key == key,
+      (p) => p.key == key,
   orElse: () => _colorPresets[0],
 );
 
@@ -255,15 +255,15 @@ class EmergencyItem {
       id: map['id'].toString(),
       type: map['type'] ?? 'Emergency',
       level: EmergencyLevel.values.firstWhere(
-        (e) => e.name == map['level'],
+            (e) => e.name == map['level'],
         orElse: () => EmergencyLevel.high,
       ),
       location: map['location'] ?? 'Unknown',
       reportedBy: map['reported_by'] ?? 'Anonymous',
       dateTime: map['created_at'] != null
           ? DateFormat(
-              'MMM dd, hh:mm a',
-            ).format(DateTime.parse(map['created_at']))
+        'MMM dd, hh:mm a',
+      ).format(DateTime.parse(map['created_at']))
           : 'Just now',
       description: map['description'] ?? '',
       responder: map['responder'],
@@ -308,7 +308,7 @@ String _levelLabel(EmergencyLevel l) => switch (l) {
 
 IconData _typeIcon(String type) {
   final cat = appCategories.firstWhere(
-    (c) => c.name == type,
+        (c) => c.name == type,
     orElse: () => appCategories.first,
   );
   return cat.icon;
@@ -316,7 +316,7 @@ IconData _typeIcon(String type) {
 
 Color _typeColor(String type) {
   final cat = appCategories.firstWhere(
-    (c) => c.name == type,
+        (c) => c.name == type,
     orElse: () => appCategories.first,
   );
   return _presetByKey(cat.colorKey).fg;
@@ -460,20 +460,20 @@ class _ManageCategoriesPageState extends State<ManageCategoriesPage> {
             child: appCategories.isEmpty
                 ? const _EmptyCategories()
                 : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
-                    itemCount: appCategories.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
-                    itemBuilder: (_, i) {
-                      final cat = appCategories[i];
-                      return _CategoryCard(
-                        category: cat,
-                        onEdit: () => _openEdit(cat),
-                        onDelete: () => _confirmDelete(cat),
-                        onToggle: () =>
-                            setState(() => cat.active = !cat.active),
-                      );
-                    },
-                  ),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+              itemCount: appCategories.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
+              itemBuilder: (_, i) {
+                final cat = appCategories[i];
+                return _CategoryCard(
+                  category: cat,
+                  onEdit: () => _openEdit(cat),
+                  onDelete: () => _confirmDelete(cat),
+                  onToggle: () =>
+                      setState(() => cat.active = !cat.active),
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -517,7 +517,7 @@ class _CategoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final preset = _presetByKey(category.colorKey);
     final sevEntry = _severities.firstWhere(
-      (s) => s.$1 == category.severity,
+          (s) => s.$1 == category.severity,
       orElse: () => _severities[2],
     );
 
@@ -929,10 +929,10 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
                       ),
                       child: active
                           ? const Icon(
-                              Icons.check_rounded,
-                              size: 14,
-                              color: Colors.white,
-                            )
+                        Icons.check_rounded,
+                        size: 14,
+                        color: Colors.white,
+                      )
                           : null,
                     ),
                   ),
@@ -1307,9 +1307,9 @@ class _EmergencyTrackerPageState extends State<EmergencyTrackerPage>
       final q = _searchQuery.toLowerCase();
       final matchSearch =
           q.isEmpty ||
-          e.type.toLowerCase().contains(q) ||
-          e.location.toLowerCase().contains(q) ||
-          e.reportedBy.toLowerCase().contains(q);
+              e.type.toLowerCase().contains(q) ||
+              e.location.toLowerCase().contains(q) ||
+              e.reportedBy.toLowerCase().contains(q);
       return matchLevel && matchSearch;
     }).toList();
   }
@@ -1333,12 +1333,12 @@ class _EmergencyTrackerPageState extends State<EmergencyTrackerPage>
           item: e,
           onAdvance: e.step < 3
               ? () async {
-                  await supabase
-                      .from('emergency_incidents')
-                      .update({'step': e.step + 1})
-                      .eq('id', e.id);
-                  if (ctx.mounted) Navigator.pop(ctx);
-                }
+            await supabase
+                .from('emergency_incidents')
+                .update({'step': e.step + 1})
+                .eq('id', e.id);
+            if (ctx.mounted) Navigator.pop(ctx);
+          }
               : null,
         ),
       ),
@@ -1468,35 +1468,35 @@ class _EmergencyTrackerPageState extends State<EmergencyTrackerPage>
                             'All',
                             'all',
                             _filterLevel,
-                            (v) => setState(() => _filterLevel = v),
+                                (v) => setState(() => _filterLevel = v),
                           ),
                           const SizedBox(width: 6),
                           _FilterChip(
                             'Critical',
                             'critical',
                             _filterLevel,
-                            (v) => setState(() => _filterLevel = v),
+                                (v) => setState(() => _filterLevel = v),
                           ),
                           const SizedBox(width: 6),
                           _FilterChip(
                             'High',
                             'high',
                             _filterLevel,
-                            (v) => setState(() => _filterLevel = v),
+                                (v) => setState(() => _filterLevel = v),
                           ),
                           const SizedBox(width: 6),
                           _FilterChip(
                             'Medium',
                             'medium',
                             _filterLevel,
-                            (v) => setState(() => _filterLevel = v),
+                                (v) => setState(() => _filterLevel = v),
                           ),
                           const SizedBox(width: 6),
                           _FilterChip(
                             'Low',
                             'low',
                             _filterLevel,
-                            (v) => setState(() => _filterLevel = v),
+                                (v) => setState(() => _filterLevel = v),
                           ),
                         ],
                       ),
@@ -1505,7 +1505,7 @@ class _EmergencyTrackerPageState extends State<EmergencyTrackerPage>
                     _SectionHeader(
                       title: 'Live Incidents',
                       count:
-                          '${live.length} alert${live.length == 1 ? '' : 's'}',
+                      '${live.length} alert${live.length == 1 ? '' : 's'}',
                       countColor: _kRed,
                       countBg: _kRedBg,
                       countBorder: _kRedBorder,
@@ -1516,7 +1516,7 @@ class _EmergencyTrackerPageState extends State<EmergencyTrackerPage>
               ),
               SliverList(
                 delegate: SliverChildBuilderDelegate(
-                  (_, i) => Padding(
+                      (_, i) => Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                     child: _IncidentCard(
                       item: live[i],
@@ -1556,7 +1556,7 @@ class _EmergencyTrackerPageState extends State<EmergencyTrackerPage>
               ),
               SliverList(
                 delegate: SliverChildBuilderDelegate(
-                  (_, i) => Padding(
+                      (_, i) => Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                     child: _ResolvedCard(
                       item: resolved[i],
@@ -1676,57 +1676,57 @@ class _InlineMapSectionState extends State<_InlineMapSection> {
           decoration: const BoxDecoration(),
           child: _cacheReady
               ? FlutterMap(
-                  mapController: _mapCtrl,
-                  options: const MapOptions(
-                    initialCenter: LatLng(_kDefaultLat, _kDefaultLng),
-                    initialZoom: 14,
-                    interactionOptions: InteractionOptions(
-                      flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
+            mapController: _mapCtrl,
+            options: const MapOptions(
+              initialCenter: LatLng(_kDefaultLat, _kDefaultLng),
+              initialZoom: 14,
+              interactionOptions: InteractionOptions(
+                flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
+              ),
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: _kOsmTile,
+                tileProvider: CancellableNetworkTileProvider(),
+                userAgentPackageName: 'com.barangay.ube',
+                maxNativeZoom: 19,
+                keepBuffer: 4,
+              ),
+              MarkerLayer(
+                markers: widget.items.map((item) {
+                  return Marker(
+                    point: LatLng(item.mapLat, item.mapLng),
+                    width: 36,
+                    height: 44,
+                    alignment: Alignment.topCenter,
+                    child: GestureDetector(
+                      onTap: () => widget.onPinTap(item),
+                      child: _MiniPin(
+                        color: _levelColor(item.level),
+                        icon: _typeIcon(item.type),
+                      ),
                     ),
-                  ),
-                  children: [
-                    TileLayer(
-                      urlTemplate: _kOsmTile,
-                      tileProvider: CancellableNetworkTileProvider(),
-                      userAgentPackageName: 'com.barangay.ube',
-                      maxNativeZoom: 19,
-                      keepBuffer: 4,
-                    ),
-                    MarkerLayer(
-                      markers: widget.items.map((item) {
-                        return Marker(
-                          point: LatLng(item.mapLat, item.mapLng),
-                          width: 36,
-                          height: 44,
-                          alignment: Alignment.topCenter,
-                          child: GestureDetector(
-                            onTap: () => widget.onPinTap(item),
-                            child: _MiniPin(
-                              color: _levelColor(item.level),
-                              icon: _typeIcon(item.type),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    RichAttributionWidget(
-                      alignment: AttributionAlignment.bottomLeft,
-                      popupBackgroundColor: Colors.white.withOpacity(0.9),
-                      attributions: [
-                        TextSourceAttribution('© OpenStreetMap contributors'),
-                      ],
-                    ),
-                  ],
-                )
+                  );
+                }).toList(),
+              ),
+              RichAttributionWidget(
+                alignment: AttributionAlignment.bottomLeft,
+                popupBackgroundColor: Colors.white.withOpacity(0.9),
+                attributions: [
+                  TextSourceAttribution('© OpenStreetMap contributors'),
+                ],
+              ),
+            ],
+          )
               : Container(
-                  color: const Color(0xFFE5E7EB),
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      color: _kAccent,
-                      strokeWidth: 2,
-                    ),
-                  ),
-                ),
+            color: const Color(0xFFE5E7EB),
+            child: const Center(
+              child: CircularProgressIndicator(
+                color: _kAccent,
+                strokeWidth: 2,
+              ),
+            ),
+          ),
         ),
         // Fullscreen button
         Positioned(
@@ -2179,11 +2179,11 @@ class _Stepper extends StatelessWidget {
                         border: isDone ? null : Border.all(color: _kBorder),
                         boxShadow: isCurrent
                             ? [
-                                BoxShadow(
-                                  color: _kAccent.withOpacity(0.4),
-                                  blurRadius: 8,
-                                ),
-                              ]
+                          BoxShadow(
+                            color: _kAccent.withOpacity(0.4),
+                            blurRadius: 8,
+                          ),
+                        ]
                             : null,
                       ),
                       child: Icon(
@@ -2689,7 +2689,7 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
     );
     _moveCtrl!
       ..addListener(
-        () => _mapCtrl.move(
+            () => _mapCtrl.move(
           LatLng(latT.evaluate(curve), lngT.evaluate(curve)),
           zoomT.evaluate(curve),
         ),
@@ -2851,8 +2851,8 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
                   child: GestureDetector(
                     onTap: () {
                       setState(
-                        () =>
-                            _selected = _selected?.id == item.id ? null : item,
+                            () =>
+                        _selected = _selected?.id == item.id ? null : item,
                       );
                       if (_selected != null)
                         _animateTo(LatLng(item.mapLat, item.mapLng), 16.5);
@@ -3174,7 +3174,7 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
                       Row(
                         children: List.generate(
                           4,
-                          (i) => Container(
+                              (i) => Container(
                             width: 8,
                             height: 8,
                             margin: const EdgeInsets.only(left: 4),
@@ -3281,7 +3281,7 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
               (_kYellow, 'Medium', Icons.info_outline_rounded),
               (_kGreen, 'Low', Icons.check_circle_outline),
             ].map(
-              (e) => Padding(
+                  (e) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Row(
                   children: [

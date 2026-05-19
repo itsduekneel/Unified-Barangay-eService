@@ -1,683 +1,983 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:ube/authentication/app_colors.dart';
 
-import 'package:ube/features/request_appointment_page.dart';
-import 'package:ube/widgets/status_card.dart';
+final _sb = Supabase.instance.client;
 
-class AppColors {
-  static const primary = Color(0xFF8B2CF5);
-  static const primaryHover = Color(0xFF6B1BD4);
-  static const primaryLight = Color(0xFFEBE0FF);
-  static const primarySuperLight = Color(0xFFF5F0FF);
-
-  static const textDark = Color(0xFF1E0447);
-  static const textMedium = Color(0xFF360C78);
-  static const textMuted = Color(0xFF8B2CF5);
-  static const backgroundLight = Color(0xFFFAFAFA);
-
-  static const badgeConfBg = Color(0xFFEDFAF3);
-  static const badgeConfText = Color(0xFF1A7C45);
-  static const badgeConfBorder = Color(0xFFB0E8C9);
-
-  static const badgePendBg = Color(0xFFEBE0FF);
-  static const badgePendText = Color(0xFF4F12A8);
-}
-
-class AppointmentItem {
-  final int id;
-  final String title;
-  final String month;
-  final String day;
-  final String time;
-  final String type;
-  String status;
-  final String notes;
-
-  AppointmentItem({
-    required this.id,
-    required this.title,
-    required this.month,
-    required this.day,
-    required this.time,
-    required this.type,
-    required this.status,
-    required this.notes,
-  });
-}
-
-class AppointmentRequestPage extends StatefulWidget {
-  const AppointmentRequestPage({super.key});
+// ============================================================================
+//  RESIDENT APPOINTMENT REQUEST PAGE
+// ============================================================================
+class ResidentAppointmentRequestPage extends StatefulWidget {
+  const ResidentAppointmentRequestPage({super.key});
 
   @override
-  State<AppointmentRequestPage> createState() => _AppointmentRequestPageState();
+  State<ResidentAppointmentRequestPage> createState() =>
+      _ResidentAppointmentRequestPageState();
 }
 
-class _AppointmentRequestPageState extends State<AppointmentRequestPage> {
-  String currentFilter = 'all';
-  String searchQuery = '';
-  final bool _hasPdf = false; // Added missing variable
+class _ResidentAppointmentRequestPageState
+    extends State<ResidentAppointmentRequestPage> {
+  // ── controllers ────────────────────────────────────────────────────────────
+  final _pageController  = PageController();
+  final _personalFormKey = GlobalKey<FormState>();
+  final _fullNameCtrl    = TextEditingController();
+  final _contactCtrl     = TextEditingController();
+  final _addressCtrl     = TextEditingController();
+  final _purposeCtrl     = TextEditingController();
 
-  List<AppointmentItem> requests = [
-    AppointmentItem(
-      id: 1,
-      title: 'Plumbing inspection',
-      month: 'Apr',
-      day: '12',
-      time: '10:00 AM',
-      type: 'Maintenance',
-      status: 'upcoming',
-      notes: 'Possible leak under kitchen sink.',
-    ),
-    AppointmentItem(
-      id: 2,
-      title: 'HVAC maintenance',
-      month: 'Apr',
-      day: '18',
-      time: '2:00 PM',
-      type: 'HVAC',
-      status: 'confirmed',
-      notes: 'Annual full-unit servicing.',
-    ),
-    AppointmentItem(
-      id: 3,
-      title: 'General inspection',
-      month: 'Apr',
-      day: '24',
-      time: '9:30 AM',
-      type: 'Inspection',
-      status: 'pending',
-      notes: 'Quarterly walkthrough.',
-    ),
-    AppointmentItem(
-      id: 4,
-      title: 'Pest control visit',
-      month: 'Mar',
-      day: '29',
-      time: '11:00 AM',
-      type: 'Pest Control',
-      status: 'completed',
-      notes: 'Routine treatment applied.',
-    ),
-    AppointmentItem(
-      id: 5,
-      title: 'Electrical check',
-      month: 'Mar',
-      day: '15',
-      time: '3:00 PM',
-      type: 'Maintenance',
-      status: 'completed',
-      notes: 'Panel inspection completed.',
-    ),
+  // ── state ──────────────────────────────────────────────────────────────────
+  int        _currentPage          = 0;
+  int        _selectedServiceIndex = 0;
+  DateTime?  _selectedDate;
+  TimeOfDay? _selectedTime;
+  bool       _saving               = false;
+  bool       _submitted            = false;
+  String     _referenceNo          = '';
+
+  final List<_Service> _services = [
+    const _Service('Barangay Clearance',    '5–10 mins',  Icons.badge_outlined),
+    const _Service('Business Permit',       '15–30 mins', Icons.storefront_outlined),
+    const _Service('Indigency Certificate', '5–10 mins',  Icons.assignment_ind_outlined),
+    const _Service('Blotter Report',        '20–40 mins', Icons.gavel_rounded),
+    const _Service('Residency Certificate', '5 mins',     Icons.home_outlined),
+    const _Service('Other / Walk-in',       'Varies',     Icons.more_horiz_rounded),
   ];
 
-  // Simplified getters
-  int get totalCount => requests.length;
-  int get upcomingCount => requests
-      .where((r) => r.status == 'upcoming')
-      .length; // Added missing getter
-  int get pendingCount => requests.where((r) => r.status == 'pending').length;
-  int get confirmedCount =>
-      requests.where((r) => r.status == 'confirmed').length;
-  int get completedCount =>
-      requests.where((r) => r.status == 'completed').length;
-  int get rejectedCount => requests.where((r) => r.status == 'rejected').length;
-
-  // Fixed List type and search logic
-  List<AppointmentItem> get filteredRequests {
-    return requests.where((r) {
-      final matchStatus = currentFilter == 'all' || r.status == currentFilter;
-      final query = searchQuery.toLowerCase();
-      final matchSearch =
-          query.isEmpty ||
-          r.title.toLowerCase().contains(query) ||
-          r.type.toLowerCase().contains(query);
-
-      return matchStatus && matchSearch;
-    }).toList();
+  @override
+  void initState() {
+    super.initState();
+    _referenceNo = 'APT-${Random().nextInt(90000) + 10000}';
   }
 
-  void _showToast(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.textDark,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
+  @override
+  void dispose() {
+    _pageController.dispose();
+    _fullNameCtrl.dispose();
+    _contactCtrl.dispose();
+    _addressCtrl.dispose();
+    _purposeCtrl.dispose();
+    super.dispose();
+  }
+
+  // ── navigation ─────────────────────────────────────────────────────────────
+  void _nextPage() {
+    if (_currentPage == 1) {
+      if (_selectedDate == null || _selectedTime == null) {
+        _snack('Please select date and time.');
+        return;
+      }
+    }
+    if (_currentPage < 2) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _previousPage() {
+    if (_currentPage > 0) {
+      _pageController.previousPage(
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  // ── pickers ────────────────────────────────────────────────────────────────
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: now.add(const Duration(days: 1)),
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 60)),
+      builder: (ctx, child) => Theme(
+        data: ThemeData.light().copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: AppColors.primary,
+            onPrimary: Colors.white,
+            surface: AppColors.white,
+          ),
+        ),
+        child: child!,
       ),
+    );
+    if (picked != null) setState(() => _selectedDate = picked);
+  }
+
+  Future<void> _pickTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: const TimeOfDay(hour: 9, minute: 0),
+      builder: (ctx, child) => Theme(
+        data: ThemeData.light().copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: AppColors.primary,
+            onPrimary: Colors.white,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) setState(() => _selectedTime = picked);
+  }
+
+  // ── submit ─────────────────────────────────────────────────────────────────
+  Future<void> _submit() async {
+    if (!_personalFormKey.currentState!.validate()) return;
+    if (_saving) return;
+    setState(() => _saving = true);
+
+    final svc     = _services[_selectedServiceIndex];
+    final isoDate = '${_selectedDate!.year}-'
+        '${_selectedDate!.month.toString().padLeft(2, '0')}-'
+        '${_selectedDate!.day.toString().padLeft(2, '0')}';
+    final timeStr = _selectedTime!.format(context);
+
+    try {
+      await _sb.from('appointments').insert({
+        'service_name':     svc.name,
+        'service_duration': svc.duration,
+        'appointment_date': isoDate,
+        'appointment_time': timeStr,
+        'full_name':        _fullNameCtrl.text.trim(),
+        'contact_no':       _contactCtrl.text.trim(),
+        'purpose': _purposeCtrl.text.trim().isEmpty
+            ? null
+            : _purposeCtrl.text.trim(),
+        'status':       'pending',
+        'reference_no': _referenceNo,
+        'notes':        null,
+        'resident_info': [
+          {'label': 'Full Name',   'value': _fullNameCtrl.text.trim(), 'required': true},
+          {'label': 'Contact No.', 'value': _contactCtrl.text.trim(),  'required': true},
+          if (_addressCtrl.text.trim().isNotEmpty)
+            {'label': 'Address', 'value': _addressCtrl.text.trim(), 'required': false},
+          if (_purposeCtrl.text.trim().isNotEmpty)
+            {'label': 'Purpose', 'value': _purposeCtrl.text.trim(), 'required': false},
+        ],
+      });
+      if (mounted) setState(() => _submitted = true);
+    } catch (e) {
+      _snack('Error: $e');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  void _snack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: AppColors.red),
     );
   }
 
+  void _reset() {
+    _fullNameCtrl.clear();
+    _contactCtrl.clear();
+    _addressCtrl.clear();
+    _purposeCtrl.clear();
+    setState(() {
+      _selectedServiceIndex = 0;
+      _selectedDate         = null;
+      _selectedTime         = null;
+      _submitted            = false;
+      _currentPage          = 0;
+      _referenceNo          = 'APT-${Random().nextInt(90000) + 10000}';
+    });
+    _pageController.jumpToPage(0);
+  }
+
+  // ── build ──────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: AppColors.bgColor,
       appBar: AppBar(
-        title: const Text(
-          'Appointment',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.bgColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: Colors.white,
-            size: 20,
-          ),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.primary, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
+        title: const Text(
+          'Request Appointment',
+          style: TextStyle(color: AppColors.textDark, fontWeight: FontWeight.bold, fontSize: 15),
+        ),
+        centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildStatsGrid(),
-            const SizedBox(height: 24),
-            _buildAppointmentCard(context),
-            const SizedBox(height: 24),
-            _buildFilterAndSearchRow(),
-            const SizedBox(height: 16),
-            _buildAppointmentList(),
-          ],
+      body: _submitted ? _buildSuccess() : _buildForm(),
+    );
+  }
+
+  // ── form ───────────────────────────────────────────────────────────────────
+  Widget _buildForm() {
+    return Column(
+      children: [
+        // ── Ref chip
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.sell_outlined, size: 13, color: AppColors.primary),
+                const SizedBox(width: 8),
+                const Text(
+                  'Reference No.',
+                  style: TextStyle(fontSize: 11, color: AppColors.textGrey, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _referenceNo,
+                  style: const TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w900,
+                    color: AppColors.primary, letterSpacing: 0.5,
+                  ),
+                ),
+                const Spacer(),
+                const Icon(Icons.lock_outline_rounded, size: 12, color: AppColors.textGrey),
+              ],
+            ),
+          ),
+        ),
+
+        // ── Step indicator
+        _StepIndicator(currentStep: _currentPage),
+
+        // ── Pages
+        Expanded(
+          child: PageView(
+            controller: _pageController,
+            physics: const NeverScrollableScrollPhysics(),
+            onPageChanged: (i) => setState(() => _currentPage = i),
+            children: [
+              _Page1Service(
+                services: _services,
+                selectedIndex: _selectedServiceIndex,
+                onServiceSelected: (i) => setState(() => _selectedServiceIndex = i),
+              ),
+              _Page2Schedule(
+                selectedDate: _selectedDate,
+                selectedTime: _selectedTime,
+                onPickDate: _pickDate,
+                onPickTime: _pickTime,
+              ),
+              _Page3Info(
+                formKey: _personalFormKey,
+                fullNameCtrl: _fullNameCtrl,
+                contactCtrl: _contactCtrl,
+                addressCtrl: _addressCtrl,
+                purposeCtrl: _purposeCtrl,
+              ),
+            ],
+          ),
+        ),
+
+        // ── Bottom bar
+        _BottomBar(
+          currentPage: _currentPage,
+          saving: _saving,
+          onBack: _previousPage,
+          onNext: _currentPage == 2 ? _submit : _nextPage,
+        ),
+      ],
+    );
+  }
+
+  // ── success ────────────────────────────────────────────────────────────────
+  Widget _buildSuccess() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(28),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: AppColors.greenBg,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.greenBorder),
+                ),
+                child: const Icon(Icons.check_circle_outline_rounded, color: AppColors.green, size: 42),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Request Submitted!',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textDark),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Your appointment request has been received.\nBarangay staff will confirm your schedule.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: AppColors.textGrey, height: 1.6),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  children: [
+                    const Text(
+                      'Reference No.',
+                      style: TextStyle(fontSize: 11, color: AppColors.textGrey, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _referenceNo,
+                      style: const TextStyle(
+                        fontSize: 22, fontWeight: FontWeight.w900,
+                        color: AppColors.primary, letterSpacing: 1,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Keep this number to track your appointment.',
+                style: TextStyle(fontSize: 11, color: AppColors.textGrey),
+              ),
+              const SizedBox(height: 28),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: _reset,
+                  child: const Text('Create New Request', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildStatsGrid() {
-    int safeTotal = totalCount > 0 ? totalCount : 1;
+// ─────────────────────────────────────────────────────────────────────────────
+//  PAGE 1 — Select Service
+// ─────────────────────────────────────────────────────────────────────────────
+class _Page1Service extends StatelessWidget {
+  final List<_Service> services;
+  final int selectedIndex;
+  final ValueChanged<int> onServiceSelected;
 
+  const _Page1Service({
+    required this.services,
+    required this.selectedIndex,
+    required this.onServiceSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          StatusCard(
-            value: totalCount,
-            label: "Total",
-            pct: 1.0,
-            isActive: true,
+          const _InfoBox(
+            message: 'Pumili ng serbisyo bago mag-proceed sa schedule. '
+                'Office hours: Monday–Friday, 8AM–5PM.',
           ),
-          const SizedBox(width: 12),
-          StatusCard(
-            value: upcomingCount,
-            label: "Upcoming",
-            pct: upcomingCount / safeTotal,
-            isActive: false,
-          ),
-          const SizedBox(width: 12),
-          StatusCard(
-            value: pendingCount,
-            label: "Pending",
-            pct: pendingCount / safeTotal,
-            isActive: false,
-          ),
-          const SizedBox(width: 12),
-          StatusCard(
-            value: completedCount,
-            label: "Completed",
-            pct: completedCount / safeTotal,
-            isActive: false,
+          const SizedBox(height: 14),
+          const _SectionLabel(label: 'Select Service'),
+          const SizedBox(height: 10),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: services.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 2.5,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemBuilder: (_, i) {
+              final svc    = services[i];
+              final active = selectedIndex == i;
+              return GestureDetector(
+                onTap: () => onServiceSelected(i),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: active ? AppColors.primaryLight : AppColors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: active ? AppColors.primary : AppColors.border,
+                      width: active ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(svc.icon, size: 16, color: active ? AppColors.primary : AppColors.textGrey),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              svc.name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: active ? AppColors.textDark : AppColors.textMedium,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              svc.duration,
+                              style: const TextStyle(fontSize: 9, color: AppColors.textGrey),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (active)
+                        const Icon(Icons.check_circle_rounded, size: 12, color: AppColors.primary),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildFilterAndSearchRow() {
-    return Column(
+// ─────────────────────────────────────────────────────────────────────────────
+//  PAGE 2 — Schedule
+// ─────────────────────────────────────────────────────────────────────────────
+class _Page2Schedule extends StatelessWidget {
+  final DateTime?  selectedDate;
+  final TimeOfDay? selectedTime;
+  final VoidCallback onPickDate;
+  final VoidCallback onPickTime;
+
+  const _Page2Schedule({
+    required this.selectedDate,
+    required this.selectedTime,
+    required this.onPickDate,
+    required this.onPickTime,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _InfoBox(
+            message: 'Pumili ng preferred date at oras ng iyong appointment. '
+                'Available tuwing Lunes–Biyernes lamang.',
+          ),
+          const SizedBox(height: 14),
+          const _SectionLabel(label: 'Preferred Schedule'),
+          const SizedBox(height: 10),
+
+          _PickerTile(
+            icon: Icons.event_rounded,
+            label: 'Appointment Date',
+            value: selectedDate == null
+                ? null
+                : DateFormat('MMMM dd, yyyy').format(selectedDate!),
+            hint: 'Select a date',
+            onTap: onPickDate,
+          ),
+
+          const SizedBox(height: 10),
+
+          _PickerTile(
+            icon: Icons.access_time_rounded,
+            label: 'Appointment Time',
+            value: selectedTime?.format(context),
+            hint: 'Select a time',
+            onTap: onPickTime,
+          ),
+
+          const SizedBox(height: 16),
+
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.orangeBg,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.orangeBorder),
+            ),
+            child: const Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.schedule_rounded, size: 14, color: AppColors.orange),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Office hours: Monday–Friday, 8:00 AM – 5:00 PM. '
+                        'Appointments outside these hours will not be accommodated.',
+                    style: TextStyle(fontSize: 11, color: AppColors.orange, height: 1.5),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  PAGE 3 — Resident Info
+// ─────────────────────────────────────────────────────────────────────────────
+class _Page3Info extends StatelessWidget {
+  final GlobalKey<FormState> formKey;
+  final TextEditingController fullNameCtrl, contactCtrl, addressCtrl, purposeCtrl;
+
+  const _Page3Info({
+    required this.formKey,
+    required this.fullNameCtrl,
+    required this.contactCtrl,
+    required this.addressCtrl,
+    required this.purposeCtrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _InfoBox(
+            message: 'Ilagay ang iyong personal na impormasyon para makontak '
+                'ng barangay staff para sa kumpirmasyon.',
+          ),
+          const SizedBox(height: 14),
+          const _SectionLabel(label: 'Resident Information'),
+          const SizedBox(height: 12),
+          Form(
+            key: formKey,
+            child: Column(
+              children: [
+                _FormField(
+                  label: 'Full Name',
+                  controller: fullNameCtrl,
+                  icon: Icons.person_outline_rounded,
+                  hint: 'Juan Dela Cruz',
+                  required: true,
+                ),
+                const SizedBox(height: 10),
+                _FormField(
+                  label: 'Contact Number',
+                  controller: contactCtrl,
+                  icon: Icons.phone_outlined,
+                  hint: '09XX XXX XXXX',
+                  required: true,
+                  keyboard: TextInputType.phone,
+                ),
+                const SizedBox(height: 10),
+                _FormField(
+                  label: 'Address',
+                  controller: addressCtrl,
+                  icon: Icons.location_on_outlined,
+                  hint: 'Block/Lot, Street, Barangay',
+                ),
+                const SizedBox(height: 10),
+                _FormField(
+                  label: 'Purpose / Reason',
+                  controller: purposeCtrl,
+                  icon: Icons.notes_rounded,
+                  hint: 'Briefly describe why you need this appointment…',
+                  maxLines: 2,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.orangeBg,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.orangeBorder),
+            ),
+            child: const Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.shield_outlined, size: 14, color: AppColors.orange),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Your personal information is kept confidential and will only '
+                        'be used by authorized barangay personnel.',
+                    style: TextStyle(fontSize: 11, color: AppColors.orange, height: 1.5),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Step Indicator
+// ─────────────────────────────────────────────────────────────────────────────
+class _StepIndicator extends StatelessWidget {
+  final int currentStep;
+  const _StepIndicator({required this.currentStep});
+
+  static const _labels = ['Select Service', 'Schedule', 'Your Info'];
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: List.generate(_labels.length, (i) {
+              final isDone   = i < currentStep;
+              final isActive = i == currentStep;
+              return Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: isDone
+                              ? AppColors.green
+                              : isActive
+                              ? AppColors.primary
+                              : AppColors.border,
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                      ),
+                    ),
+                    if (i < _labels.length - 1) const SizedBox(width: 6),
+                  ],
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Step ${currentStep + 1} of ${_labels.length}  ·  ${_labels[currentStep]}',
+            style: const TextStyle(fontSize: 11, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Bottom Bar
+// ─────────────────────────────────────────────────────────────────────────────
+class _BottomBar extends StatelessWidget {
+  final int currentPage;
+  final bool saving;
+  final VoidCallback onBack, onNext;
+
+  const _BottomBar({
+    required this.currentPage,
+    required this.saving,
+    required this.onBack,
+    required this.onNext,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isLast = currentPage == 2;
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + MediaQuery.of(context).padding.bottom),
+      decoration: const BoxDecoration(
+        color: AppColors.white,
+        boxShadow: [BoxShadow(color: Color(0x10000000), blurRadius: 20, offset: Offset(0, -4))],
+      ),
+      child: Row(
+        children: [
+          if (currentPage > 0) ...[
+            OutlinedButton(
+              onPressed: saving ? null : onBack,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: const BorderSide(color: AppColors.border, width: 1.5),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.arrow_back_ios_new_rounded, size: 13),
+                  SizedBox(width: 4),
+                  Text('Back', style: TextStyle(fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+          ],
+          Expanded(
+            child: ElevatedButton(
+              onPressed: saving ? null : onNext,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isLast ? AppColors.green : AppColors.primary,
+                disabledBackgroundColor: (isLast ? AppColors.green : AppColors.primary).withValues(alpha: 0.5),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                elevation: 0,
+              ),
+              child: saving
+                  ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+              )
+                  : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    isLast ? Icons.send_rounded : Icons.arrow_forward_rounded,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    isLast ? 'Submit Request' : 'Continue',
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Shared Components
+// ─────────────────────────────────────────────────────────────────────────────
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  const _SectionLabel({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
       children: [
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              _filterTab('All', 'all'),
-              _filterTab('Upcoming', 'upcoming'),
-              _filterTab('Pending', 'pending'),
-              _filterTab('Completed', 'completed'),
-            ],
-          ),
+        Container(
+          width: 3,
+          height: 15,
+          decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(2)),
         ),
-        const SizedBox(height: 12),
-        TextField(
-          onChanged: (val) => setState(() => searchQuery = val),
-          decoration: InputDecoration(
-            hintText: 'Search...',
-            hintStyle: const TextStyle(
-              color: AppColors.textMuted,
-              fontSize: 13,
-            ),
-            prefixIcon: const Icon(
-              Icons.search,
-              color: AppColors.primary,
-              size: 20,
-            ),
-            filled: true,
-            fillColor: AppColors.primarySuperLight,
-            contentPadding: const EdgeInsets.symmetric(vertical: 0),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: AppColors.primaryLight),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: AppColors.primaryLight),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: AppColors.primary),
-            ),
-          ),
-        ),
+        const SizedBox(width: 8),
+        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textDark)),
       ],
     );
   }
+}
 
-  Widget _filterTab(String label, String value) {
-    bool isOn = currentFilter == value;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: InkWell(
-        onTap: () => setState(() => currentFilter = value),
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: isOn ? AppColors.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: isOn ? AppColors.primary : Colors.transparent,
-            ),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: isOn ? FontWeight.w600 : FontWeight.w500,
-              color: isOn ? Colors.white : AppColors.primaryHover,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+class _InfoBox extends StatelessWidget {
+  final String message;
+  const _InfoBox({required this.message});
 
-  Widget _buildAppointmentCard(BuildContext context) {
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        _instantRoute(const AddAppointment()), // Assuming AddAppointment exists
-      ),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: AppColors.primaryLight),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(
-                color: AppColors.primarySuperLight,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.add_rounded,
-                color: AppColors.primary,
-                size: 28,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              _hasPdf ? 'Document Attached' : 'New request',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-                color: _hasPdf ? AppColors.primary : AppColors.textDark,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              _hasPdf
-                  ? 'Tap the card to replace'
-                  : 'Tap to book a service appointment',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAppointmentList() {
-    final list = filteredRequests; // Fixed variable name
-    if (list.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(40.0),
-          child: Text(
-            "No appointments found",
-            style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-          ),
-        ),
-      );
-    }
-
-    return Column(children: list.map((a) => _buildListItem(a)).toList());
-  }
-
-  Widget _buildListItem(AppointmentItem a) {
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.primaryLight,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primaryLight),
+        border: Border.all(color: AppColors.border),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        onTap: () => _openDetailSheet(a),
-        leading: Container(
-          width: 50,
-          height: 54,
-          decoration: BoxDecoration(
-            color: AppColors.primarySuperLight,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppColors.primaryLight),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline_rounded, size: 14, color: AppColors.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(message, style: const TextStyle(fontSize: 11, color: AppColors.textMedium, height: 1.5)),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                a.month.toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 9,
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                a.day,
-                style: const TextStyle(
-                  fontSize: 18,
-                  color: AppColors.textMedium,
-                  fontWeight: FontWeight.bold,
-                  height: 1.1,
-                ),
-              ),
-            ],
-          ),
-        ),
-        title: Text(
-          a.title,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textDark,
-          ),
-        ),
-        subtitle: Text(
-          '${a.time} · ${a.type}',
-          style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
-        ),
-        trailing: _buildBadge(a.status),
+        ],
       ),
     );
   }
+}
 
-  Widget _buildBadge(String status) {
-    Color bg, text, border;
-    String label;
+class _PickerTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String? value;
+  final String hint;
+  final VoidCallback onTap;
 
-    switch (status) {
-      case 'upcoming':
-        bg = AppColors.primary;
-        text = Colors.white;
-        border = AppColors.primary;
-        label = 'Upcoming';
-        break;
-      case 'confirmed':
-        bg = AppColors.badgeConfBg;
-        text = AppColors.badgeConfText;
-        border = AppColors.badgeConfBorder;
-        label = 'Confirmed';
-        break;
-      case 'pending':
-        bg = AppColors.badgePendBg;
-        text = AppColors.badgePendText;
-        border = AppColors.primaryLight;
-        label = 'Pending';
-        break;
-      case 'completed':
-      default:
-        bg = AppColors.primarySuperLight;
-        text = AppColors.primary;
-        border = AppColors.primarySuperLight;
-        label = 'Done';
-        break;
-    }
+  const _PickerTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.hint,
+    required this.onTap,
+  });
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: border),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: text,
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
+  @override
+  Widget build(BuildContext context) {
+    final filled = value != null;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        decoration: BoxDecoration(
+          color: filled ? AppColors.primaryLight : AppColors.white,
+          borderRadius: BorderRadius.circular(11),
+          border: Border.all(
+            color: filled ? AppColors.primary : AppColors.border,
+            width: filled ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: filled ? AppColors.primary : AppColors.textGrey),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(fontSize: 10, color: AppColors.textGrey, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    filled ? value! : hint,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: filled ? FontWeight.w700 : FontWeight.normal,
+                      color: filled ? AppColors.textDark : AppColors.textGrey,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: filled ? AppColors.primary : AppColors.textGrey,
+            ),
+          ],
         ),
       ),
     );
   }
+}
 
-  void _openDetailSheet(AppointmentItem a) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).padding.bottom,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          a.title,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textDark,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        const Text(
-                          'Appointment details',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                      ],
-                    ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.close,
-                        color: AppColors.textMedium,
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                      style: IconButton.styleFrom(
-                        backgroundColor: AppColors.primarySuperLight,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1, color: AppColors.primaryLight),
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    _detailRow('Date', '${a.month} ${a.day}, 2026'),
-                    const SizedBox(height: 12),
-                    _detailRow('Time', a.time),
-                    const SizedBox(height: 12),
-                    _detailRow('Service type', a.type),
-                    const SizedBox(height: 12),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Expanded(
-                          flex: 2,
-                          child: Text(
-                            'STATUS',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: AppColors.textMuted,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 5,
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: _buildBadge(a.status),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    _detailRow('Notes', a.notes),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                child: Row(
-                  children: [
-                    if (a.status != 'completed')
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            setState(
-                              () => requests.removeWhere(
-                                (item) => item.id == a.id,
-                              ), // Fixed variable reference
-                            );
-                            Navigator.pop(context);
-                            _showToast('Appointment cancelled');
-                          },
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.red,
-                            side: const BorderSide(color: Colors.redAccent),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: const Text('Cancel'),
-                        ),
-                      ),
-                    if (a.status != 'completed') const SizedBox(width: 12),
-                    if (a.status != 'completed')
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            _showToast('Reschedule requested');
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: const Text('Reschedule'),
-                        ),
-                      ),
-                    if (a.status == 'completed')
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            _showToast('Archived successfully');
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryHover,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: const Text('Archive'),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+class _FormField extends StatelessWidget {
+  final String label, hint;
+  final TextEditingController controller;
+  final IconData icon;
+  final bool required;
+  final int maxLines;
+  final TextInputType? keyboard;
 
-  Widget _detailRow(String label, String value) {
-    return Row(
+  const _FormField({
+    required this.label,
+    required this.controller,
+    required this.icon,
+    required this.hint,
+    this.required = false,
+    this.maxLines = 1,
+    this.keyboard,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          flex: 2,
-          child: Text(
-            label.toUpperCase(),
-            style: const TextStyle(
-              fontSize: 10,
-              color: AppColors.textMuted,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+        Row(
+          children: [
+            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textMedium)),
+            if (required) const Text(' *', style: TextStyle(color: AppColors.red, fontSize: 12)),
+          ],
         ),
-        Expanded(
-          flex: 5,
-          child: Text(
-            value,
-            style: const TextStyle(fontSize: 14, color: AppColors.textDark),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller,
+          maxLines: maxLines,
+          keyboardType: keyboard,
+          style: const TextStyle(fontSize: 13, color: AppColors.textDark),
+          validator: required
+              ? (v) => (v == null || v.trim().isEmpty) ? '$label is required' : null
+              : null,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: const TextStyle(color: AppColors.textGrey, fontSize: 12),
+            prefixIcon: Icon(icon, size: 17, color: AppColors.textGrey),
+            filled: true,
+            fillColor: AppColors.white,
+            contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: maxLines > 1 ? 14 : 13),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(11),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(11),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(11),
+              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(11),
+              borderSide: const BorderSide(color: AppColors.red, width: 1.5),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(11),
+              borderSide: const BorderSide(color: AppColors.red, width: 1.5),
+            ),
+            errorStyle: const TextStyle(fontSize: 11, color: AppColors.red),
           ),
         ),
       ],
@@ -685,8 +985,8 @@ class _AppointmentRequestPageState extends State<AppointmentRequestPage> {
   }
 }
 
-Route<void> _instantRoute(Widget page) => PageRouteBuilder(
-  pageBuilder: (_, _, _) => page,
-  transitionDuration: Duration.zero,
-  reverseTransitionDuration: Duration.zero,
-);
+class _Service {
+  final String name, duration;
+  final IconData icon;
+  const _Service(this.name, this.duration, this.icon);
+}

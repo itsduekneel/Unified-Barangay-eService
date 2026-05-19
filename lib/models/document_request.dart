@@ -1,3 +1,5 @@
+// lib/models/document_request.dart
+import 'package:flutter/material.dart';
 class DocumentRequest {
   final String id;
   final String title;
@@ -8,6 +10,8 @@ class DocumentRequest {
   final String? pdfUrl;
   final String status;
   final List<Map<String, dynamic>> formFields;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   const DocumentRequest({
     required this.id,
@@ -19,27 +23,32 @@ class DocumentRequest {
     this.pdfUrl,
     required this.status,
     required this.formFields,
+    required this.createdAt,
+    required this.updatedAt,
   });
+  IconData get icon =>
+      IconData(iconCode, fontFamily: 'MaterialIcons');
 
-  factory DocumentRequest.fromMap(Map<String, dynamic> map) {
+  factory DocumentRequest.fromJson(Map<String, dynamic> json) {
     return DocumentRequest(
-      id: map['id'].toString(),
-      title: map['title'] ?? '',
-      amount: (map['amount'] as num?)?.toDouble() ?? 0,
-      isPublished: map['is_published'] ?? false,
-      iconCode: map['icon_code'] ?? 57701,
-      pdfName: map['pdf_name'],
-      pdfUrl: map['pdf_url'],
-      status: map['status'] ?? 'pending',
-      formFields: List<Map<String, dynamic>>.from(
-        (map['form_fields'] as List? ?? []).map(
-          (e) => Map<String, dynamic>.from(e as Map),
-        ),
-      ),
+      id: json['id'] as String,
+      title: json['title'] as String,
+      amount: (json['amount'] as num).toDouble(),
+      isPublished: json['is_published'] as bool,
+      iconCode: json['icon_code'] as int,
+      pdfName: json['pdf_name'] as String?,
+      pdfUrl: json['pdf_url'] as String?,
+      status: json['status'] as String,
+      formFields: (json['form_fields'] as List<dynamic>)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList(),
+      createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: DateTime.parse(json['updated_at'] as String),
     );
   }
 
-  Map<String, dynamic> toMap() => {
+  Map<String, dynamic> toJson() => {
+    'id': id,
     'title': title,
     'amount': amount,
     'is_published': isPublished,
@@ -48,5 +57,7 @@ class DocumentRequest {
     'pdf_url': pdfUrl,
     'status': status,
     'form_fields': formFields,
+    'created_at': createdAt.toIso8601String(),
+    'updated_at': updatedAt.toIso8601String(),
   };
 }

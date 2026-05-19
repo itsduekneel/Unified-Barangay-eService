@@ -54,6 +54,7 @@ Widget buildTextField({
   TextInputType keyboardType = TextInputType.text,
   bool enabled = true,
   bool isRequired = false,
+  IconData? icon,
   List<TextInputFormatter>? inputFormatters,
   String? Function(String?)? validator,
 }) {
@@ -82,6 +83,7 @@ Widget buildTextField({
 
 /// A read-only date field that opens a [DatePicker] on tap.
 Widget buildDateField({
+  required String label,
   required String displayValue,
   required VoidCallback onTap,
   required String? Function(String?) validator,
@@ -99,7 +101,7 @@ Widget buildDateField({
           color: Color(0xFF1A1A1A),
         ),
         decoration: _baseDecoration(
-          label: 'Date of Birth',
+          label: label,
           hintText: 'MM/DD/YYYY',
           suffixIcon: const Icon(
             Icons.calendar_today_rounded,

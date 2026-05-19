@@ -2,53 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:ube/features/emergency_request_page.dart';
+import 'package:ube/authentication/app_colors.dart';
 
 final supabase = Supabase.instance.client;
-
-const _kPrimary = Color(0xFF8B2CF5);
-const _kPrimaryDark = Color(0xFF3B1278);
-const _kPrimaryMid = Color(0xFFC4B5FD);
-const _kPrimaryLight = Color(0xFFEDE9FE);
-const _kSurface = Color(0xFFF4F0FB);
-const _kBorder = Color(0xFFE9D5FF);
-
-class EmergencyPage extends StatelessWidget {
-  const EmergencyPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _kSurface,
-      appBar: AppBar(
-        title: const Text(
-          'Emergency',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: _kPrimary,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: Colors.white,
-            size: 20,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: const SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(25, 50, 25, 20),
-          child: EmergencyRequestCaller(),
-        ),
-      ),
-    );
-  }
-}
 
 class EmergencyRequestCaller extends StatefulWidget {
   const EmergencyRequestCaller({super.key});
@@ -66,29 +22,29 @@ class _EmergencyRequestCallerState extends State<EmergencyRequestCaller> {
       label: 'Medical',
       sub: 'Injury · Illness',
       icon: Icons.monitor_heart_outlined,
-      color: _kPrimary,
-      bg: _kPrimaryLight,
+      color: AppColors.red,
+      bg: AppColors.redBg,
     ),
     EmergencyType(
       label: 'Fire',
       sub: 'Fire · Smoke',
-      icon: const IconData(0xe29c, fontFamily: 'MaterialIcons'), // Icons.local_fire_department_outlined
-      color: const Color(0xFFF59E0B),
-      bg: const Color(0xFFFFF7ED),
+      icon: Icons.local_fire_department_rounded,
+      color: AppColors.orange,
+      bg: AppColors.orangeBg,
     ),
     EmergencyType(
       label: 'Security',
       sub: 'Theft · Danger',
       icon: Icons.shield_outlined,
-      color: const Color(0xFFEF4444),
-      bg: const Color(0xFFFEF2F2),
+      color: AppColors.primary,
+      bg: AppColors.primaryLight,
     ),
     EmergencyType(
       label: 'Flood',
       sub: 'Water · Storm',
       icon: Icons.water_outlined,
-      color: const Color(0xFF22C55E),
-      bg: const Color(0xFFF0FDF4),
+      color: AppColors.blue,
+      bg: AppColors.blueBg,
     ),
   ];
 
@@ -98,7 +54,6 @@ class _EmergencyRequestCallerState extends State<EmergencyRequestCaller> {
     setState(() => _isSubmitting = true);
 
     try {
-      // 1. Get Location
       Position? position;
       try {
         position = await Geolocator.getCurrentPosition(
@@ -111,12 +66,11 @@ class _EmergencyRequestCallerState extends State<EmergencyRequestCaller> {
         debugPrint('Location error: $e');
       }
 
-      // 2. Push to Supabase
       final response = await supabase.from('emergency_incidents').insert({
         'type': _selectedType!.label,
         'level': _selectedType!.label == 'Medical' || _selectedType!.label == 'Fire' ? 'critical' : 'high',
         'location': 'Current Location',
-        'reported_by': 'Resident User', // Should ideally come from Auth
+        'reported_by': supabase.auth.currentUser?.id ?? 'Anonymous',
         'description': 'Emergency alert activated via app.',
         'step': 0,
         'map_lat': position?.latitude ?? 14.1668,
@@ -125,7 +79,6 @@ class _EmergencyRequestCallerState extends State<EmergencyRequestCaller> {
 
       if (!mounted) return;
 
-      // 3. Navigate to Request Page
       Navigator.push(
         context,
         PageRouteBuilder(
@@ -142,7 +95,7 @@ class _EmergencyRequestCallerState extends State<EmergencyRequestCaller> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send alert: $e')),
+          SnackBar(content: Text('Failed to send alert: $e'), backgroundColor: AppColors.red),
         );
       }
     } finally {
@@ -157,17 +110,18 @@ class _EmergencyRequestCallerState extends State<EmergencyRequestCaller> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Select emergency type',
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: _kPrimary,
-          ),
+        Row(
+          children: [
+            Container(width: 3, height: 14, decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(2))),
+            const SizedBox(width: 8),
+            const Text(
+              'Select Emergency Type',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textDark),
+            ),
+          ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
 
-        /// GRID
         GridView.count(
           crossAxisCount: 2,
           shrinkWrap: true,
@@ -182,21 +136,16 @@ class _EmergencyRequestCallerState extends State<EmergencyRequestCaller> {
               onTap: () => setState(() => _selectedType = type),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: selected ? const Color(0xFFEEECFD) : Colors.white,
-                  borderRadius: BorderRadius.circular(14),
+                  color: selected ? type.bg : AppColors.white,
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: selected ? const Color(0xFF8B2CF5) : const Color(0xFFE4E2F7),
+                    color: selected ? type.color : AppColors.border,
                     width: selected ? 2 : 1,
                   ),
                   boxShadow: [
-                    if (!selected)
-                      const BoxShadow(
-                        color: Color(0x0A000000),
-                        blurRadius: 6,
-                        offset: Offset(0, 2),
-                      ),
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
                   ],
                 ),
                 child: Column(
@@ -204,24 +153,25 @@ class _EmergencyRequestCallerState extends State<EmergencyRequestCaller> {
                   children: [
                     Icon(
                       type.icon,
-                      color: selected ? const Color(0xFF8B2CF5) : const Color(0xFF9490B0),
-                      size: 22,
+                      color: selected ? type.color : AppColors.textGrey,
+                      size: 24,
                     ),
                     const Spacer(),
                     Text(
                       type.label,
                       style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: selected ? const Color(0xFF8B2CF5) : Colors.black,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: selected ? type.color : AppColors.textDark,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       type.sub,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
-                        color: Color(0xFF9490B0),
+                        fontWeight: FontWeight.w500,
+                        color: selected ? type.color.withOpacity(0.8) : AppColors.textGrey,
                       ),
                     ),
                   ],
@@ -231,73 +181,68 @@ class _EmergencyRequestCallerState extends State<EmergencyRequestCaller> {
           }).toList(),
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
 
-        /// PREVIEW
         AnimatedContainer(
           duration: const Duration(milliseconds: 250),
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: _kBorder, width: 0.5),
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
           ),
           child: Row(
             children: [
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                width: 36,
-                height: 36,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  color: isReady || _isSubmitting ? _selectedType?.bg ?? const Color(0xFFF3F0FB) : const Color(0xFFF3F0FB),
+                  color: isReady || _isSubmitting ? _selectedType?.bg ?? AppColors.bgColor : AppColors.bgColor,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   isReady || _isSubmitting ? _selectedType?.icon ?? Icons.info_outline_rounded : Icons.info_outline_rounded,
-                  size: 16,
-                  color: isReady || _isSubmitting ? _selectedType?.color ?? _kPrimaryMid : _kPrimaryMid,
+                  size: 20,
+                  color: isReady || _isSubmitting ? _selectedType?.color ?? AppColors.textGrey : AppColors.textGrey,
                 ),
               ),
-              const SizedBox(width: 10),
-
-              _isSubmitting
-                  ? const Text('Sending alert...', style: TextStyle(fontSize: 12, color: _kPrimary))
-                  : isReady
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${_selectedType!.label} emergency',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: _kPrimaryDark,
+              const SizedBox(width: 12),
+              Expanded(
+                child: _isSubmitting
+                    ? const Text('Sending urgent alert...', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary))
+                    : isReady
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${_selectedType!.label} Alert Ready',
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.textDark),
                               ),
-                            ),
-                            const Text(
-                              'Responder: Tanod',
-                              style: TextStyle(fontSize: 11, color: _kPrimary),
-                            ),
-                          ],
-                        )
-                      : const Text(
-                          'Select a type to continue...',
-                          style: TextStyle(fontSize: 12, color: Color(0xFFA8A8B0)),
-                        ),
+                              const Text(
+                                'Slide the button below to confirm',
+                                style: TextStyle(fontSize: 11, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+                              ),
+                            ],
+                          )
+                        : const Text(
+                            'Select an emergency type to continue',
+                            style: TextStyle(fontSize: 13, color: AppColors.textGrey, fontWeight: FontWeight.w500),
+                          ),
+              ),
             ],
           ),
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         const EmergencyRequestGuidelines(),
-        const SizedBox(height: 12),
+        const SizedBox(height: 24),
 
-        /// SLIDE BUTTON
         SmoothSlideButton(
           enabled: isReady,
           onActivate: _handleEmergency,
-          emergencyRed: const Color(0xFFEF4444),
-          successGreen: const Color(0xFF22C55E),
+          emergencyRed: AppColors.red,
+          successGreen: AppColors.green,
         ),
       ],
     );
@@ -326,51 +271,56 @@ class EmergencyRequestGuidelines extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity, // ✅ IMPORTANT FIX
-      padding: const EdgeInsets.all(14),
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB), width: 2),
+        color: AppColors.primaryLight,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'How it works',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1F2937),
-            ),
+          Row(
+            children: [
+              const Icon(Icons.info_outline_rounded, size: 16, color: AppColors.primary),
+              const SizedBox(width: 8),
+              const Text(
+                'How it works',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.textDark),
+              ),
+            ],
           ),
-          SizedBox(height: 10),
-
-          Text(
-            '1. Slide to activate emergency alert',
-            style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
-          ),
-          SizedBox(height: 6),
-
-          Text(
-            '2. Share your real-time location',
-            style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
-          ),
-          SizedBox(height: 6),
-
-          Text(
-            '3. Nearest responders get notified',
-            style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
-          ),
+          const SizedBox(height: 12),
+          _GuidelineItem(icon: Icons.swipe_right_rounded, text: 'Slide to activate emergency alert'),
+          _GuidelineItem(icon: Icons.location_on_rounded, text: 'Your real-time location will be shared'),
+          _GuidelineItem(icon: Icons.notification_important_rounded, text: 'Authorized responders will be notified'),
         ],
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────
-// SMOOTH SLIDE BUTTON
-// ─────────────────────────────────────────
+class _GuidelineItem extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  const _GuidelineItem({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: AppColors.textMedium),
+          const SizedBox(width: 10),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 12, color: AppColors.textMedium, fontWeight: FontWeight.w500))),
+        ],
+      ),
+    );
+  }
+}
+
 class SmoothSlideButton extends StatefulWidget {
   final bool enabled;
   final VoidCallback onActivate;
@@ -406,8 +356,8 @@ class _SmoothSlideButtonState extends State<SmoothSlideButton> {
 
   @override
   Widget build(BuildContext context) {
-    const double sliderHeight = 55;
-    const double handleWidth = 55;
+    const double sliderHeight = 60;
+    const double handleWidth = 60;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -415,87 +365,69 @@ class _SmoothSlideButtonState extends State<SmoothSlideButton> {
         final bool nearEnd = _dragPercent > 0.9;
 
         return AnimatedOpacity(
-          opacity: widget.enabled ? 1.0 : 0.4,
+          opacity: widget.enabled ? 1.0 : 0.5,
           duration: const Duration(milliseconds: 200),
           child: GestureDetector(
             onHorizontalDragUpdate: widget.enabled && !_activated
                 ? (details) {
                     setState(() {
-                      _dragPercent =
-                          (_dragPercent + details.delta.dx / maxSlide).clamp(
-                            0.0,
-                            1.0,
-                          );
+                      _dragPercent = (_dragPercent + details.delta.dx / maxSlide).clamp(0.0, 1.0);
                     });
                   }
                 : null,
             onHorizontalDragEnd: widget.enabled
                 ? (_) {
-                    final shouldActivate = _dragPercent >= 1.0;
-
-                    if (shouldActivate && !_activated) {
+                    if (_dragPercent >= 1.0 && !_activated) {
                       widget.onActivate();
                     }
-
-                    // ALWAYS RESET (smooth animation)
                     setState(() {
                       _activated = false;
                       _dragPercent = 0;
                     });
                   }
                 : null,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
+            child: Container(
               height: sliderHeight,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: nearEnd ? Colors.green.shade50 : const Color(0xFFF3F4F6),
-                borderRadius: BorderRadius.circular(15),
+                color: nearEnd ? AppColors.greenBg : AppColors.border.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(18),
               ),
               child: Stack(
                 children: [
                   Center(
                     child: Text(
                       !widget.enabled
-                          ? 'Select a type first'
+                          ? 'Select emergency type'
                           : nearEnd
-                          ? 'Release to Send Alert'
-                          : 'Slide to Activate Emergency Alert',
+                              ? 'Release to confirm alert'
+                              : 'Slide to activate alert',
                       style: TextStyle(
-                        color: nearEnd
-                            ? widget.successGreen
-                            : const Color(0xFF6B7280),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 10,
+                        color: nearEnd ? AppColors.green : AppColors.textGrey,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ),
-
                   AnimatedPositioned(
-                    duration: _dragPercent == 0
-                        ? const Duration(milliseconds: 250)
-                        : Duration.zero,
+                    duration: _dragPercent == 0 ? const Duration(milliseconds: 250) : Duration.zero,
                     curve: Curves.easeOut,
                     left: _dragPercent * maxSlide,
-                    top: 0,
-                    bottom: 0,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
+                    top: 0, bottom: 0,
+                    child: Container(
                       width: handleWidth,
                       decoration: BoxDecoration(
-                        color: Color.lerp(
-                          widget.emergencyRed,
-                          widget.successGreen,
-                          _dragPercent,
-                        ),
-                        borderRadius: BorderRadius.circular(15),
+                        color: Color.lerp(widget.emergencyRed, widget.successGreen, _dragPercent),
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 10, offset: const Offset(2, 0)),
+                        ],
                       ),
                       child: Icon(
-                        nearEnd
-                            ? Icons.check_rounded
-                            : Icons.arrow_forward_ios_rounded,
+                        nearEnd ? Icons.check_rounded : Icons.arrow_forward_ios_rounded,
                         color: Colors.white,
-                        size: 20,
+                        size: 22,
                       ),
                     ),
                   ),

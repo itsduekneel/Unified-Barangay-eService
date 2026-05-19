@@ -4,9 +4,6 @@ import '../widgets/notification_card.dart';
 import 'notification_read_pages.dart';
 import 'package:ube/core/utils/route_utils.dart';
 
-/// =======================
-/// MAIN NOTIFICATION PAGE
-/// =======================
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
 
@@ -33,7 +30,7 @@ class _NotificationPageState extends State<NotificationPage> {
     super.dispose();
   }
 
-  // ─── Fetch all announcements once on load ───────────────────────────────────
+  // ─── Fetch all announcements ────────────────────────────────────────────────
   Future<void> _fetchAnnouncements() async {
     try {
       final data = await Supabase.instance.client
@@ -46,14 +43,15 @@ class _NotificationPageState extends State<NotificationPage> {
         notifications = (data as List)
             .map(
               (row) => NotificationItem(
-                id: row['id'],
-                title: row['title'],
-                description: row['description'],
-                time: _timeAgo(DateTime.parse(row['created_at'])),
-                status: 'Unread',
-                author: row['author'] ?? 'Username',
-              ),
-            )
+            id: row['id'],
+            title: row['title'],
+            description: row['description'],
+            time: _timeAgo(DateTime.parse(row['created_at'])),
+            // ✅ FIX: basahin ang status from Supabase, hindi hardcode
+            status: row['status'] ?? 'Unread',
+            author: row['author'] ?? 'Username',
+          ),
+        )
             .toList();
         _isLoading = false;
       });
@@ -64,46 +62,61 @@ class _NotificationPageState extends State<NotificationPage> {
     }
   }
 
-  // ─── Real-time listener for new announcements ───────────────────────────────
+  // ─── Mark as read sa Supabase ───────────────────────────────────────────────
+  Future<void> _markAsRead(NotificationItem item) async {
+    if (item.status == 'Read') return; // skip kung read na
+
+    // ✅ Update local agad para instant ang UI
+    setState(() => item.status = 'Read');
+
+    try {
+      await Supabase.instance.client
+          .from('announcements')
+          .update({'status': 'Read'})
+          .eq('id', item.id);
+    } catch (e) {
+      // ✅ I-revert kung nabigo ang Supabase update
+      setState(() => item.status = 'Unread');
+      _showError('Failed to mark as read.');
+    }
+  }
+
+  // ─── Real-time listener ─────────────────────────────────────────────────────
   void _subscribeToAnnouncements() {
     _channel = Supabase.instance.client
         .channel('announcements_channel')
         .onPostgresChanges(
-          event: PostgresChangeEvent.insert,
-          schema: 'public',
-          table: 'announcements',
-          callback: (payload) {
-            final row = payload.newRecord;
-            final newItem = NotificationItem(
-              id: row['id'],
-              title: row['title'],
-              description: row['description'],
-              time: _timeAgo(DateTime.parse(row['created_at'])),
-              status: 'Unread',
-              author: row['author'] ?? 'Kap. Maria Santos',
-            );
-            if (!mounted) return;
-            setState(() {
-              notifications.insert(0, newItem);
-            });
-          },
-        )
+      event: PostgresChangeEvent.insert,
+      schema: 'public',
+      table: 'announcements',
+      callback: (payload) {
+        final row = payload.newRecord;
+        final newItem = NotificationItem(
+          id: row['id'],
+          title: row['title'],
+          description: row['description'],
+          time: _timeAgo(DateTime.parse(row['created_at'])),
+          status: row['status'] ?? 'Unread', // ✅ same fix sa realtime
+          author: row['author'] ?? 'Kap. Maria Santos',
+        );
+        if (!mounted) return;
+        setState(() => notifications.insert(0, newItem));
+      },
+    )
         .onPostgresChanges(
-          event: PostgresChangeEvent.delete,
-          schema: 'public',
-          table: 'announcements',
-          callback: (payload) {
-            final deletedId = payload.oldRecord['id'];
-            if (!mounted) return;
-            setState(() {
-              notifications.removeWhere((n) => n.id == deletedId);
-            });
-          },
-        )
+      event: PostgresChangeEvent.delete,
+      schema: 'public',
+      table: 'announcements',
+      callback: (payload) {
+        final deletedId = payload.oldRecord['id'];
+        if (!mounted) return;
+        setState(() => notifications.removeWhere((n) => n.id == deletedId));
+      },
+    )
         .subscribe();
   }
 
-  // ─── Delete from Supabase ───────────────────────────────────────────────────
+  // ─── Delete ─────────────────────────────────────────────────────────────────
   Future<void> _deleteAnnouncement(NotificationItem item) async {
     try {
       await Supabase.instance.client
@@ -171,7 +184,6 @@ class _NotificationPageState extends State<NotificationPage> {
       ),
       body: Column(
         children: [
-          // Filter bar
           Container(
             width: double.infinity,
             color: Colors.white,
@@ -197,60 +209,57 @@ class _NotificationPageState extends State<NotificationPage> {
             ),
           ),
 
-          // Body
           Expanded(
             child: _isLoading
                 ? const Center(
-                    child: CircularProgressIndicator(color: Color(0xFF8B2CF5)),
-                  )
+              child: CircularProgressIndicator(color: Color(0xFF8B2CF5)),
+            )
                 : _filtered.isEmpty
                 ? Center(
-                    child: Text(
-                      'No notifications found.',
-                      style: TextStyle(color: Colors.grey.shade500),
-                    ),
-                  )
+              child: Text(
+                'No notifications found.',
+                style: TextStyle(color: Colors.grey.shade500),
+              ),
+            )
                 : RefreshIndicator(
-                    color: const Color(0xFF8B2CF5),
-                    onRefresh: _fetchAnnouncements,
-                    child: ListView.separated(
-                      itemCount: _filtered.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
-                      itemBuilder: (context, index) {
-                        final item = _filtered[index];
+              color: const Color(0xFF8B2CF5),
+              onRefresh: _fetchAnnouncements,
+              child: ListView.separated(
+                itemCount: _filtered.length,
+                separatorBuilder: (_, __) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final item = _filtered[index];
 
-                        return NotificationCard(
-                          item: item,
-                          onTap: () {
-                            setState(() => item.status = 'Read');
+                  return NotificationCard(
+                    item: item,
+                    onTap: () async {
+                      // ✅ Mark as read sa Supabase bago mag-navigate
+                      await _markAsRead(item);
 
-                            Navigator.push(
-                              context,
-                              instantRoute(
-                                NotificationReadPages(
-                                  title: item.title,
-                                  description: item.description,
-                                  time: item.time,
-                                  author: item.author,
-                                  onDelete: () async {
-                                    await _deleteAnnouncement(item);
-                                    if (context.mounted) {
-                                      Navigator.pop(context);
-                                    }
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ),
+                      if (!context.mounted) return;
+                      Navigator.push(
+                        context,
+                        instantRoute(
+                          NotificationReadPages(
+                            title: item.title,
+                            description: item.description,
+                            time: item.time,
+                            author: item.author,
+                            onDelete: () async {
+                              await _deleteAnnouncement(item);
+                              if (context.mounted) Navigator.pop(context);
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 }
-
-// ─── Instant page transition (no animation) ─────────────────────────────────

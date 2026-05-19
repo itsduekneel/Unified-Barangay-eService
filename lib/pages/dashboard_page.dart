@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ube/features/appointment_request_page..dart';
+import 'package:ube/features/appointment_request_page.dart';
 
 import 'package:ube/features/emergency_page.dart';
 import 'package:ube/features/user_management.dart';
@@ -86,8 +86,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
               ),
-              // ... rest of your code
-              // 2. BOTTOM SECTION (Quick Actions)
               // Added margin-top of 40 to account for the floating card overlay
               Padding(
                 padding: const EdgeInsets.only(
@@ -127,7 +125,7 @@ class _HomePageState extends State<HomePage> {
           title: 'Appointment',
           icon: Icons.calendar_today_rounded,
           onTap: () =>
-              Navigator.push(context, instantRoute(const AppointmentPage())),
+              Navigator.push(context, instantRoute(const ResidentAppointmentRequestPage())),
         ),
         QuickActionItem(
           title: 'View All',
@@ -295,7 +293,3 @@ class _ResidentCard extends StatelessWidget {
     );
   }
 }
-
-// ============================================================================
-// GLOBAL UTILITIES
-// ============================================================================

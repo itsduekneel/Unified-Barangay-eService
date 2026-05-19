@@ -100,18 +100,18 @@ class _CalendarContainerState extends State<CalendarContainer> {
         children: days
             .map(
               (day) => Expanded(
-                child: Center(
-                  child: Text(
-                    day,
-                    style: const TextStyle(
-                      color: Color(0xFF8B2CF5),
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+            child: Center(
+              child: Text(
+                day,
+                style: const TextStyle(
+                  color: Color(0xFF8B2CF5),
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            )
+            ),
+          ),
+        )
             .toList(),
       ),
     );
@@ -125,9 +125,9 @@ class _CalendarContainerState extends State<CalendarContainer> {
         children: weeks
             .map(
               (week) => TableRow(
-                children: week.map((day) => _buildDayCell(day)).toList(),
-              ),
-            )
+            children: week.map((day) => _buildDayCell(day)).toList(),
+          ),
+        )
             .toList(),
       ),
     );
