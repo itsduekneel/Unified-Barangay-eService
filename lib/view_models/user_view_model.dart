@@ -74,21 +74,52 @@ class UserViewModel extends ChangeNotifier {
 
     try {
       debugPrint('UserViewModel: Fetching profile for UID: ${user.id}');
-      final data = await _client
+      
+      // 1. Try fetching from profiles table
+      final profileData = await _client
           .from('profiles')
           .select()
           .eq('id', user.id)
           .maybeSingle();
 
-      if (data != null) {
-        _currentUser = ProfileData.fromMap(data);
+      if (profileData != null) {
+        _currentUser = ProfileData.fromMap(profileData);
         debugPrint('UserViewModel: Profile found! Name: ${_currentUser?.firstName}');
         notifyListeners();
+        return;
+      }
+
+      // 2. Fallback: Try fetching from barangays table if not in profiles
+      debugPrint('UserViewModel: No profile found in "profiles", checking "barangays" table...');
+      final barangayData = await _client
+          .from('barangays')
+          .select()
+          .eq('auth_uid', user.id)
+          .maybeSingle();
+
+      if (barangayData != null) {
+        _currentUser = ProfileData(
+          id: user.id,
+          firstName: barangayData['name'] ?? 'Barangay',
+          middleName: '',
+          lastName: '',
+          email: barangayData['email'],
+          role: 'Barangay',
+          isActive: barangayData['is_active'] ?? true,
+        );
+        debugPrint('UserViewModel: Barangay profile found! Name: ${_currentUser?.firstName}');
+        notifyListeners();
       } else {
-        debugPrint('UserViewModel: No profile found in "profiles" table for UID: ${user.id}');
+        debugPrint('UserViewModel: No user data found in both tables for UID: ${user.id}');
       }
     } catch (e) {
       debugPrint('Error fetching current user profile: $e');
     }
+  }
+
+  void clearUser() {
+    _currentUser = null;
+    _profiles = [];
+    notifyListeners();
   }
 }

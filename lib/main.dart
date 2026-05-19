@@ -6,13 +6,26 @@ import 'package:ube/authentication/splash_screen.dart';
 import 'package:ube/supabase_config.dart';
 import 'package:ube/view_models/document_view_model.dart';
 import 'package:ube/view_models/user_view_model.dart';
-
-
+import 'package:ube/core/services/local_notification_service.dart';
+import 'package:ube/core/services/supabase_realtime_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+  
+  // Initialize Notifications
+  await LocalNotificationService.init();
+  
+  // Listen to Auth State Changes to start/stop Realtime Listener
+  Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+    final event = data.event;
+    if (event == AuthChangeEvent.signedIn || event == AuthChangeEvent.initialSession) {
+      SupabaseRealtimeService.init();
+    } else if (event == AuthChangeEvent.signedOut) {
+      SupabaseRealtimeService.stop();
+    }
+  });
 
   runApp(
     MultiProvider(

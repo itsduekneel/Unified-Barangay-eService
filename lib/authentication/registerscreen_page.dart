@@ -19,10 +19,8 @@ class RegisterScreen extends StatefulWidget {
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen>
-    with SingleTickerProviderStateMixin {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _scrollController = ScrollController();
-  late final TabController _tabController;
 
   // ── Controllers ─────────────────────────────────────────────────────────────
   final _firstNameCtrl = TextEditingController();
@@ -617,10 +615,7 @@ class _RegisterScreenState extends State<RegisterScreen>
       return;
     }
     if (_step < 2) {
-      setState(() {
-        _step++;
-        _tabController.animateTo(_step);
-      });
+      setState(() => _step++);
       _scrollController.animateTo(
         0,
         duration: const Duration(milliseconds: 300),
@@ -633,10 +628,7 @@ class _RegisterScreenState extends State<RegisterScreen>
 
   void _prevStep() {
     if (_step > 0) {
-      setState(() {
-        _step--;
-        _tabController.animateTo(_step);
-      });
+      setState(() => _step--);
     } else {
       Navigator.pop(context);
     }
@@ -650,10 +642,6 @@ class _RegisterScreenState extends State<RegisterScreen>
       final email = _emailCtrl.text.trim();
       final password = _passwordCtrl.text;
 
-      // 1. Create auth user
-      // NOTE: If you still get the "Database error saving new user" error here,
-      // you MUST go to your Supabase Dashboard -> Database -> Triggers,
-      // and delete/disable the trigger on the `auth.users` table.
       final response = await _supabase.auth.signUp(
         email: email,
         password: password,
@@ -666,7 +654,6 @@ class _RegisterScreenState extends State<RegisterScreen>
       final uid = response.user?.id;
       if (uid == null) throw Exception('Sign-up failed. No user returned.');
 
-      // 2. Insert full profile into profiles table manually
       await _supabase.from('profiles').insert({
         'id': uid,
         'first_name': _firstNameCtrl.text.trim(),
@@ -709,12 +696,9 @@ class _RegisterScreenState extends State<RegisterScreen>
 
   String _friendlyAuthError(String message) {
     final m = message.toLowerCase();
-
-    // Intercept the raw Supabase database trigger error you were seeing
     if (m.contains('database error saving new user')) {
       return 'Backend configuration error: Please disable the trigger in your Supabase dashboard.';
     }
-
     if (m.contains('already registered') || m.contains('already exists')) {
       return 'This email is already registered. Please sign in instead.';
     }
@@ -776,14 +760,14 @@ class _RegisterScreenState extends State<RegisterScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     // Rebuild when password changes so requirements update live
     _passwordCtrl.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
     _scrollController.dispose();
     _firstNameCtrl.dispose();
     _middleNameCtrl.dispose();
@@ -801,134 +785,43 @@ class _RegisterScreenState extends State<RegisterScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F4FA),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
-        automaticallyImplyLeading: false,
-        toolbarHeight: 0,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(112),
-          child: Container(
-            color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: _prevStep,
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF5F0FF),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFFEBE0FF)),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          size: 15,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            const [
-                              'Let\'s Get Started',
-                              'Current Address',
-                              'Account Setup',
-                            ][_step],
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF1E0447),
-                            ),
-                          ),
-                          Text(
-                            const [
-                              'Please enter your personal information',
-                              'Please enter your current address',
-                              'Set up your login credentials',
-                            ][_step],
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 18,
+            color: Colors.black87,
+          ),
+          onPressed: _prevStep,
+        ),
+      ),
+      body: Column(
+        children: [
+          const SizedBox(height: 5),
 
-                const SizedBox(height: 10),
+          _StepProgress(step: _step),
 
-                Row(
-                  children: List.generate(3, (i) {
-                    final active = i <= _step;
-                    return Expanded(
-                      child: Container(
-                        margin: EdgeInsets.only(right: i < 2 ? 6 : 0),
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: active
-                              ? AppColors.primary
-                              : const Color(0xFFEBE0FF),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-
-                const SizedBox(height: 4),
-
-                TabBar(
-                  controller: _tabController,
-                  onTap: (i) => setState(() => _step = i),
-                  labelColor: AppColors.primary,
-                  unselectedLabelColor: Colors.grey,
-                  labelStyle: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  unselectedLabelStyle: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  indicatorColor: AppColors.primary,
-                  indicatorWeight: 2,
-                  tabs: const [
-                    Tab(text: 'Personal'),
-                    Tab(text: 'Address'),
-                    Tab(text: 'Account'),
-                  ],
-                ),
-              ],
+          const SizedBox(height: 15),
+          Expanded(
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                child: _buildStepContent(),
+              ),
             ),
           ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        controller: _scrollController,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 250),
-          child: _buildStepContent(),
-        ),
-      ),
-      bottomNavigationBar: _BottomBar(
-        step: _step,
-        isLoading: _isLoading,
-        onNext: _nextStep,
+          _BottomBar(
+            step: _step,
+            isLoading: _isLoading,
+            onNext: _nextStep,
+          ),
+        ],
       ),
     );
   }
@@ -942,6 +835,35 @@ class _RegisterScreenState extends State<RegisterScreen>
       default:
         return _Step2Account(key: const ValueKey(2), state: this);
     }
+  }
+}
+
+// ─── STEP PROGRESS BAR ────────────────────────────────────────────────────────
+
+class _StepProgress extends StatelessWidget {
+  final int step;
+  const _StepProgress({required this.step});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: List.generate(3, (i) {
+          final active = i <= step;
+          return Expanded(
+            child: Container(
+              margin: EdgeInsets.only(right: i < 2 ? 6 : 0),
+              height: 4,
+              decoration: BoxDecoration(
+                color: active ? AppColors.primary : Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
   }
 }
 
@@ -1148,7 +1070,8 @@ class _Step0PersonalInfo extends StatelessWidget {
                                   ? Icons.female
                                   : Icons.person_outline,
                               size: 18,
-                              color: selected ? AppColors.primary : Colors.grey,
+                              color:
+                              selected ? AppColors.primary : Colors.grey,
                             ),
                             const SizedBox(height: 4),
                             Text(
@@ -1388,7 +1311,6 @@ class _Step2Account extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              // ── Live password requirement indicators ──────────────
               _PwReq(text: 'At least 8 characters', met: s._pwHas8),
               _PwReq(
                 text: 'One uppercase letter (recommended)',

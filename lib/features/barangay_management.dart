@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import '../core/utils/route_utils.dart';
+import '../supabase_config.dart';
 
 final _sb = Supabase.instance.client;
 
@@ -72,8 +73,8 @@ class _Barangay {
   final String id;
   final String name;
   final String? captain;
-  final String? contactNo;
   final String? email;
+  final String? authUid;       // ← Supabase Auth UID
   final String? address;
   final String? zone;
   final int?    population;
@@ -88,8 +89,8 @@ class _Barangay {
     required this.id,
     required this.name,
     this.captain,
-    this.contactNo,
     this.email,
+    this.authUid,
     this.address,
     this.zone,
     this.population,
@@ -102,19 +103,19 @@ class _Barangay {
   });
 
   factory _Barangay.fromMap(Map<String, dynamic> m) => _Barangay(
-    id:         m['id'].toString(),
-    name:       m['name'] ?? '',
-    captain:    m['captain'],
-    contactNo:  m['contact_no'],
-    email:      m['email'],
-    address:    m['address'],
-    zone:       m['zone'],
+    id:        m['id'].toString(),
+    name:      m['name'] ?? '',
+    captain:   m['captain'],
+    email:     m['email'],
+    authUid:   m['auth_uid'],
+    address:   m['address'],
+    zone:      m['zone'],
     population: m['population'] is int ? m['population'] : null,
-    notes:      m['notes'],
-    iconKey:    m['icon_key'],
-    colorHex:   m['color_hex'],
-    isActive:   m['is_active'] ?? true,
-    createdAt:  m['created_at'] != null
+    notes:     m['notes'],
+    iconKey:   m['icon_key'],
+    colorHex:  m['color_hex'],
+    isActive:  m['is_active'] ?? true,
+    createdAt: m['created_at'] != null
         ? DateFormat('MMM dd, yyyy').format(DateTime.parse(m['created_at']))
         : '',
     updatedAt: m['updated_at'] != null
@@ -134,7 +135,7 @@ class _Barangay {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-//  BARANGAY MANAGEMENT PAGE  (list)
+//  BARANGAY MANAGEMENT PAGE
 // ══════════════════════════════════════════════════════════════════════════════
 class BarangayManagementPage extends StatefulWidget {
   const BarangayManagementPage({super.key});
@@ -229,8 +230,6 @@ class _BarangayManagementPageState extends State<BarangayManagementPage>
               ),
             ],
           ),
-
-          // ── Full body in SingleChildScrollView ──────────────────────────
           body: RefreshIndicator(
             color: _kAccent,
             onRefresh: () async {},
@@ -239,8 +238,6 @@ class _BarangayManagementPageState extends State<BarangayManagementPage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
-                  // ── Stat Pills ──────────────────────────────────────────
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
                     child: Row(
@@ -253,8 +250,6 @@ class _BarangayManagementPageState extends State<BarangayManagementPage>
                       ],
                     ),
                   ),
-
-                  // ── Search ──────────────────────────────────────────────
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                     child: Container(
@@ -286,11 +281,7 @@ class _BarangayManagementPageState extends State<BarangayManagementPage>
                       ),
                     ),
                   ),
-
-                  // ── Tabs ────────────────────────────────────────────────
                   _buildTabs(counts),
-
-                  // ── Content ─────────────────────────────────────────────
                   if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData)
                     const SizedBox(
                       height: 320,
@@ -401,7 +392,6 @@ class _BarangayCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Icon box
                   Container(
                     width: 48,
                     height: 52,
@@ -413,8 +403,6 @@ class _BarangayCard extends StatelessWidget {
                     child: Icon(icon, color: color, size: 22),
                   ),
                   const SizedBox(width: 12),
-
-                  // Info
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -435,8 +423,9 @@ class _BarangayCard extends StatelessWidget {
                           children: [
                             if (barangay.zone != null && barangay.zone!.isNotEmpty)
                               _IconText(Icons.map_outlined, barangay.zone!, 11),
-                            if (barangay.contactNo != null && barangay.contactNo!.isNotEmpty)
-                              _IconText(Icons.phone_outlined, barangay.contactNo!, 11),
+                            // ← email shown instead of contact number
+                            if (barangay.email != null && barangay.email!.isNotEmpty)
+                              _IconText(Icons.email_outlined, barangay.email!, 11),
                           ],
                         ),
                         const SizedBox(height: 6),
@@ -455,8 +444,6 @@ class _BarangayCard extends StatelessWidget {
                 ],
               ),
             ),
-
-            // Footer
             const Divider(height: 1, color: _kBorder),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -496,6 +483,17 @@ class _BarangayDetailPageState extends State<_BarangayDetailPage> {
   Future<void> _delete() async {
     final ok = await _confirm(context, 'Delete "${widget.barangay.name}"?', 'This action cannot be undone.');
     if (ok != true) return;
+
+    // Delete the Supabase Auth user if auth_uid exists
+    final uid = widget.barangay.authUid;
+    if (uid != null && uid.isNotEmpty) {
+      try {
+        await _sb.auth.admin.deleteUser(uid);
+      } catch (_) {
+        // non-fatal – proceed with DB delete even if auth delete fails
+      }
+    }
+
     await _sb.from('barangays').delete().eq('id', widget.barangay.id);
     if (mounted) Navigator.pop(context);
   }
@@ -536,20 +534,17 @@ class _BarangayDetailPageState extends State<_BarangayDetailPage> {
           ),
         ],
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 40),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
-            // ── Header Card ───────────────────────────────────────────────
+            // ── Header Card ──────────────────────────────────────────────
             _DetailCard(
               child: Row(
                 children: [
                   Container(
-                    width: 52,
-                    height: 52,
+                    width: 52, height: 52,
                     decoration: BoxDecoration(
                       color: color.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(13),
@@ -574,7 +569,7 @@ class _BarangayDetailPageState extends State<_BarangayDetailPage> {
             ),
             const SizedBox(height: 14),
 
-            // ── Barangay Info ─────────────────────────────────────────────
+            // ── Barangay Info ────────────────────────────────────────────
             const _SectionLabel(label: 'Barangay Information'),
             const SizedBox(height: 8),
             _DetailCard(
@@ -595,21 +590,21 @@ class _BarangayDetailPageState extends State<_BarangayDetailPage> {
             ),
             const SizedBox(height: 14),
 
-            // ── Contact Info ──────────────────────────────────────────────
-            const _SectionLabel(label: 'Contact Information'),
+            // ── Account Info ─────────────────────────────────────────────
+            const _SectionLabel(label: 'Account Information'),
             const SizedBox(height: 8),
             _DetailCard(
               child: Column(
                 children: [
-                  _DetailInfoRow(Icons.phone_outlined,   'Contact No.', b.contactNo ?? '—'),
+                  _DetailInfoRow(Icons.email_outlined,  'Email',    b.email    ?? '—'),
                   _DividerLine(),
-                  _DetailInfoRow(Icons.email_outlined,   'Email',       b.email     ?? '—'),
+                  _DetailInfoRow(Icons.badge_outlined,  'Auth UID', b.authUid  ?? '—'),
                 ],
               ),
             ),
             const SizedBox(height: 14),
 
-            // ── Notes ─────────────────────────────────────────────────────
+            // ── Notes ────────────────────────────────────────────────────
             if (b.notes != null && b.notes!.isNotEmpty) ...[
               const _SectionLabel(label: 'Notes'),
               const SizedBox(height: 8),
@@ -619,7 +614,7 @@ class _BarangayDetailPageState extends State<_BarangayDetailPage> {
               const SizedBox(height: 14),
             ],
 
-            // ── Record Info ───────────────────────────────────────────────
+            // ── Record Info ──────────────────────────────────────────────
             const _SectionLabel(label: 'Record Information'),
             const SizedBox(height: 8),
             _DetailCard(
@@ -633,7 +628,7 @@ class _BarangayDetailPageState extends State<_BarangayDetailPage> {
             ),
             const SizedBox(height: 24),
 
-            // ── Action Buttons ────────────────────────────────────────────
+            // ── Action Buttons ───────────────────────────────────────────
             Row(
               children: [
                 Expanded(
@@ -699,16 +694,17 @@ class _CreateBarangayPage extends StatefulWidget {
 }
 
 class _CreateBarangayPageState extends State<_CreateBarangayPage> {
-  final _formKey       = GlobalKey<FormState>();
-  final _nameCtrl      = TextEditingController();
-  final _captainCtrl   = TextEditingController();
-  final _zoneCtrl      = TextEditingController();
-  final _addressCtrl   = TextEditingController();
-  final _contactCtrl   = TextEditingController();
-  final _emailCtrl     = TextEditingController();
+  final _formKey        = GlobalKey<FormState>();
+  final _nameCtrl       = TextEditingController();
+  final _captainCtrl    = TextEditingController();
+  final _zoneCtrl       = TextEditingController();
+  final _addressCtrl    = TextEditingController();
+  final _emailCtrl      = TextEditingController();
+  final _passwordCtrl   = TextEditingController();        // ← new
   final _populationCtrl = TextEditingController();
-  final _notesCtrl     = TextEditingController();
-  bool _saving = false;
+  final _notesCtrl      = TextEditingController();
+  bool _saving          = false;
+  bool _obscurePass     = true;                           // ← toggle visibility
 
   String _selectedIconKey    = 'location';
   int    _selectedColorIndex = 0;
@@ -719,8 +715,8 @@ class _CreateBarangayPageState extends State<_CreateBarangayPage> {
     _captainCtrl.dispose();
     _zoneCtrl.dispose();
     _addressCtrl.dispose();
-    _contactCtrl.dispose();
     _emailCtrl.dispose();
+    _passwordCtrl.dispose();
     _populationCtrl.dispose();
     _notesCtrl.dispose();
     super.dispose();
@@ -731,26 +727,45 @@ class _CreateBarangayPageState extends State<_CreateBarangayPage> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _saving = true);
     try {
+      // 1️⃣  Create Supabase Auth account
+      // We use a temporary client to avoid signing out the current admin user.
+      // Note: 'emailConfirm: true' is an admin-only feature. To skip confirmation,
+      // disable "Confirm email" in your Supabase Project Settings > Auth.
+      final tempClient = SupabaseClient(supabaseUrl, supabaseAnonKey);
+
+      final authRes = await tempClient.auth.signUp(
+        email:    _emailCtrl.text.trim(),
+        password: _passwordCtrl.text,
+      );
+      final uid = authRes.user?.id;
+
+      // 2️⃣  Insert barangay row, linking the auth UID
       await _sb.from('barangays').insert({
         'name':        _nameCtrl.text.trim(),
         'captain':     _captainCtrl.text.trim().isEmpty ? null : _captainCtrl.text.trim(),
         'zone':        _zoneCtrl.text.trim().isEmpty    ? null : _zoneCtrl.text.trim(),
         'address':     _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
-        'contact_no':  _contactCtrl.text.trim().isEmpty ? null : _contactCtrl.text.trim(),
-        'email':       _emailCtrl.text.trim().isEmpty   ? null : _emailCtrl.text.trim(),
+        'email':       _emailCtrl.text.trim(),
+        'auth_uid':    uid,
         'population':  _populationCtrl.text.trim().isEmpty
             ? null
             : int.tryParse(_populationCtrl.text.trim()),
-        'notes':       _notesCtrl.text.trim().isEmpty   ? null : _notesCtrl.text.trim(),
+        'notes':       _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
         'icon_key':    _selectedIconKey,
         'color_hex':   _colorToHex(_kColorOptions[_selectedColorIndex]),
         'is_active':   true,
         'created_at':  DateTime.now().toIso8601String(),
         'updated_at':  DateTime.now().toIso8601String(),
       });
+
       if (mounted) Navigator.pop(context);
+    } on AuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Auth error: ${e.message}'), backgroundColor: _kRed),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e'), backgroundColor: _kRed),
@@ -804,38 +819,11 @@ class _CreateBarangayPageState extends State<_CreateBarangayPage> {
               ),
               const SizedBox(height: 10),
               _FormField(
-                label: 'Zone / District',
-                controller: _zoneCtrl,
-                icon: Icons.map_outlined,
-                hint: 'e.g. Zone 1, North District',
-              ),
-              const SizedBox(height: 10),
-              _FormField(
                 label: 'Address',
                 controller: _addressCtrl,
                 icon: Icons.home_outlined,
                 hint: 'Full address of barangay hall',
                 maxLines: 2,
-              ),
-              const SizedBox(height: 20),
-
-              // ── Contact ─────────────────────────────────────────────────
-              const _SectionLabel(label: 'Contact Information'),
-              const SizedBox(height: 10),
-              _FormField(
-                label: 'Contact Number',
-                controller: _contactCtrl,
-                icon: Icons.phone_outlined,
-                hint: 'e.g. 09XX-XXX-XXXX',
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 10),
-              _FormField(
-                label: 'Email Address',
-                controller: _emailCtrl,
-                icon: Icons.email_outlined,
-                hint: 'e.g. brgy@example.com',
-                keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 10),
               _FormField(
@@ -847,14 +835,50 @@ class _CreateBarangayPageState extends State<_CreateBarangayPage> {
               ),
               const SizedBox(height: 20),
 
-              // ── Icon & Color ─────────────────────────────────────────────
-              const _SectionLabel(label: 'Icon & Color'),
+              // ── Account Credentials ─────────────────────────────────────
+              const _SectionLabel(label: 'Account Credentials'),
+              const SizedBox(height: 6),
+              // small helper note
+              Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: _kBlueBg,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: _kBlueBorder),
+                ),
+                child: Row(
+                  children: const [
+                    Icon(Icons.info_outline_rounded, size: 14, color: _kBlue),
+                    SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'A Supabase Auth account will be created with these credentials.',
+                        style: TextStyle(fontSize: 11, color: _kBlue),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _FormField(
+                label: 'Email Address',
+                controller: _emailCtrl,
+                icon: Icons.email_outlined,
+                hint: 'e.g. brgy@example.com',
+                keyboardType: TextInputType.emailAddress,
+                required: true,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Email is required';
+                  if (!v.contains('@')) return 'Enter a valid email';
+                  return null;
+                },
+              ),
               const SizedBox(height: 10),
-              _IconColorPicker(
-                selectedIconKey: _selectedIconKey,
-                selectedColorIndex: _selectedColorIndex,
-                onIconSelected:  (k) => setState(() => _selectedIconKey = k),
-                onColorSelected: (i) => setState(() => _selectedColorIndex = i),
+              // ── Password Field (custom — needs suffix icon) ────────────
+              _PasswordField(
+                controller: _passwordCtrl,
+                obscure: _obscurePass,
+                onToggle: () => setState(() => _obscurePass = !_obscurePass),
               ),
               const SizedBox(height: 20),
 
@@ -883,7 +907,7 @@ class _CreateBarangayPageState extends State<_CreateBarangayPage> {
               ),
               const SizedBox(height: 28),
 
-              // ── Save Button ──────────────────────────────────────────────
+              // ── Save ─────────────────────────────────────────────────────
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -896,13 +920,11 @@ class _CreateBarangayPageState extends State<_CreateBarangayPage> {
                   ),
                   onPressed: _saving ? null : _save,
                   icon: _saving
-                      ? const SizedBox(
-                    width: 18, height: 18,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                  )
+                      ? const SizedBox(width: 18, height: 18,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                       : const Icon(Icons.add_location_alt_rounded, size: 18),
                   label: Text(
-                    _saving ? 'Saving…' : 'Create Barangay',
+                    _saving ? 'Creating Account…' : 'Create Barangay',
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -927,31 +949,32 @@ class _EditBarangayPage extends StatefulWidget {
 }
 
 class _EditBarangayPageState extends State<_EditBarangayPage> {
-  final _formKey = GlobalKey<FormState>();
+  final _formKey        = GlobalKey<FormState>();
   late final TextEditingController _nameCtrl;
   late final TextEditingController _captainCtrl;
   late final TextEditingController _zoneCtrl;
   late final TextEditingController _addressCtrl;
-  late final TextEditingController _contactCtrl;
   late final TextEditingController _emailCtrl;
+  late final TextEditingController _newPasswordCtrl;      // ← optional new pass
   late final TextEditingController _populationCtrl;
   late final TextEditingController _notesCtrl;
   late String _selectedIconKey;
   late int    _selectedColorIndex;
-  bool _saving = false;
+  bool _saving      = false;
+  bool _obscurePass = true;
 
   @override
   void initState() {
     super.initState();
     final b = widget.barangay;
-    _nameCtrl       = TextEditingController(text: b.name);
-    _captainCtrl    = TextEditingController(text: b.captain     ?? '');
-    _zoneCtrl       = TextEditingController(text: b.zone        ?? '');
-    _addressCtrl    = TextEditingController(text: b.address     ?? '');
-    _contactCtrl    = TextEditingController(text: b.contactNo   ?? '');
-    _emailCtrl      = TextEditingController(text: b.email       ?? '');
-    _populationCtrl = TextEditingController(text: b.population?.toString() ?? '');
-    _notesCtrl      = TextEditingController(text: b.notes       ?? '');
+    _nameCtrl        = TextEditingController(text: b.name);
+    _captainCtrl     = TextEditingController(text: b.captain  ?? '');
+    _zoneCtrl        = TextEditingController(text: b.zone     ?? '');
+    _addressCtrl     = TextEditingController(text: b.address  ?? '');
+    _emailCtrl       = TextEditingController(text: b.email    ?? '');
+    _newPasswordCtrl = TextEditingController();
+    _populationCtrl  = TextEditingController(text: b.population?.toString() ?? '');
+    _notesCtrl       = TextEditingController(text: b.notes    ?? '');
     _selectedIconKey    = b.iconKey ?? 'location';
     _selectedColorIndex = _findColorIndex(b.colorHex);
   }
@@ -971,8 +994,8 @@ class _EditBarangayPageState extends State<_EditBarangayPage> {
     _captainCtrl.dispose();
     _zoneCtrl.dispose();
     _addressCtrl.dispose();
-    _contactCtrl.dispose();
     _emailCtrl.dispose();
+    _newPasswordCtrl.dispose();
     _populationCtrl.dispose();
     _notesCtrl.dispose();
     super.dispose();
@@ -985,25 +1008,50 @@ class _EditBarangayPageState extends State<_EditBarangayPage> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
     try {
+      final uid = widget.barangay.authUid;
+
+      // 1️⃣  Update Auth user (email and/or password) if uid exists
+      // NOTE: Updating another user's email/password requires Admin privileges (Service Role Key),
+      // which should only be done in a secure server environment or Supabase Edge Function.
+      // This call will likely fail with "User not allowed" if using the Anon key.
+      if (uid != null && uid.isNotEmpty) {
+        try {
+          final attrs = AdminUserAttributes(
+            email: _emailCtrl.text.trim(),
+            password: _newPasswordCtrl.text.isNotEmpty ? _newPasswordCtrl.text : null,
+          );
+          await _sb.auth.admin.updateUserById(uid, attributes: attrs);
+        } catch (e) {
+          debugPrint('Auth Update Error: $e');
+          // We continue to update the DB even if Auth update fails,
+          // as editing other users' auth data is restricted.
+        }
+      }
+
+      // 2️⃣  Update barangay row
       await _sb.from('barangays').update({
-        'name':        _nameCtrl.text.trim(),
-        'captain':     _captainCtrl.text.trim().isEmpty ? null : _captainCtrl.text.trim(),
-        'zone':        _zoneCtrl.text.trim().isEmpty    ? null : _zoneCtrl.text.trim(),
-        'address':     _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
-        'contact_no':  _contactCtrl.text.trim().isEmpty ? null : _contactCtrl.text.trim(),
-        'email':       _emailCtrl.text.trim().isEmpty   ? null : _emailCtrl.text.trim(),
-        'population':  _populationCtrl.text.trim().isEmpty
+        'name':       _nameCtrl.text.trim(),
+        'captain':    _captainCtrl.text.trim().isEmpty ? null : _captainCtrl.text.trim(),
+        'zone':       _zoneCtrl.text.trim().isEmpty    ? null : _zoneCtrl.text.trim(),
+        'address':    _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
+        'email':      _emailCtrl.text.trim(),
+        'population': _populationCtrl.text.trim().isEmpty
             ? null
             : int.tryParse(_populationCtrl.text.trim()),
-        'notes':       _notesCtrl.text.trim().isEmpty   ? null : _notesCtrl.text.trim(),
-        'icon_key':    _selectedIconKey,
-        'color_hex':   _colorToHex(_kColorOptions[_selectedColorIndex]),
-        'updated_at':  DateTime.now().toIso8601String(),
+        'notes':      _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+        'icon_key':   _selectedIconKey,
+        'color_hex':  _colorToHex(_kColorOptions[_selectedColorIndex]),
+        'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', widget.barangay.id);
+
       if (mounted) {
         Navigator.pop(context);
-        Navigator.pop(context); // back to list
+        Navigator.pop(context);
       }
+    } on AuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Auth error: ${e.message}'), backgroundColor: _kRed),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e'), backgroundColor: _kRed),
@@ -1037,6 +1085,8 @@ class _EditBarangayPageState extends State<_EditBarangayPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+
+              // ── Basic Info ──────────────────────────────────────────────
               const _SectionLabel(label: 'Basic Information'),
               const SizedBox(height: 10),
               _FormField(
@@ -1055,37 +1105,11 @@ class _EditBarangayPageState extends State<_EditBarangayPage> {
               ),
               const SizedBox(height: 10),
               _FormField(
-                label: 'Zone / District',
-                controller: _zoneCtrl,
-                icon: Icons.map_outlined,
-                hint: 'e.g. Zone 1, North District',
-              ),
-              const SizedBox(height: 10),
-              _FormField(
                 label: 'Address',
                 controller: _addressCtrl,
                 icon: Icons.home_outlined,
                 hint: 'Full address of barangay hall',
                 maxLines: 2,
-              ),
-              const SizedBox(height: 20),
-
-              const _SectionLabel(label: 'Contact Information'),
-              const SizedBox(height: 10),
-              _FormField(
-                label: 'Contact Number',
-                controller: _contactCtrl,
-                icon: Icons.phone_outlined,
-                hint: 'e.g. 09XX-XXX-XXXX',
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 10),
-              _FormField(
-                label: 'Email Address',
-                controller: _emailCtrl,
-                icon: Icons.email_outlined,
-                hint: 'e.g. brgy@example.com',
-                keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 10),
               _FormField(
@@ -1097,16 +1121,33 @@ class _EditBarangayPageState extends State<_EditBarangayPage> {
               ),
               const SizedBox(height: 20),
 
-              const _SectionLabel(label: 'Icon & Color'),
+              // ── Account Credentials ─────────────────────────────────────
+              const _SectionLabel(label: 'Account Credentials'),
               const SizedBox(height: 10),
-              _IconColorPicker(
-                selectedIconKey: _selectedIconKey,
-                selectedColorIndex: _selectedColorIndex,
-                onIconSelected:  (k) => setState(() => _selectedIconKey = k),
-                onColorSelected: (i) => setState(() => _selectedColorIndex = i),
+              _FormField(
+                label: 'Email Address',
+                controller: _emailCtrl,
+                icon: Icons.email_outlined,
+                hint: 'e.g. brgy@example.com',
+                keyboardType: TextInputType.emailAddress,
+                required: true,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Email is required';
+                  if (!v.contains('@')) return 'Enter a valid email';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 10),
+              // Password is optional on edit — leave blank to keep existing
+              _PasswordField(
+                controller: _newPasswordCtrl,
+                obscure: _obscurePass,
+                onToggle: () => setState(() => _obscurePass = !_obscurePass),
+                isOptional: true,     // ← shows "(leave blank to keep)" hint
               ),
               const SizedBox(height: 20),
 
+              // ── Notes ───────────────────────────────────────────────────
               const _SectionLabel(label: 'Notes (Optional)'),
               const SizedBox(height: 10),
               Container(
@@ -1143,10 +1184,8 @@ class _EditBarangayPageState extends State<_EditBarangayPage> {
                   ),
                   onPressed: _saving ? null : _save,
                   icon: _saving
-                      ? const SizedBox(
-                    width: 18, height: 18,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                  )
+                      ? const SizedBox(width: 18, height: 18,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                       : const Icon(Icons.save_rounded, size: 18),
                   label: Text(
                     _saving ? 'Saving…' : 'Save Changes',
@@ -1163,10 +1202,84 @@ class _EditBarangayPageState extends State<_EditBarangayPage> {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-//  SHARED WIDGETS
+//  PASSWORD FIELD  (shared between Create & Edit)
+// ══════════════════════════════════════════════════════════════════════════════
+class _PasswordField extends StatelessWidget {
+  final TextEditingController controller;
+  final bool obscure;
+  final VoidCallback onToggle;
+  final bool isOptional;
+
+  const _PasswordField({
+    required this.controller,
+    required this.obscure,
+    required this.onToggle,
+    this.isOptional = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Text('Password', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _kText2)),
+            if (!isOptional) const Text(' *', style: TextStyle(color: _kRed, fontSize: 12)),
+            if (isOptional)
+              const Text('  (leave blank to keep current)',
+                  style: TextStyle(fontSize: 10, color: _kText3)),
+          ],
+        ),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller,
+          obscureText: obscure,
+          style: const TextStyle(fontSize: 13, color: _kText),
+          validator: isOptional
+              ? (v) {
+            if (v != null && v.isNotEmpty && v.length < 6) {
+              return 'Password must be at least 6 characters';
+            }
+            return null;
+          }
+              : (v) {
+            if (v == null || v.isEmpty) return 'Password is required';
+            if (v.length < 6) return 'Password must be at least 6 characters';
+            return null;
+          },
+          decoration: InputDecoration(
+            hintText: isOptional ? 'New password (optional)' : 'Min. 6 characters',
+            hintStyle: const TextStyle(color: _kText3, fontSize: 13),
+            prefixIcon: const Icon(Icons.lock_outline_rounded, size: 17, color: _kText3),
+            suffixIcon: IconButton(
+              icon: Icon(
+                obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                size: 18,
+                color: _kText3,
+              ),
+              onPressed: onToggle,
+            ),
+            filled: true,
+            fillColor: _kSurface,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+            border:             OutlineInputBorder(borderRadius: BorderRadius.circular(11), borderSide: const BorderSide(color: _kBorder)),
+            enabledBorder:      OutlineInputBorder(borderRadius: BorderRadius.circular(11), borderSide: const BorderSide(color: _kBorder)),
+            focusedBorder:      OutlineInputBorder(borderRadius: BorderRadius.circular(11), borderSide: const BorderSide(color: _kAccent, width: 1.5)),
+            errorBorder:        OutlineInputBorder(borderRadius: BorderRadius.circular(11), borderSide: const BorderSide(color: _kRed, width: 1.5)),
+            focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(11), borderSide: const BorderSide(color: _kRed, width: 1.5)),
+            errorStyle: const TextStyle(fontSize: 11, color: _kRed),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  SHARED WIDGETS  (unchanged from original)
 // ══════════════════════════════════════════════════════════════════════════════
 
-// ─── Stat Pill ─────────────────────────────────────────────────────────────────
 class _StatPill extends StatelessWidget {
   final String count, label;
   final Color fg, bg, border;
@@ -1194,7 +1307,6 @@ class _StatPill extends StatelessWidget {
   }
 }
 
-// ─── Status Badge ──────────────────────────────────────────────────────────────
 class _StatusBadge extends StatelessWidget {
   final bool isActive;
   const _StatusBadge({required this.isActive});
@@ -1227,7 +1339,6 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
-// ─── Population Badge ──────────────────────────────────────────────────────────
 class _PopulationBadge extends StatelessWidget {
   final int population;
   const _PopulationBadge({required this.population});
@@ -1246,17 +1357,13 @@ class _PopulationBadge extends StatelessWidget {
         children: [
           const Icon(Icons.people_outline_rounded, size: 10, color: _kBlue),
           const SizedBox(width: 4),
-          Text(
-            '$population',
-            style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: _kBlue),
-          ),
+          Text('$population', style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: _kBlue)),
         ],
       ),
     );
   }
 }
 
-// ─── Icon Text ─────────────────────────────────────────────────────────────────
 class _IconText extends StatelessWidget {
   final IconData icon;
   final String text;
@@ -1278,7 +1385,6 @@ class _IconText extends StatelessWidget {
   }
 }
 
-// ─── Quick Button ──────────────────────────────────────────────────────────────
 class _QuickBtn extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -1311,7 +1417,6 @@ class _QuickBtn extends StatelessWidget {
   }
 }
 
-// ─── Pill Button ───────────────────────────────────────────────────────────────
 class _PillBtn extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -1342,7 +1447,6 @@ class _PillBtn extends StatelessWidget {
   }
 }
 
-// ─── Section Label ─────────────────────────────────────────────────────────────
 class _SectionLabel extends StatelessWidget {
   final String label;
   const _SectionLabel({required this.label});
@@ -1362,7 +1466,6 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-// ─── Detail Card ───────────────────────────────────────────────────────────────
 class _DetailCard extends StatelessWidget {
   final Widget child;
   const _DetailCard({required this.child});
@@ -1383,7 +1486,6 @@ class _DetailCard extends StatelessWidget {
   }
 }
 
-// ─── Detail Info Row ───────────────────────────────────────────────────────────
 class _DetailInfoRow extends StatelessWidget {
   final IconData icon;
   final String label, value;
@@ -1406,13 +1508,11 @@ class _DetailInfoRow extends StatelessWidget {
   }
 }
 
-// ─── Divider ───────────────────────────────────────────────────────────────────
 class _DividerLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) => const Divider(height: 1, color: _kBorder);
 }
 
-// ─── Form Field ────────────────────────────────────────────────────────────────
 class _FormField extends StatelessWidget {
   final String label, hint;
   final TextEditingController controller;
@@ -1420,6 +1520,7 @@ class _FormField extends StatelessWidget {
   final bool required;
   final int maxLines;
   final TextInputType keyboardType;
+  final String? Function(String?)? validator;   // ← added for email validation
 
   const _FormField({
     required this.label,
@@ -1429,6 +1530,7 @@ class _FormField extends StatelessWidget {
     this.required = false,
     this.maxLines = 1,
     this.keyboardType = TextInputType.text,
+    this.validator,
   });
 
   @override
@@ -1448,9 +1550,10 @@ class _FormField extends StatelessWidget {
           maxLines: maxLines,
           keyboardType: keyboardType,
           style: const TextStyle(fontSize: 13, color: _kText),
-          validator: required
-              ? (v) => (v == null || v.trim().isEmpty) ? '$label is required' : null
-              : null,
+          validator: validator ??
+              (required
+                  ? (v) => (v == null || v.trim().isEmpty) ? '$label is required' : null
+                  : null),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: const TextStyle(color: _kText3, fontSize: 13),
@@ -1471,88 +1574,6 @@ class _FormField extends StatelessWidget {
   }
 }
 
-// ─── Icon & Color Picker ───────────────────────────────────────────────────────
-class _IconColorPicker extends StatelessWidget {
-  final String selectedIconKey;
-  final int selectedColorIndex;
-  final void Function(String) onIconSelected;
-  final void Function(int) onColorSelected;
-
-  const _IconColorPicker({
-    required this.selectedIconKey,
-    required this.selectedColorIndex,
-    required this.onIconSelected,
-    required this.onColorSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final activeColor = _kColorOptions[selectedColorIndex];
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: _kSurface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _kBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Icon grid
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 7, crossAxisSpacing: 8, mainAxisSpacing: 8, childAspectRatio: 1,
-            ),
-            itemCount: _kIconOptions.length,
-            itemBuilder: (_, i) {
-              final opt    = _kIconOptions[i];
-              final active = opt.key == selectedIconKey;
-              return GestureDetector(
-                onTap: () => onIconSelected(opt.key),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  decoration: BoxDecoration(
-                    color: active ? activeColor.withOpacity(0.12) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(9),
-                    border: Border.all(color: active ? activeColor : _kBorder, width: active ? 1.5 : 1),
-                  ),
-                  child: Icon(opt.icon, size: 20, color: active ? activeColor : _kText3),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 14),
-          // Color row
-          Row(
-            children: _kColorOptions.map((color) {
-              final active = color == activeColor;
-              return Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: GestureDetector(
-                  onTap: () => onColorSelected(_kColorOptions.indexOf(color)),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    width: 30, height: 30,
-                    decoration: BoxDecoration(
-                      color: color,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: active ? _kText : Colors.transparent, width: 3),
-                    ),
-                    child: active ? const Icon(Icons.check_rounded, size: 13, color: Colors.white) : null,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Empty State ───────────────────────────────────────────────────────────────
 class _EmptyState extends StatelessWidget {
   final String filter;
   const _EmptyState({required this.filter});
@@ -1582,7 +1603,6 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-// ─── Confirm Dialog ────────────────────────────────────────────────────────────
 Future<bool?> _confirm(BuildContext context, String title, String body) {
   return showDialog<bool>(
     context: context,

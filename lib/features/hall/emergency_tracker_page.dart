@@ -1361,7 +1361,7 @@ class _EmergencyTrackerPageState extends State<EmergencyTrackerPage>
         }
 
         final allItems = (snapshot.data ?? [])
-            .map((m) => EmergencyItem.fromMap(m))
+            .map<EmergencyItem>((m) => EmergencyItem.fromMap(Map<String, dynamic>.from(m as Map)))
             .toList();
         final filtered = _applyFilters(allItems);
         final live = filtered.where((e) => e.step < 3).toList();
@@ -1641,11 +1641,35 @@ class _InlineMapSection extends StatefulWidget {
 class _InlineMapSectionState extends State<_InlineMapSection> {
   final _mapCtrl = MapController();
   bool _cacheReady = false;
+  LatLng _center = const LatLng(_kDefaultLat, _kDefaultLng);
 
   @override
   void initState() {
     super.initState();
     _initCache();
+    _initLocation();
+  }
+
+  Future<void> _initLocation() async {
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) return;
+      var perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.denied) {
+        perm = await Geolocator.requestPermission();
+      }
+      if (perm == LocationPermission.always || perm == LocationPermission.whileInUse) {
+        final pos = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.medium,
+            timeLimit: Duration(seconds: 3),
+          ),
+        );
+        if (mounted) {
+          setState(() => _center = LatLng(pos.latitude, pos.longitude));
+          _mapCtrl.move(_center, 14);
+        }
+      }
+    } catch (_) {}
   }
 
   Future<void> _initCache() async {
@@ -1677,10 +1701,10 @@ class _InlineMapSectionState extends State<_InlineMapSection> {
           child: _cacheReady
               ? FlutterMap(
             mapController: _mapCtrl,
-            options: const MapOptions(
-              initialCenter: LatLng(_kDefaultLat, _kDefaultLng),
+            options: MapOptions(
+              initialCenter: _center,
               initialZoom: 14,
-              interactionOptions: InteractionOptions(
+              interactionOptions: const InteractionOptions(
                 flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
               ),
             ),
@@ -2806,7 +2830,7 @@ class _EmergencyMapPageState extends State<EmergencyMapPage>
       stream: supabase.from('emergency_incidents').stream(primaryKey: ['id']),
       builder: (context, snapshot) {
         final allItems = (snapshot.data ?? [])
-            .map((m) => EmergencyItem.fromMap(m))
+            .map<EmergencyItem>((m) => EmergencyItem.fromMap(Map<String, dynamic>.from(m as Map)))
             .toList();
         final visible = _activeOnly
             ? allItems.where((e) => e.step < 3).toList()

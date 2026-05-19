@@ -796,8 +796,10 @@ class _AdminApptServicePageState extends State<AdminApptServicePage> {
           .order('created_at', ascending: false);
       if (mounted) {
         setState(() {
-          _services = (data as List).map((m) => _ApptService.fromMap(m)).toList();
-          _loading  = false;
+          _services = (data as List)
+              .map<_ApptService>((m) => _ApptService.fromMap(Map<String, dynamic>.from(m as Map)))
+              .toList();
+          _loading = false;
         });
       }
     } catch (_) {

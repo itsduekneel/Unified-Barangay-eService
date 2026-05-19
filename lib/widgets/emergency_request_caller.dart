@@ -6,6 +6,9 @@ import 'package:ube/authentication/app_colors.dart';
 
 final supabase = Supabase.instance.client;
 
+const _kDefaultLat = 14.1668;
+const _kDefaultLng = 121.2420;
+
 class EmergencyRequestCaller extends StatefulWidget {
   const EmergencyRequestCaller({super.key});
 
@@ -50,57 +53,96 @@ class _EmergencyRequestCallerState extends State<EmergencyRequestCaller> {
 
   Future<void> _handleEmergency() async {
     if (_selectedType == null || _isSubmitting) return;
-
     setState(() => _isSubmitting = true);
 
     try {
+      // ── 1. Kumuha ng position — last known muna (instant), fallback sa default
       Position? position;
+
       try {
-        position = await Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.high,
-            timeLimit: Duration(seconds: 5),
-          ),
-        );
+        if (await Geolocator.isLocationServiceEnabled()) {
+          var perm = await Geolocator.checkPermission();
+          if (perm == LocationPermission.denied) {
+            perm = await Geolocator.requestPermission();
+          }
+
+          if (perm == LocationPermission.always ||
+              perm == LocationPermission.whileInUse) {
+            // Fast path — walang GPS spin-up, instant
+            position = await Geolocator.getLastKnownPosition();
+          }
+        }
       } catch (e) {
         debugPrint('Location error: $e');
       }
 
+      // ── 2. I-insert sa Supabase gamit ang best available location
       final response = await supabase.from('emergency_incidents').insert({
         'type': _selectedType!.label,
-        'level': _selectedType!.label == 'Medical' || _selectedType!.label == 'Fire' ? 'critical' : 'high',
+        'level': (_selectedType!.label == 'Medical' ||
+            _selectedType!.label == 'Fire')
+            ? 'critical'
+            : 'high',
         'location': 'Current Location',
         'reported_by': supabase.auth.currentUser?.id ?? 'Anonymous',
         'description': 'Emergency alert activated via app.',
         'step': 0,
-        'map_lat': position?.latitude ?? 14.1668,
-        'map_lng': position?.longitude ?? 121.2420,
+        'map_lat': position?.latitude ?? _kDefaultLat,
+        'map_lng': position?.longitude ?? _kDefaultLng,
       }).select().single();
 
       if (!mounted) return;
 
+      final incidentId = response['id'] as String;
+
+      // ── 3. Pumunta sa request page agad — hindi naghihintay sa accurate fix
       Navigator.push(
         context,
         PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              EmergencyRequestPage(
-                incidentId: response['id'],
-                emergencyLabel: _selectedType!.label,
-                emergencySub: _selectedType!.sub,
-              ),
+          pageBuilder: (_, __, ___) => EmergencyRequestPage(
+            incidentId: incidentId,
+            emergencyLabel: _selectedType!.label,
+            emergencySub: _selectedType!.sub,
+          ),
           transitionDuration: Duration.zero,
           reverseTransitionDuration: Duration.zero,
         ),
       );
+
+      // ── 4. I-update ang map_lat/map_lng sa background pag dumating accurate fix
+      //    Hindi na naghihintay ang user — nasa request page na siya
+      _updateLocationInBackground(incidentId);
+
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send alert: $e'), backgroundColor: AppColors.red),
+          SnackBar(
+            content: Text('Failed to send alert: $e'),
+            backgroundColor: AppColors.red,
+          ),
         );
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
+  }
+
+  void _updateLocationInBackground(String incidentId) {
+    Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        timeLimit: Duration(seconds: 15),
+      ),
+    ).then((pos) async {
+      // I-update ang Supabase — ang EmergencyRequestPage stream
+      // ay awtomatikong makakakita ng bagong lat/lng
+      await supabase.from('emergency_incidents').update({
+        'map_lat': pos.latitude,
+        'map_lng': pos.longitude,
+      }).eq('id', incidentId);
+    }).catchError((e) {
+      debugPrint('Background location update failed: $e');
+    });
   }
 
   @override

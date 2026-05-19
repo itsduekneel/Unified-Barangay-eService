@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart'; // para sa ScrollDirection
+import 'package:flutter/rendering.dart'; 
+import 'package:provider/provider.dart';
+import 'package:ube/view_models/user_view_model.dart';
 import 'package:ube/authentication/authentication_page.dart';
+import 'package:ube/authentication/auth_service.dart';
 import 'package:ube/pages/notification_page.dart';
 import 'package:ube/core/utils/route_utils.dart';
 import '../pages/dashboard_page.dart';
@@ -50,11 +53,17 @@ class _AppShellState extends State<AppShell> {
 
   void _logout() async {
     Navigator.of(context).pop();
-    // Use Supabase to sign out
-    // await Supabase.instance.client.auth.signOut();
-    Navigator.pushReplacement(
+    
+    // Clear user data in ViewModel
+    context.read<UserViewModel>().clearUser();
+    
+    await AuthService.signOut();
+    
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
       context,
       instantRoute(const LoginPage()),
+      (route) => false,
     );
   }
 
